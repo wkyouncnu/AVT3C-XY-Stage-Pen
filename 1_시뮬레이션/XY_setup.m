@@ -53,6 +53,9 @@ d_reach  = 0.03;  th_tol = deg2rad(1);  % Stateflow 전이 조건 (실기 Chart 
 r_tag   = [-0.080;  0.060];   % 로봇 중심 기준 ZeroKey 태그 위치
 r_pen0  = [ 0.000;  0.000];   % 로봇 중심 기준 펜 위치 (스테이지 중앙일 때, 배치 3안)
 pen_d   = r_pen0 - r_tag;     % 태그 -> 펜 레버암
+%  q0 는 태그 자세. 운동모델은 중심 c 를 적분하므로 초기 중심 q0c = [q0(1:2) - R(psi0) r_tag; psi0]
+%  q0 is the tag pose. The plant integrates the centre c, so its initial state is q0c
+q0c = [q0(1:2) - [cos(q0(3)) -sin(q0(3)); sin(q0(3)) cos(q0(3))] * r_tag; q0(3)];
 
 %% 6. 로봇 운동모델 — 6WP_sim Dynamics 의 식, AVT-3C 크기로   [실측 필요]
 m_r    = 12.0;        % 로봇 질량 [kg] (스테이지 포함)                     [실측 필요]

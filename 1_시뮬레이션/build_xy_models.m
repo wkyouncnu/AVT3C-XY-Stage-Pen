@@ -148,6 +148,7 @@ function finish_model(m, here)
     align_root(m);
     connect_root(m);
     fix_const_crossings(m);
+    snap_jogs(m);
     save_system(m);
     try
         [n, ~, n2] = check_lines(m, false);
@@ -256,19 +257,23 @@ function addMission(m, P)
 %    Waypoints  : 모드에 따라 로봇이 따라갈 선분 (6WP 의 waypoint_manager 역할)
     ss = add_subsys(m, 'Mission', boxpos(P,5), {'pose'}, ...
                     {'WP_prev','WP_target','mode','t_line','lineAB'}, gnc_colour('mission'));
-    geo = {'const:pen_A','const:pen_B','const:pen_d','const:line_pre','const:line_post'};
+    geo = {'const:pen_A','const:pen_B','const:pen_d','const:line_pre','const:line_post','const:r_tag'};
     line_geo = {
         'th = atan2(pen_B(2) - pen_A(2), pen_B(1) - pen_A(1));   % 펜 직선 방향'
         'u  = [cos(th); sin(th)];'
         'R  = [cos(th) -sin(th); sin(th) cos(th)];'
         '% 로봇(태그)이 따라갈 선 = 펜 직선을 R*pen_d 만큼 옮긴 것 (스테이지 중앙일 때 펜이 직선 위)'
         'rA = pen_A - R*pen_d - u*line_pre;    % 로봇 출발점 (펜이 A 에 닿기 line_pre 전)'
-        'rB = pen_B - R*pen_d + u*line_post;   % 로봇 끝점'};
+        'rB = pen_B - R*pen_d + u*line_post;   % 로봇 끝점'
+        '% 제자리 회전은 중심 둘레로 돈다: 회전 뒤 태그가 rA 에 오려면 중심이 cA 에 있어야 한다'
+        '% In-place turns pivot about the centre: for the tag to end at rA the centre must be at cA'
+        'cA = rA - R*r_tag;'};
     code = [{
-        'function [dist_start, th_err, along_rem] = Guards(pose, pen_A, pen_B, pen_d, line_pre, line_post)'
+        'function [dist_start, th_err, along_rem] = Guards(pose, pen_A, pen_B, pen_d, line_pre, line_post, r_tag)'
         '% Stateflow 전이 조건에 쓸 값 (실기 Chart 의 dist, th_err, dist_to_WP2 와 같은 뜻)'}; line_geo; {
         'p = pose(1:2);'
-        'dist_start = norm(rA - p);                                     % 출발점까지 거리'
+        'Rp = [cos(pose(3)) -sin(pose(3)); sin(pose(3)) cos(pose(3))];'
+        'dist_start = norm(cA - (p - Rp*r_tag));                        % 중심과 출발 중심 cA 의 거리'
         'th_err     = atan2(sin(th - pose(3)), cos(th - pose(3)));      % 직선 방향 오차'
         'along_rem  = dot(rB - p, u);                                   % 끝점까지 남은 진행 거리'}];
     fcn_box(ss, 'Guards', code, [{'in:pose'}, geo], {'tag:dist_start','tag:th_err','tag:along_rem'}, 330, 60);
@@ -276,11 +281,12 @@ function addMission(m, P)
     make_chart(ss, 'ModeChart', 1100, 60);
 
     code = [{
-        'function [WP_prev, WP_target, lineAB] = Waypoints(mode, pen_A, pen_B, pen_d, line_pre, line_post)'
-        '% 모드 1 (Goto_Start) 의 목표는 출발점 rA, 그 뒤로는 rA -> rB 선분'}; line_geo; {
+        'function [WP_prev, WP_target, lineAB] = Waypoints(mode, pen_A, pen_B, pen_d, line_pre, line_post, r_tag)'
+        '% 모드 1 (Goto_Start) 의 목표는 출발 중심 cA (중심 기준), 그 뒤로는 태그 선분 rA -> rB'
+        '% Mode 1 target = start centre cA (centre-referenced); afterwards the tag segment rA -> rB'}; line_geo; {
         'WP_prev = rA;'
         'if round(mode) <= 1'
-        '    WP_target = rA;'
+        '    WP_target = cA;'
         'else'
         '    WP_target = rB;'
         'end'
@@ -352,15 +358,17 @@ function addRobotCtrl(m, P)
     fan_inports(ss);
     modes = {
       'M1_GotoStart', {'WP_target','pose'}, {'v','w'}, ...
-        {'function [v, w] = Goto_Start_Position(WP_target, pose, K_dist, K_yaw)'
-         '% 6WP_sim Goto_Start_Position, Method 2 (리아프노프형)'
-         'err_x = WP_target(1) - pose(1);  err_y = WP_target(2) - pose(2);'
+        {'function [v, w] = Goto_Start_Position(WP_target, pose, K_dist, K_yaw, r_tag)'
+         '% 6WP_sim Goto_Start_Position, Method 2 (리아프노프형). 6WP 와 같이 로봇 중심을 목표로 보낸다'
+         '% 6WP_sim Goto_Start_Position, Method 2. Drives the robot centre (as in 6WP_sim) to the target'
+         'c = pose(1:2) - [cos(pose(3)) -sin(pose(3)); sin(pose(3)) cos(pose(3))] * r_tag;   % 중심 추정'
+         'err_x = WP_target(1) - c(1);  err_y = WP_target(2) - c(2);'
          'dist = hypot(err_x, err_y);'
          'target_th = atan2(err_y, err_x);'
          'a = atan2(sin(target_th - pose(3)), cos(target_th - pose(3)));'
          'v = K_dist * dist * max(0, cos(a));            % 방향이 맞을 때만 전진'
          'w = K_yaw * a + 0.5 * sin(a) * cos(a);         % 비선형 감쇠항'}, ...
-        {'const:K_dist','const:K_yaw'};
+        {'const:K_dist','const:K_yaw','const:r_tag'};
       'M2_Turn', {'WP_prev','WP_target','pose'}, {'v','w'}, ...
         {'function [v, w] = Turning_Straight_Mode(WP_prev, WP_target, pose, K_yaw)'
          '% 6WP_sim Turning_Straight_Mode — 제자리 회전'
@@ -718,8 +726,17 @@ function addRobotPlant(m, P)
         '         v*sin(theta) - u*omega*cos(theta);'
         '         omega + wob];'}, ...
         {'from:V_act','from:q_act','from:u','clock','const:dist_p'}, {'tag:q_dot'}, 3050, 60);
-    blk_box(ss, 'simulink/Continuous/Integrator', 'Integ_q', {'InitialCondition','q0'}, ...
-        {'from:q_dot'}, {'both:q_act:q_true'}, 3050, 420, 50, 40);
+    %  9) 적분 상태 = 로봇 중심 c (6WP_sim 과 같음). 출력 q_true = ZeroKey 태그 점
+    %     Integrated state = robot centre c (as in 6WP_sim). Output q_true = ZeroKey tag point
+    blk_box(ss, 'simulink/Continuous/Integrator', 'Integ_q', {'InitialCondition','q0c'}, ...
+        {'from:q_dot'}, {'tag:q_act'}, 3050, 420, 50, 40);
+    fcn_box(ss, 'TagPoint', {
+        'function q_tag = TagPoint(q_c, r_tag)'
+        '% 중심 -> 태그: p = c + R(psi) r_tag. 회전하면 태그는 반경 |r_tag| 원호를 그린다'
+        '% Centre -> tag: p = c + R(psi) r_tag. While turning the tag moves on an arc of radius |r_tag|'
+        'R = [cos(q_c(3)) -sin(q_c(3)); sin(q_c(3)) cos(q_c(3))];'
+        'q_tag = [q_c(1:2) + R * r_tag; q_c(3)];'}, ...
+        {'from:q_act','const:r_tag'}, {'both:q_tag:q_true'}, 3050, 560);
 end
 
 function addSensors(m, P)
@@ -738,11 +755,12 @@ function addSensors(m, P)
     blk_box(ss, 'simulink/Discrete/Zero-Order Hold', 'ZkHold', {'SampleTime','zk_Ts'}, ...
         {'from:zk_del'}, {'zk_meas'}, 1250, 60, 40, 40);
     fcn_box(ss, 'ZkVel', {
-        'function zkv = ZkVel(q_true, V_true)'
-        '% ZeroKey 속도 (월드): x = p2 방향, z = p1 방향'
-        'p1d = V_true(1) * cos(q_true(3));'
-        'p2d = V_true(1) * sin(q_true(3));'
-        'zkv = [p2d; 0; p1d];'}, {'from:i_q_true','from:i_V_true'}, {'tag:zkv_raw'}, 330, 360);
+        'function zkv = ZkVel(q_true, V_true, r_tag)'
+        '% ZeroKey 속도 (월드): x = p2 방향, z = p1 방향. 태그 속도 = 중심 속도 + omega J R r_tag'
+        '% ZeroKey velocity (world): x = p2, z = p1. Tag velocity = centre velocity + omega J R r_tag'
+        'psi = q_true(3);  R = [cos(psi) -sin(psi); sin(psi) cos(psi)];'
+        'pd = V_true(1) * [cos(psi); sin(psi)] + V_true(2) * [0 -1; 1 0] * R * r_tag;'
+        'zkv = [pd(2); 0; pd(1)];'}, {'from:i_q_true','from:i_V_true','const:r_tag'}, {'tag:zkv_raw'}, 330, 360);
     blk_box(ss, 'simulink/Discrete/Zero-Order Hold', 'ZkVHold', {'SampleTime','zk_Ts'}, ...
         {'from:zkv_raw'}, {'zk_vel_meas'}, 1250, 360, 40, 40);
     if ver2()
@@ -1434,5 +1452,21 @@ function hold_inputs(ss, fcn, ts)
                   'Position', [sp(3)-20 q(2)-12 sp(3)+20 q(2)+12], 'ShowName','off');
         add_line(ss, [get_param(src,'Name') '/1'], [zb '/1']);
         add_line(ss, [zb '/1'], sprintf('%s/%d', fcn, k));
+    end
+end
+
+function snap_jogs(m)
+%  자동 배선이 남긴 1–3 px 비틀림(사선)을 곧게 편다. 중간 꺾임점만 옮긴다
+%  Straighten 1-3 px diagonal jogs left by auto-routing. Only interior bend points move.
+    ln = find_system(m, 'FindAll','on', 'Type','line');
+    for k = 1:numel(ln)
+        p = get_param(ln(k), 'Points');  n = size(p, 1);  ch = false;
+        for j = 2:n-1
+            dx = p(j,1) - p(j-1,1);  dy = p(j,2) - p(j-1,2);
+            if dx ~= 0 && abs(dx) <= 3 && dy ~= 0 && p(j+1,2) == p(j,2)
+                p(j,1) = p(j-1,1);  ch = true;
+            end
+        end
+        if ch, try, set_param(ln(k), 'Points', p); catch, end, end
     end
 end

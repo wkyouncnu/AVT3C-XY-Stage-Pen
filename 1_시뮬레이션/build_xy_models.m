@@ -51,7 +51,7 @@ function build_sim()
     %  ROS 2 루프백: 토픽이 실제 DDS 를 지나므로 실시간보다 빨리 돌리지 않는다
     %  Run 버튼: To Workspace log 가 base 에 바로 생기고, 끝나면 XY_stop 이 결과 그림을 띄운다
     set_param(m, 'ReturnWorkspaceOutputs','off', 'StopFcn','XY_stop');
-    try, set_param(m, 'EnablePacing','on', 'PacingRate', 1); catch, end
+    try, set_param(m, 'EnablePacing','on', 'PacingRate', 4); catch, end
     L = layout();
     addController(m, L);
     addPlantRosIn(m,  L.prin);
@@ -62,7 +62,11 @@ function build_sim()
     addPenTrace(m,    L.trace);
     addLogging(m,     L.log, log_signals(true));
     %  실시간 화면 (끄기: animate = 0). 그리는 일은 XY_animate.m
-    add_animate_box(m, {'q_true','pen_true','pen_on','stage_pos','lineAB'}, 'XY_animate', '', [L.log(1)+330 L.log(2)], 'anim_Ts');
+    %  Animate 입력마다 Zero-Order Hold (anim_Ts) 를 넣는다. 그러지 않으면 입력이 연속 신호라
+    %  적분 스텝(0.5 ms)마다 XY_animate 가 불려 실행이 수십 배 느려진다
+    %  Zero-order holds at anim_Ts on every input: otherwise the drawing call runs every solver step.
+    add_animate_box(m, {'q_true','pen_true','pen_on','stage_pos','lineAB','e_pen','v_cmd','w_cmd','V_true','mode'}, 'XY_animate', '', [L.log(1)+330 L.log(2)], 'anim_Ts');
+    hold_inputs([m '/Animate'], 'AnimateFcn', 'anim_Ts');
     wire_direct(m);
     note(m, 'n_title', ['XY_1_pen_sim : AVT-3C 벽면 로봇 + XY 스테이지 펜 직선 긋기 — 가상 실험 (ROS 2 루프백)' newline ...
         '윗줄 = 제어기 (XY_2_pen_ros2 와 같은 상자).  아랫줄 = 가상 실험장 (6WP_sim 동역학 + 센서 + Zaber 모델)' newline ...
@@ -1169,6 +1173,12 @@ function arrange_subs(m)
         if endsWith(subs{k}, '/RobotCtrl'), continue; end   % M1 -> M4 순서를 빌더 자리 그대로
         try, Simulink.BlockDiagram.arrangeSystem(subs{k}); catch, end
     end
+    %  층 배치 뒤 compute_u -> Dynamics 선이 dist_p 상수의 오른쪽 끝을 지나므로 상수를 왼쪽으로 민다
+    %  After arrangeSystem the compute_u -> Dynamics line clips the dist_p constant; shift it left.
+    c = [m '/RobotPlant/C_dist_p'];
+    if getSimulinkBlockHandle(c) > 0
+        set_param(c, 'Position', get_param(c, 'Position') - [50 0 50 0]);
+    end
     warning(ws);
 end
 
@@ -1222,4 +1232,26 @@ function y = port_y(blk, kind, name)
     if isempty(ports), return; end
     ph = get_param(blk, 'PortHandles');  n = str2double(get_param(ports{1}, 'Port'));
     q = get_param(ph.(kind)(n), 'Position');  y = q(2);
+end
+
+function hold_inputs(ss, fcn, ts)
+%  HOLD_INPUTS — From -> fcn 선마다 Zero-Order Hold 를 끼운다 (샘플 시간 ts)
+%    MATLAB Function 이 연속 신호를 받으면 적분 스텝마다 실행된다. 입력을 모두 이산으로 만들면
+%    블록이 ts 를 상속해 그 주기에만 실행된다.
+%  Insert a zero-order hold on each From -> fcn line so the function block inherits ts.
+    ph = get_param([ss '/' fcn], 'PortHandles');
+    for k = 1:numel(ph.Inport)
+        ln = get_param(ph.Inport(k), 'Line');
+        if ln < 0, continue; end
+        src = get_param(ln, 'SrcBlockHandle');
+        if ~strcmp(get_param(src, 'BlockType'), 'From'), continue; end
+        sp = get_param(src, 'Position');  q = port_xy(ss, fcn, 'Inport', k);
+        delete_line(ln);
+        set_param(src, 'Position', [sp(1)-60 sp(2) sp(3)-60 sp(4)]);
+        zb = sprintf('ZOH_%d', k);
+        add_block('simulink/Discrete/Zero-Order Hold', [ss '/' zb], 'SampleTime', ts, ...
+                  'Position', [sp(3)-20 q(2)-12 sp(3)+20 q(2)+12], 'ShowName','off');
+        add_line(ss, [get_param(src,'Name') '/1'], [zb '/1']);
+        add_line(ss, [zb '/1'], sprintf('%s/%d', fcn, k));
+    end
 end

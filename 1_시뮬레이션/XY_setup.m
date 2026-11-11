@@ -28,18 +28,18 @@ setenv('ROS_DOMAIN_ID', num2str(ros_domain_sim));
 
 %% 1. 시뮬레이션
 Ts_ctrl  = 0.01;         % 제어기 주기 = ROS 구독 주기 (100 Hz, 실기 모델과 같음)
-Ts_plant = 0.005;        % 운동모델 적분 고정 스텝 (ode4)
+Ts_plant = 0.0005;       % 운동모델 적분 고정 스텝 (ode4). 5 ms 는 회전 마찰 tanh(w/0.01) 에 비해 커서 yaw rate 가 수치적으로 떨린다 (2026-11-11 확인)
 T_run    = 70;           % 최대 시간 [s] (미션이 끝나면 자동 정지)
 T_run_ros = 300;         % 실기 모델 최대 시간 [s]
 
 %% 2. 그릴 직선 (펜 기준, 벽면 좌표 [p1; p2] m)
-pen_A = [0.30;  0.40];   % 시작점
-pen_B = [0.30; -0.20];   % 끝점 (0.6 m 수평선)
+pen_A = [0.30;  0.70];   % 시작점
+pen_B = [0.30; -0.50];   % 끝점 (1.2 m 수평선)
 line_pre  = 0.06;        % 펜이 A 에 닿기 전 로봇이 미리 직진할 거리 [m]
 line_post = 0.04;        % B 를 지나 더 갈 거리 [m]
 
 %% 3. 로봇 초기 자세 (태그 위치)
-q0 = [0.10; 0.55; 0.0];  % [p1; p2; psi]  천장 방향을 보고 출발
+q0 = [0.10; 0.85; 0.0];  % [p1; p2; psi]  천장 방향을 보고 출발
 
 %% 4. 로봇 주행 제어 게인 — 6WP_sim / 실기 모델의 모드 함수와 같은 식
 K_dist   = 1.0;   K_yaw = 2.0;          % Goto_Start / Turning (6WP 값)
@@ -136,7 +136,7 @@ tau_pred  = 0;                % ZeroKey 지연 보상 시간 [s] (Nav, 0 이면 
 anim_speed = 2.0;
 anim_fps   = 25;
 animate    = 1;               % Run 버튼으로 돌릴 때 실시간 화면 (0 이면 끔, 빨라진다)
-anim_Ts    = 0.1;             % 실시간 화면 갱신 주기 [s]
+anim_Ts    = 0.2;             % 실시간 화면 갱신 주기 [s] (Animate 입력의 Zero-Order Hold 주기)
 XY_batch   = 0;               % 1 이면 StopFcn (XY_stop) 이 그림을 그리지 않는다 — 스크립트가 세운다
 stl_file   = fullfile(here, '..', '4_CAD', 'AVT-3C.stl');
 

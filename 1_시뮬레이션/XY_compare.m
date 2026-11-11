@@ -11,6 +11,7 @@
 
 here = fileparts(mfilename('fullpath'));  cd(here);
 XY_setup;
+clear r s                                      % 작업 공간에 같은 이름의 다른 변수가 있으면 구조체 대입이 실패한다
 if ~isfile('XY_1_pen_sim.slx'), build_xy_models(1); end
 load_system('XY_1_pen_sim');
 
@@ -40,7 +41,7 @@ for k = XY_compare_only
     %  스테이지 대역을 바꾸면 서보 게인을 다시 계산한다 (XY_setup 7 절과 같은 식)
     Kp_s = [m_sx; m_sy]*wn_s^2;  Kd_s = 2*ze_s*[m_sx; m_sy]*wn_s;  Ki_s = Kp_s*wn_s/5;
     stg_p = [m_sx; m_sy; c_s; Kp_s; Kd_s; Ki_s; g_acc];
-    T_run = 40 + 0.7/v_ref;
+    T_run = 40 + 1.3/v_ref;
     fprintf('\n[%d/%d] %s — %s\n', k, size(cases,1), cases{k,1}, cases{k,2});
     XY_batch = 1;  animate = 0;
     out = sim('XY_1_pen_sim', 'ReturnWorkspaceOutputs','on');

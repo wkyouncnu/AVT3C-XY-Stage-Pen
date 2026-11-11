@@ -1,4 +1,4 @@
-% XY_RUN_ALL  모델 생성 -> 시뮬레이션 -> 그림 -> 동영상을 한 번에 돌리고 기록을 남긴다
+% XY_RUN_ALL  모델 생성 -> 시뮬레이션 -> 그림 -> 대시보드 동영상을 한 번에 돌리고 기록을 남긴다
 %
 %   >> run('C:\...\MC_Handover\5_XY스테이지\1_시뮬레이션\XY_run_all.m')
 %
@@ -38,7 +38,9 @@ catch e
 end
 
 try
-    XY_animate_video(out);  status{end+1} = 'video OK';
+    XY_record_live(out);  status{end+1} = 'video OK';
+    I = print(findobj('Type','figure','Tag','XY_live'), '-RGBImage', '-r0');   % 마지막 프레임 = 보고서 그림
+    imwrite(imresize(I, [900 1600]), fullfile('img','XY_1_dashboard.png'));
 catch e
     status{end+1} = ['video FAIL: ' e.message];  disp(getReport(e,'extended'));
 end

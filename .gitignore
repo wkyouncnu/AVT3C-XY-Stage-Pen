@@ -1,0 +1,18 @@
+# 내부 문서·대용량·생성물
+CLAUDE.md
+0_계획/
+4_CAD/
+pycheck/
+1_시뮬레이션/_old/
+1_시뮬레이션/logs/
+1_시뮬레이션/slprj/
+1_시뮬레이션/+bus_conv_fcns/
+1_시뮬레이션/img/XY_1_pen_offline*
+1_시뮬레이션/video/XY_1_pen_offline.mp4
+*.slxc
+*.bak
+*.autosave
+*.asv
+*~
+.md2pdf_*.html
+.chk.html

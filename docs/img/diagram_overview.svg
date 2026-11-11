@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="470" viewBox="0 0 1000 470" font-family="Malgun Gothic, Noto Sans CJK KR, sans-serif" font-size="13">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#333"/>
+    </marker>
+  </defs>
+  <rect width="1000" height="470" fill="#fff"/>
+
+  <!-- controller -->
+  <rect x="20" y="40" width="300" height="390" fill="#e9eef5" stroke="#1f3a5f" stroke-width="1.4"/>
+  <text x="170" y="64" text-anchor="middle" font-weight="bold" fill="#1f3a5f">제어기 (Simulink)</text>
+  <text x="170" y="82" text-anchor="middle" font-size="11.5" fill="#1f3a5f">XY_1 윗줄 = XY_2 (같은 빌더 함수)</text>
+  <g font-size="12.5">
+    <rect x="45" y="100" width="250" height="34" fill="#fff" stroke="#1f3a5f"/>
+    <text x="170" y="122" text-anchor="middle">RosIn · Nav  (구독 → pose)</text>
+    <rect x="45" y="150" width="250" height="34" fill="#fff" stroke="#1f3a5f"/>
+    <text x="170" y="172" text-anchor="middle">Mission  (Stateflow 4 모드)</text>
+    <rect x="45" y="200" width="118" height="50" fill="#fff" stroke="#1f3a5f"/>
+    <text x="104" y="221" text-anchor="middle">RobotCtrl</text>
+    <text x="104" y="239" text-anchor="middle" font-size="11">v, ω 명령</text>
+    <rect x="177" y="200" width="118" height="50" fill="#fff" stroke="#1f3a5f"/>
+    <text x="236" y="221" text-anchor="middle">PenCtrl</text>
+    <text x="236" y="239" text-anchor="middle" font-size="11">펜 기구학 보상</text>
+    <rect x="45" y="266" width="118" height="34" fill="#fff" stroke="#1f3a5f"/>
+    <text x="104" y="288" text-anchor="middle">PwmMap</text>
+    <rect x="45" y="316" width="250" height="34" fill="#fff" stroke="#1f3a5f"/>
+    <text x="170" y="338" text-anchor="middle">RosOut  (발행)</text>
+  </g>
+  <text x="170" y="378" text-anchor="middle" font-size="11.5" fill="#333">연속 제어 · 주기 Ts_ctrl = 0.01 s</text>
+  <text x="170" y="396" text-anchor="middle" font-size="11.5" fill="#333">실기: Intel NUC, Ubuntu 24.04, ROS 2 Jazzy</text>
+
+  <!-- ROS 2 -->
+  <rect x="360" y="40" width="270" height="390" fill="#fff" stroke="#555" stroke-width="1.2"/>
+  <text x="495" y="64" text-anchor="middle" font-weight="bold" fill="#333">ROS 2 토픽 (실기와 같은 이름·형식)</text>
+  <g font-family="Consolas, monospace" font-size="12.5" fill="#222">
+    <text x="378" y="104">/motor_pwm</text>
+    <text x="378" y="136">/stage/target_pos</text>
+    <text x="378" y="206">/zerokey/position</text>
+    <text x="378" y="238">/zerokey/vel</text>
+    <text x="378" y="270">/zerokey/orientation</text>
+    <text x="378" y="302">/imu/data</text>
+    <text x="378" y="334">/stage/pos</text>
+  </g>
+  <g font-size="11" fill="#666">
+    <text x="612" y="104" text-anchor="end">Point</text>
+    <text x="612" y="136" text-anchor="end">Point [mm]</text>
+    <text x="612" y="206" text-anchor="end">PointStamped</text>
+    <text x="612" y="238" text-anchor="end">TwistStamped</text>
+    <text x="612" y="270" text-anchor="end">QuaternionSt.</text>
+    <text x="612" y="302" text-anchor="end">Imu</text>
+    <text x="612" y="334" text-anchor="end">PointStamped [mm]</text>
+  </g>
+  <line x1="370" y1="160" x2="620" y2="160" stroke="#bbb" stroke-dasharray="4 3"/>
+  <text x="495" y="378" text-anchor="middle" font-size="11.5" fill="#333">가상 실험 ROS_DOMAIN_ID = 77</text>
+  <text x="495" y="396" text-anchor="middle" font-size="11.5" fill="#333">실기 ROS_DOMAIN_ID = 0</text>
+
+  <!-- arrows controller <-> ROS -->
+  <line x1="320" y1="100" x2="358" y2="100" stroke="#333" stroke-width="1.2" marker-end="url(#a)"/>
+  <line x1="320" y1="132" x2="358" y2="132" stroke="#333" stroke-width="1.2" marker-end="url(#a)"/>
+  <line x1="360" y1="240" x2="322" y2="240" stroke="#333" stroke-width="1.2" marker-end="url(#a)"/>
+  <line x1="360" y1="300" x2="322" y2="300" stroke="#333" stroke-width="1.2" marker-end="url(#a)"/>
+  <text x="340" y="92" text-anchor="middle" font-size="10.5" fill="#555">발행</text>
+  <text x="340" y="232" text-anchor="middle" font-size="10.5" fill="#555">구독</text>
+
+  <!-- virtual testbed -->
+  <rect x="670" y="40" width="310" height="215" fill="#e9eef5" stroke="#1f3a5f" stroke-width="1.4"/>
+  <text x="825" y="64" text-anchor="middle" font-weight="bold" fill="#1f3a5f">가상 실험장 (XY_1_pen_sim 아랫줄)</text>
+  <g font-size="12.5">
+    <rect x="690" y="80" width="270" height="34" fill="#fff" stroke="#1f3a5f"/>
+    <text x="825" y="102" text-anchor="middle">RobotPlant  (6WP 동역학, 벽면판)</text>
+    <rect x="690" y="124" width="270" height="34" fill="#fff" stroke="#1f3a5f"/>
+    <text x="825" y="146" text-anchor="middle">Sensors  (ZeroKey · IMU 잡음·지연)</text>
+    <rect x="690" y="168" width="270" height="34" fill="#fff" stroke="#1f3a5f"/>
+    <text x="825" y="190" text-anchor="middle">StagePlant  (Zaber X-LSM100B 모델)</text>
+  </g>
+  <text x="825" y="232" text-anchor="middle" font-size="11.5" fill="#333">PlantRosIn / PlantRosOut 으로만 토픽 교환</text>
+
+  <!-- real hardware -->
+  <rect x="670" y="275" width="310" height="155" fill="#fff" stroke="#888" stroke-width="1.2" stroke-dasharray="6 4"/>
+  <text x="825" y="299" text-anchor="middle" font-weight="bold" fill="#555">실기 (XY_2_pen_ros2 와 연결)</text>
+  <g font-size="12" fill="#444">
+    <text x="690" y="324">Arduino Mega → C620 ESC → 궤도 모터</text>
+    <text x="690" y="346">ZeroKey RTLS 태그 (20 Hz) · Xsens IMU</text>
+    <text x="690" y="368">zaber_stage_node.py (RS-232 115200)</text>
+    <text x="690" y="390">→ Zaber X-LSM100B-E03 × 2 (X, Y)</text>
+  </g>
+  <text x="825" y="416" text-anchor="middle" font-size="11.5" fill="#666">가상 실험장 자리를 실기가 대신함</text>
+
+  <!-- arrows ROS <-> plant -->
+  <line x1="630" y1="116" x2="668" y2="116" stroke="#333" stroke-width="1.2" marker-end="url(#a)"/>
+  <line x1="668" y1="200" x2="632" y2="200" stroke="#333" stroke-width="1.2" marker-end="url(#a)"/>
+  <line x1="630" y1="330" x2="668" y2="330" stroke="#888" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#a)"/>
+  <line x1="668" y1="370" x2="632" y2="370" stroke="#888" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#a)"/>
+  <text x="649" y="108" text-anchor="middle" font-size="10.5" fill="#555">구독</text>
+  <text x="649" y="192" text-anchor="middle" font-size="10.5" fill="#555">발행</text>
+</svg>

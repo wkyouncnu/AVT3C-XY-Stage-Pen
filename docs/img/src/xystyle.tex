@@ -1,0 +1,26 @@
+% xystyle.tex — XY 스테이지 다이어그램 공통 스타일 (\input{xystyle})
+%   흰 바탕, 직각 상자, 회색 + 남색 1색 강조, 수식은 LaTeX (Computer Modern), 한글은 kotex
+\usepackage{kotex}
+\usepackage{amsmath,amssymb}
+\usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds}
+\definecolor{navy}{HTML}{1F3A5F}
+\definecolor{navybg}{HTML}{E9EEF5}
+\definecolor{ink}{HTML}{333333}
+\definecolor{hwbg}{HTML}{F3F3F3}
+\definecolor{mute}{HTML}{777777}
+\tikzset{
+  >={Stealth[length=2.0mm,width=1.6mm]},
+  every node/.style={text=ink},
+  blk/.style={draw=ink, line width=0.6pt, fill=white, align=center, inner sep=4pt,
+              minimum height=1.0cm, font=\small},
+  key/.style={blk, draw=navy, fill=navybg, line width=0.8pt},
+  hw/.style={blk, fill=hwbg},
+  opt/.style={blk, dashed, draw=mute},
+  sig/.style={->, line width=0.6pt, draw=ink},
+  optsig/.style={->, line width=0.6pt, dashed, draw=mute},
+  lab/.style={font=\footnotesize, align=center, inner sep=1.5pt},
+  note/.style={font=\footnotesize, align=left, text=mute},
+  grp/.style={draw=mute, dashed, line width=0.5pt, inner sep=7pt},
+  ttl/.style={font=\footnotesize\bfseries, text=navy, anchor=south west, inner sep=1pt},
+}
+\newcommand{\tp}[1]{\texttt{\footnotesize #1}}

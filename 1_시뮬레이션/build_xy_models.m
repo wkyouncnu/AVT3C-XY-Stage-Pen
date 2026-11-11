@@ -230,10 +230,23 @@ function addNav(m, P)
     ss = add_subsys(m, 'Nav', boxpos(P,3), {'zerokey_position','zerokey_vel','imu_quat'}, {'pose'}, gnc_colour('ros'));
     code = {
         'function pose = NavFcn(zerokey_position, zerokey_vel, imu_quat, psi0, tau_pred)'
-        '% 벽면 평면 좌표 (실기 plane_project 와 같은 규약)'
-        '%   p1 = world z (높이),  p2 = world x (수평, 벽 정면에서 왼쪽 +)'
-        '% heading: /imu/data 쿼터니언의 요각을 첫 유효 샘플 기준 0 으로 잡고 psi0 를 더한다'
-        '%   (철판 벽에서는 자력계를 못 쓰므로 절대 방위가 아니라 상대 요각을 쓴다)'
+        '% NavFcn : 센서 토픽 -> 측정 자세 (항법)'
+        '% NavFcn : sensor topics -> measured pose (navigation)'
+        '% 입력 / Inputs'
+        '%   zerokey_position [3x1, m]   /zerokey/position point.(x,y,z). 태그 월드 좌표: x 벽 수평(왼쪽 +), y 벽 법선, z 높이'
+        '%                               tag world position: x horizontal (left +), y wall normal, z height'
+        '%   zerokey_vel      [3x1, m/s] /zerokey/vel twist.linear.(x,y,z). 태그 월드 속도 / tag world velocity'
+        '%   imu_quat         [4x1, -]   /imu/data orientation (w,x,y,z). Xsens 자세 쿼터니언 / Xsens attitude quaternion'
+        '%   psi0             [1, rad]   출발 heading (천장 방향 = 0) / initial heading (0 = toward the ceiling)'
+        '%   tau_pred         [1, s]     ZeroKey 지연 보상 시간 (0 = 끔) / ZeroKey latency compensation (0 = off)'
+        '% 출력 / Output'
+        '%   pose [3x1: m, m, rad]  [p1; p2; psi] = 태그 벽면 위치 (p1 높이, p2 수평) + heading'
+        '%                          [p1; p2; psi] = tag position on the wall (p1 height, p2 horizontal) + heading'
+        '% 원리 / Principle'
+        '%   벽면 좌표는 p1 = z, p2 = x (실기 plane_project 와 같은 규약). 철판 벽에서는 자력계를 못 쓰므로'
+        '%   heading 은 절대 방위가 아니라 첫 유효 샘플의 요각을 0 으로 잡은 상대 요각에 psi0 를 더한 값이다.'
+        '%   Wall coordinates p1 = z, p2 = x (same convention as plane_project). The steel wall disturbs the'
+        '%   magnetometer, so heading is the yaw relative to the first valid sample, plus psi0.'
         'persistent yaw0 ok'
         'if isempty(ok), ok = false; yaw0 = 0; end'
         'qw = imu_quat(1); qx = imu_quat(2); qy = imu_quat(3); qz = imu_quat(4);'
@@ -270,7 +283,18 @@ function addMission(m, P)
         'cA = rA - R*r_tag;'};
     code = [{
         'function [dist_start, th_err, along_rem] = Guards(pose, pen_A, pen_B, pen_d, line_pre, line_post, r_tag)'
-        '% Stateflow 전이 조건에 쓸 값 (실기 Chart 의 dist, th_err, dist_to_WP2 와 같은 뜻)'}; line_geo; {
+        '% Guards : Stateflow 전이 조건에 쓸 거리·각 (실기 Chart 의 dist, th_err, dist_to_WP2 와 같은 뜻)'
+        '% Guards : distances and angle used by the Stateflow transitions (dist, th_err, dist_to_WP2 of the real Chart)'
+        '% 입력 / Inputs'
+        '%   pose         [3x1: m, m, rad] 측정 태그 자세 [p1; p2; psi] / measured tag pose'
+        '%   pen_A, pen_B [2x1, m]   펜이 그릴 직선의 시작·끝 (벽면) / start and end of the pen line (wall)'
+        '%   pen_d        [2x1, m]   태그 -> 펜 레버암, 바디 좌표, 스테이지 중앙일 때 / tag-to-pen lever arm, body frame, stage centred'
+        '%   line_pre, line_post [m] 직선 앞뒤로 로봇이 더 가는 거리 / run-in and run-out lengths of the robot segment'
+        '%   r_tag        [2x1, m]   로봇 중심 -> 태그, 바디 좌표 / robot centre to tag, body frame'
+        '% 출력 / Outputs'
+        '%   dist_start [m]   추정 중심과 출발 중심 cA 의 거리 (모드 1 -> 2) / estimated centre to start centre cA (mode 1 -> 2)'
+        '%   th_err     [rad] 직선 방향 - heading, [-pi, pi] (모드 2 -> 3) / line direction minus heading (mode 2 -> 3)'
+        '%   along_rem  [m]   태그에서 로봇 끝점 rB 까지 남은 진행 거리 (모드 3 -> 4) / distance left to rB along the line (mode 3 -> 4)'}; line_geo; {
         'p = pose(1:2);'
         'Rp = [cos(pose(3)) -sin(pose(3)); sin(pose(3)) cos(pose(3))];'
         'dist_start = norm(cA - (p - Rp*r_tag));                        % 중심과 출발 중심 cA 의 거리'
@@ -282,8 +306,19 @@ function addMission(m, P)
 
     code = [{
         'function [WP_prev, WP_target, lineAB] = Waypoints(mode, pen_A, pen_B, pen_d, line_pre, line_post, r_tag)'
-        '% 모드 1 (Goto_Start) 의 목표는 출발 중심 cA (중심 기준), 그 뒤로는 태그 선분 rA -> rB'
-        '% Mode 1 target = start centre cA (centre-referenced); afterwards the tag segment rA -> rB'}; line_geo; {
+        '% Waypoints : 모드에 따라 로봇이 따라갈 선분을 낸다 (6WP waypoint_manager 역할)'
+        '% Waypoints : gives the segment the robot follows in each mode (role of the 6WP waypoint_manager)'
+        '% 입력 / Inputs'
+        '%   mode [-]  1 출발점 이동, 2 회전, 3 직선 추종, 4 정지, 5 종료 / 1 go to start, 2 turn, 3 line, 4 stop, 5 done'
+        '%   pen_A, pen_B, pen_d, line_pre, line_post, r_tag : Guards 와 같음 / same as Guards'
+        '% 출력 / Outputs'
+        '%   WP_prev   [2x1, m] 태그 선분 시작 rA (펜이 A 에 닿기 line_pre 전) / tag segment start rA'
+        '%   WP_target [2x1, m] 모드 1: 출발 중심 cA (중심 기준), 그 뒤: 태그 선분 끝 rB'
+        '%                      mode 1: start centre cA (centre-referenced); afterwards: tag segment end rB'
+        '%   lineAB    [4x1, m] [A; B] 펜 직선 (PenComp 로 간다) / pen line, sent to PenComp'
+        '% 원리 / Principle'
+        '%   스테이지가 중앙일 때 펜이 직선 위에 오도록, 태그가 갈 선분은 펜 직선을 R(theta_l) pen_d 만큼 옮긴 것이다.'
+        '%   The tag segment is the pen line shifted by -R(theta_l) pen_d, so that the pen is on the line when the stage is centred.'}; line_geo; {
         'WP_prev = rA;'
         'if round(mode) <= 1'
         '    WP_target = cA;'
@@ -359,8 +394,18 @@ function addRobotCtrl(m, P)
     modes = {
       'M1_GotoStart', {'WP_target','pose'}, {'v','w'}, ...
         {'function [v, w] = Goto_Start_Position(WP_target, pose, K_dist, K_yaw, r_tag)'
-         '% 6WP_sim Goto_Start_Position, Method 2 (리아프노프형). 6WP 와 같이 로봇 중심을 목표로 보낸다'
-         '% 6WP_sim Goto_Start_Position, Method 2. Drives the robot centre (as in 6WP_sim) to the target'
+         '% 모드 1 : 6WP_sim Goto_Start_Position, Method 2 (리아프노프형). 6WP 와 같이 로봇 중심을 목표로 보낸다'
+         '% Mode 1 : 6WP_sim Goto_Start_Position, Method 2. Drives the robot centre (as in 6WP_sim) to the target'
+         '% 입력 / Inputs'
+         '%   WP_target [2x1, m]   출발 중심 cA (벽면) / start centre cA (wall)'
+         '%   pose      [3x1: m, m, rad] 측정 태그 자세 / measured tag pose'
+         '%   K_dist    [1/s]  거리 게인 / distance gain;   K_yaw [1/s]  방향 게인 / bearing gain'
+         '%   r_tag     [2x1, m]  중심 -> 태그 (바디) / centre to tag (body)'
+         '% 출력 / Outputs'
+         '%   v [m/s]   전진 속도 명령 / forward speed command;   w [rad/s] 요 각속도 명령 (반시계 +) / yaw-rate command (CCW +)'
+         '% 원리 / Principle'
+         '%   v = K_dist rho max(0, cos a), w = K_yaw a + 0.5 sin a cos a. a = 목표 방위 - heading.'
+         '%   방향이 90 도 넘게 틀리면 서서 돌기만 한다 / turns on the spot while the bearing error exceeds 90 deg'
          'c = pose(1:2) - [cos(pose(3)) -sin(pose(3)); sin(pose(3)) cos(pose(3))] * r_tag;   % 중심 추정'
          'err_x = WP_target(1) - c(1);  err_y = WP_target(2) - c(2);'
          'dist = hypot(err_x, err_y);'
@@ -371,7 +416,12 @@ function addRobotCtrl(m, P)
         {'const:K_dist','const:K_yaw','const:r_tag'};
       'M2_Turn', {'WP_prev','WP_target','pose'}, {'v','w'}, ...
         {'function [v, w] = Turning_Straight_Mode(WP_prev, WP_target, pose, K_yaw)'
-         '% 6WP_sim Turning_Straight_Mode — 제자리 회전'
+         '% 모드 2 : 6WP_sim Turning_Straight_Mode — 제자리 회전으로 heading 을 직선 방향에 맞춘다'
+         '% Mode 2 : 6WP_sim Turning_Straight_Mode — turns on the spot until the heading matches the line'
+         '% 입력 / Inputs'
+         '%   WP_prev, WP_target [2x1, m] 태그 선분 rA, rB / tag segment;  pose [m, m, rad];  K_yaw [1/s]'
+         '% 출력 / Outputs'
+         '%   v = 0 [m/s],  w = K_yaw wrap(theta_l - psi) [rad/s]'
          'th_final = atan2(WP_target(2) - WP_prev(2), WP_target(1) - WP_prev(1));'
          'th_err = atan2(sin(th_final - pose(3)), cos(th_final - pose(3)));'
          'v = 0;'
@@ -379,8 +429,21 @@ function addRobotCtrl(m, P)
         {'const:K_yaw'};
       'M3_Line', {'WP_prev','WP_target','t_line','pose','stage_pos_meas'}, {'v','w','e_cross'}, ...
         {'function [v, w, e_cross] = Line_Tracking_Mode(WP_prev, WP_target, t_line, pose, stage_pos_meas, t, v_ref, K_px, K_py, K_ptheta, K_c, K_ci, stage_c)'
-         '% 6WP_sim Line_Tracking_Mode — 시간에 따라 앞서 가는 기준점 + 바디 좌표 오차'
-         '% (속도 커플링 제거형, 게인은 실기 ZeroKey 모델 값)'
+         '% 모드 3 : 6WP_sim Line_Tracking_Mode — 시간에 따라 앞서 가는 기준점 + 바디 좌표 오차 (게인은 실기 ZeroKey 모델 값)'
+         '% Mode 3 : 6WP_sim Line_Tracking_Mode — time-parameterised reference point + body-frame error (real ZeroKey model gains)'
+         '% 입력 / Inputs'
+         '%   WP_prev, WP_target [2x1, m]  태그 선분 rA -> rB / tag segment'
+         '%   t_line [s]  모드 3 진입 시각 / time mode 3 started;   t [s] 현재 시각 / current time'
+         '%   pose   [3x1: m, m, rad]  측정 태그 자세 / measured tag pose'
+         '%   stage_pos_meas [2x1, mm] /stage/pos (K_c = K_ci = 0 이면 쓰지 않음 / unused when K_c = K_ci = 0)'
+         '%   v_ref [m/s] 직선 속도 / line speed;  K_px [1/s];  K_py [rad/(m s)];  K_ptheta [1/s]'
+         '%   K_c [-] 스테이지 중앙 유지 비례 / stage-centring P;  K_ci [1/s] 그 적분 / its integral;  stage_c [mm] 스테이지 중앙 / stage centre'
+         '% 출력 / Outputs'
+         '%   v [m/s], w [rad/s]  속도 명령 / speed commands;   e_cross [m]  바디 좌표 횡오차 e_y / body-frame cross error'
+         '% 원리 / Principle'
+         '%   x_r = rA + v_ref (t - t_line) u,  [e_x; e_y] = R(psi)^T (x_r - p),  e_th = theta_l - psi'
+         '%   v = v_ref cos e_th + K_px e_x,  w = K_py e_y + K_ptheta sin e_th'
+         '%   로봇은 옆으로 못 가므로 횡오차 e_y 는 회전(w)으로만 줄인다 / a tracked robot cannot slide sideways, so e_y is removed by turning'
          'th_final = atan2(WP_target(2) - WP_prev(2), WP_target(1) - WP_prev(1));'
          'dist_total = hypot(WP_target(1) - WP_prev(1), WP_target(2) - WP_prev(2));'
          'd_traj = min(v_ref * (t - t_line), dist_total);'
@@ -406,7 +469,10 @@ function addRobotCtrl(m, P)
         {'dclock','const:v_ref','const:K_px','const:K_py','const:K_ptheta','const:K_c','const:K_ci','const:stage_c'};
       'M4_Stop', {'WP_target','pose'}, {'v','w'}, ...
         {'function [v, w] = Stop_Destination_Mode(WP_target, pose, K_dist, K_yaw)'
-         '% 6WP_sim Stop_Destination_Mode — 끝점(WP_target) 으로 Goto 식을 계속 돌려 그 자리에 머문다'
+         '% 모드 4 : 6WP_sim Stop_Destination_Mode — 끝점(WP_target) 으로 Goto 식을 계속 돌려 그 자리에 머문다'
+         '% Mode 4 : 6WP_sim Stop_Destination_Mode — keeps running the go-to law on the end point to hold position'
+         '% 입력 / Inputs : WP_target = rB [2x1, m], pose [m, m, rad], K_dist [1/s], K_yaw [1/s]'
+         '% 출력 / Outputs: v [m/s], w [rad/s]  (끝점 10 mm 안에서는 w = 0 / w = 0 within 10 mm of the end point)'
          'err_x = WP_target(1) - pose(1);  err_y = WP_target(2) - pose(2);'
          'dist = hypot(err_x, err_y);'
          'target_th = atan2(err_y, err_x);'
@@ -480,10 +546,17 @@ function addNav2(m, P)
     ss = add_subsys(m, 'Nav', boxpos(P,3), {'zerokey_position','zerokey_vel','imu_data'}, {'pose','V_meas'}, gnc_colour('ros'));
     code = {
         'function [pose, V_meas] = NavFcn(zerokey_position, zerokey_vel, imu_data, psi0, tau_pred)'
-        '% 벽면 평면 좌표 (실기 plane_project 와 같은 규약)'
-        '%   p1 = world z (높이),  p2 = world x (수평, 벽 정면에서 왼쪽 +)'
-        '% heading: /imu/data 쿼터니언의 요각을 첫 유효 샘플 기준 0 으로 잡고 psi0 를 더한다'
-        '% imu_data = [qw; qx; qy; qz; 자이로 z]'
+        '% NavFcn (2 판) : 1 판 NavFcn 에 내부 PI 되먹임 V_meas 를 더한 것'
+        '% NavFcn (v2)   : v1 NavFcn plus the inner-PI feedback V_meas'
+        '% 입력 / Inputs'
+        '%   zerokey_position [3x1, m], zerokey_vel [3x1, m/s], psi0 [rad], tau_pred [s] : 1 판과 같음 / as in v1'
+        '%   imu_data [5x1]  [qw; qx; qy; qz (-); 자이로 z (rad/s)] = /imu/data orientation + angular_velocity.z'
+        '% 출력 / Outputs'
+        '%   pose   [3x1: m, m, rad]  [p1; p2; psi]'
+        '%   V_meas [2x1: m/s, rad/s] [u_body; r] = ZeroKey 속도의 바디 전진 성분, 자이로 요 각속도'
+        '%                            forward body speed from the ZeroKey velocity, gyro yaw rate'
+        '% 원리 / Principle'
+        '%   u_body = x_B^T p_dot = p1_dot cos psi + p2_dot sin psi (실기 transform_state 의 u)'
         'persistent yaw0 ok'
         'if isempty(ok), ok = false; yaw0 = 0; end'
         'qw = imu_data(1); qx = imu_data(2); qy = imu_data(3); qz = imu_data(4);'
@@ -517,6 +590,15 @@ function addInnerPI(m, P)
     ss = add_subsys(m, 'InnerPI', boxpos(P,4), {'v_cmd','w_cmd','V_meas','mode'}, {'V_bar','W_bar'}, gnc_colour('control'));
     fcn_box(ss, 'SpeedErr', {
         'function [e_v, e_w, rst] = SpeedErr(v_cmd, w_cmd, V_meas, mode, w_fb_gain, inner_reset)'
+        '% SpeedErr (2 판 InnerPI) : 내부 PI 두 개의 오차와 적분기 리셋 신호'
+        '% SpeedErr (v2 InnerPI)   : errors of the two inner PI loops and the integrator reset'
+        '% 입력 / Inputs'
+        '%   v_cmd [m/s], w_cmd [rad/s]  외부 루프 명령 / outer-loop commands'
+        '%   V_meas [2x1: m/s, rad/s]    [u_body; r] (Nav)'
+        '%   mode [-]  미션 모드 / mission mode;  w_fb_gain [-] 자이로 배율 (실기 0.1443, 여기 1) / gyro scale'
+        '%   inner_reset [0/1]  1 이면 모드 전환 때 적분기 리셋 / 1 resets the integrators on a mode change'
+        '% 출력 / Outputs'
+        '%   e_v [m/s] = v_cmd - u_body,  e_w [rad/s] = w_cmd - w_fb_gain r,  rst [0/1]'
         '% 실기 Sum3 = V_cmd(1) - u,   Sum4 = V_cmd(2) - 0.1443 * ang_vel_z'
         'persistent m_prev'
         'if isempty(m_prev), m_prev = mode; end'
@@ -547,8 +629,27 @@ function addPwmMap(m, P)
     ss = add_subsys(m, 'PwmMap', boxpos(P,2), {'v_cmd','w_cmd'}, {'motor_pwm'}, gnc_colour('allocation'));
     code = {
         'function motor_pwm = calc_pwm(v_cmd, w_cmd, v_full, w_full, db_v, db_w)'
-        '% 실기 MATLAB Function6 calc_pwm 과 같은 식.'
-        '% 실기에서는 PID 출력(-0.5 ~ 0.5)이 V, W 로 들어간다 -> 속도 명령을 같은 범위로 정규화'
+        '% calc_pwm : 차체 속도 명령 -> 좌우 모터 PWM (실기 MATLAB Function6 calc_pwm 과 같은 식)'
+        '% calc_pwm : body speed command -> left/right motor PWM (same as the real MATLAB Function6 calc_pwm)'
+        '% 입력 / Inputs'
+        '%   v_cmd  [m/s]    전진 속도 명령 (RobotCtrl) / forward speed command'
+        '%   w_cmd  [rad/s]  요 각속도 명령, 반시계 (왼쪽으로 돎) + / yaw-rate command, CCW (turning left) +'
+        '%   v_full [m/s]    throttle 400 count 일 때 궤도 속도 (0.20) / track speed at 400 counts of throttle'
+        '%   w_full [rad/s]  steer 400 count 일 때 요 각속도 (1.37) / yaw rate at 400 counts of steer'
+        '%   db_v, db_w [count]  ESC 데드밴드 역보상 크기 (47, 20) / ESC dead-band pre-compensation'
+        '% 출력 / Output'
+        '%   motor_pwm [2x1, count]  [왼쪽; 오른쪽] 서보 펄스 폭 [us] 와 같은 수, 1500 = 정지, 1100-1900'
+        '%                           [left; right] servo pulse width in microseconds, 1500 = stop, 1100-1900'
+        '%                           -> /motor_pwm (geometry_msgs/Point x, y) -> Arduino Mega -> C620 ESC'
+        '% 원리 / Principle'
+        '%   1) 실기에서는 PID 출력 (-0.5 ~ 0.5, 단위 없음) 이 V, W 로 들어간다. 1 판에는 내부 PID 가 없으므로'
+        '%      속도 명령을 같은 범위로 정규화: V = 0.5 v_cmd / v_full'
+        '%      The real model feeds PID outputs (-0.5 to 0.5, unitless) as V, W. v1 has no inner PID, so the'
+        '%      speed commands are normalised to the same range: V = 0.5 v_cmd / v_full'
+        '%   2) throttle = db tanh(V/0.02) + (400 - db) V/0.5 : 0 근처에서 db 만큼 뛰어 ESC 데드존을 건너뛴다'
+        '%      throttle jumps by db near zero to step over the ESC dead zone, then rises linearly to 400'
+        '%   3) left = throttle - steer, right = throttle + steer (steer > 0 이면 오른쪽이 빨라 왼쪽으로 돈다)'
+        '%   4) 오른쪽 모터는 거울 대칭으로 달려 있어 부호를 뒤집는다 / the right motor is mirrored, so its sign is inverted'
         'V = max(-0.5, min(0.5, 0.5 * v_cmd / v_full));'
         'W = max(-0.5, min(0.5, 0.5 * w_cmd / w_full));'
         'NEUTRAL = 1500;  MAX_OFFSET = 400;  V_EPS = 0.02;  W_EPS = 0.10;'
@@ -569,7 +670,15 @@ function addPwmMap2(m, P)
     ss = add_subsys(m, 'PwmMap', boxpos(P,2), {'V_bar','W_bar'}, {'motor_pwm'}, gnc_colour('allocation'));
     code = {
         'function motor_pwm = calc_pwm(V, W, db_v, db_w)'
-        '% 실기 MATLAB Function6 calc_pwm 과 같은 식 (throttle_sign = steer_sign = 1)'
+        '% calc_pwm (2 판) : 실기 MATLAB Function6 calc_pwm 과 같은 식 (throttle_sign = steer_sign = 1)'
+        '% calc_pwm (v2)   : identical to the real MATLAB Function6 calc_pwm'
+        '% 입력 / Inputs'
+        '%   V [-]  속도 PI 출력 0 ~ 0.5 (단위 없음, 0.5 = throttle 400 count) / speed PI output, unitless'
+        '%   W [-]  요 각속도 PI 출력 -0.5 ~ 0.5 (0.5 = steer 400 count) / yaw-rate PI output, unitless'
+        '%   db_v, db_w [count]  ESC 데드밴드 역보상 / ESC dead-band pre-compensation'
+        '% 출력 / Output'
+        '%   motor_pwm [2x1, count]  [왼쪽; 오른쪽], 1500 = 정지, 1100-1900 / [left; right], 1500 = stop'
+        '% 원리는 1 판 calc_pwm 머리말과 같음 / principle as in the v1 calc_pwm header'
         'NEUTRAL = 1500;  MAX_OFFSET = 400;  V_EPS = 0.02;  W_EPS = 0.10;'
         'db_v_c = max(0, min(MAX_OFFSET, db_v));'
         'db_w_c = max(0, min(MAX_OFFSET, db_w));'
@@ -590,9 +699,27 @@ function addPenCtrl(m, P)
                     {'stage_target_pos','pen_on'}, gnc_colour('control'));
     code = {
         'function [s_cmd, pen_on, sigma] = PenComp(lineAB, mode, pose, pen_d, stage_c)'
-        '% 펜 = 태그 + R(psi) (pen_d + (s - s_c)/1000)  을 s 에 대해 푼다'
-        '%   p_des : 스테이지 중앙 펜 위치를 직선에 내린 수선의 발'
+        '% PenComp : 펜 기구학 보상. 펜이 직선 위에 오도록 스테이지 위치 명령을 계산한다'
+        '% PenComp : pen kinematic compensation. Computes the stage position command that puts the pen on the line'
+        '% 입력 / Inputs'
+        '%   lineAB  [4x1, m]   [A; B] 펜이 그릴 직선, 벽면 좌표 (p1 높이, p2 수평) / pen line in wall coordinates'
+        '%   mode    [-]        미션 모드. 3 (직선 추종) 일 때만 보상 / mission mode; compensates only in mode 3'
+        '%   pose    [3x1: m, m, rad]  측정 태그 자세 [p1; p2; psi] (Nav) / measured tag pose'
+        '%   pen_d   [2x1, m]   태그 -> 펜 레버암, 바디 좌표 [x_B; y_B], 스테이지 중앙일 때 (= d)'
+        '%                      tag-to-pen lever arm in body axes, with the stage centred (= d)'
+        '%   stage_c [mm]       스테이지 중앙 (50.8, 두 축 같음) / stage centre (50.8 on both axes)'
+        '% 출력 / Outputs'
+        '%   s_cmd  [2x1, mm]   스테이지 목표 [X; Y] (X = x_B 전진 축, Y = y_B 왼쪽 축), 0-101.6'
+        '%                      stage target [X; Y] (X along x_B forward, Y along y_B left) -> /stage/target_pos'
+        '%   pen_on [0/1]       1 = 펜 다운 (펜 목표가 A 와 B 사이) / 1 = pen down (pen target between A and B)'
+        '%   sigma  [m]         직선 위 진행 거리 (A 에서 0, B 에서 L) / distance travelled along the line'
+        '% 원리 / Principle'
+        '%   펜 = 태그 + R(psi) (pen_d + (s - s_c)/1000) 을 s 에 대해 푼다. /1000 은 mm -> m.'
+        '%   Solve  pen = tag + R(psi) (pen_d + (s - s_c)/1000)  for s.  The 1000 converts m to mm.'
+        '%   p_des : 스테이지 중앙일 때 펜 위치 c0 를 직선에 내린 수선의 발'
+        '%           foot of the perpendicular from c0 (pen with the stage centred) to the line'
         '%   진행 방향은 로봇이 맡고, 스테이지는 직선과의 어긋남(횡오차 + heading 오차)만 지운다'
+        '%   The robot provides the motion along the line; the stage removes only the offset from the line.'
         'A = lineAB(1:2);  B = lineAB(3:4);'
         'L = norm(B - A);  u = (B - A) / max(L, 1e-9);'
         'pT = pose(1:2);'
@@ -641,7 +768,13 @@ function addRobotPlant(m, P)
     %  1) ESC: PWM count -> 궤도 속도 명령
     fcn_box(ss, 'EscInv', {
         'function v_trk_cmd = EscInv(motor_pwm, pwm_dz, k_pwm)'
-        '% calc_pwm 의 역: 우측 반전 해제 -> ESC 데드존 -> count 를 궤도 속도로 [vL; vR]'
+        '% EscInv : 가상 ESC. PWM -> 궤도 속도 명령 (calc_pwm 의 역) / virtual ESC: PWM -> track speed command'
+        '% 입력 / Inputs'
+        '%   motor_pwm [2x1, count] /motor_pwm [왼쪽; 오른쪽] / [left; right]'
+        '%   pwm_dz [count] ESC 데드존 (30) / ESC dead zone;   k_pwm [m/s per count] 기울기 / slope'
+        '% 출력 / Output'
+        '%   v_trk_cmd [2x1, m/s]  [vL; vR] 궤도 속도 명령 / track speed commands'
+        '% 원리: 우측 반전 해제 -> 데드존 -> count 를 속도로 / undo the right-motor inversion, dead zone, scale'
         'pL =  (motor_pwm(1) - 1500);'
         'pR = -(motor_pwm(2) - 1500);'
         'v_trk_cmd = k_pwm * [sign(pL) * max(0, abs(pL) - pwm_dz);'
@@ -654,7 +787,14 @@ function addRobotPlant(m, P)
     %  3) 속도 오차 (6WP: V_cmd - v_actual, 둘째 성분은 L*omega)
     fcn_box(ss, 'SpeedErr', {
         'function [e_v, e_Lw] = SpeedErr(v_trk, V_act, B_eff, L_r)'
-        '% 궤도 속도 명령 -> 차체 [v; w] 명령, 6WP 와 같이 둘째 성분은 L*omega 단위'
+        '% SpeedErr (운동모델) : 궤도 속도 명령 -> 차체 속도 오차. 6WP 와 같이 둘째 성분은 L*omega 단위'
+        '% SpeedErr (plant)    : track speed command -> body speed error; 2nd component in L*omega units as in 6WP'
+        '% 입력 / Inputs'
+        '%   v_trk [2x1, m/s]  지연을 거친 궤도 속도 명령 [vL; vR] / lagged track speed commands'
+        '%   V_act [2x1: m/s, rad/s]  실제 차체 속도 [v; omega] / actual body speed'
+        '%   B_eff [m]  조향 유효 궤도 간격 / effective track spacing;   L_r [m]  관성 반경 / radius of gyration'
+        '% 출력 / Outputs'
+        '%   e_v [m/s] = (vL+vR)/2 - v,   e_Lw [m/s] = L_r ((vR-vL)/B_eff - omega)'
         'v_c = 0.5 * (v_trk(1) + v_trk(2));'
         'w_c = (v_trk(2) - v_trk(1)) / B_eff;'
         'e_v  = v_c - V_act(1);'
@@ -668,7 +808,12 @@ function addRobotPlant(m, P)
     %  5) Control allocation (6WP 와 같은 식) + 구동력 한계
     fcn_box(ss, 'Control_allocation', {
         'function [Fr, Fl] = Control_allocation(tau_X, tau_N, b_trk, L_r)'
-        '% 6WP_sim Control allocation: B_tau = [Surge force; Yawing moment / L]'
+        '% Control_allocation : 차체 힘·모멘트 -> 좌우 궤도 구동력 (6WP_sim 과 같은 식)'
+        '% Control_allocation : body force and moment -> right/left track forces (as in 6WP_sim)'
+        '% 입력 / Inputs : tau_X [N] 전진 힘 / surge force;  tau_N [N] 요 모멘트/L / yaw moment divided by L'
+        '%                 b_trk [m] 궤도 간격 / track spacing;  L_r [m]'
+        '% 출력 / Outputs: Fr, Fl [N] 오른쪽·왼쪽 궤도 구동력 / right and left track forces'
+        '% 원리: [tau_X; tau_N] = [1 1; b/2L -b/2L] [Fr; Fl] 를 푼다 / solve this 2x2 system'
         'B_tilde = [1, 1; b_trk/(2*L_r), -b_trk/(2*L_r)];'
         'F = B_tilde \ [tau_X; tau_N];'
         'Fr = F(1);  Fl = F(2);'}, ...
@@ -676,7 +821,9 @@ function addRobotPlant(m, P)
     %  6) ICR 이동량 u (6WP compute_u) 와 그 미분
     fcn_box(ss, 'compute_u', {
         'function u = compute_u(V_act, alpha_s)'
-        '% 6WP_sim compute_u: 회전 중심(ICR)의 길이방향 이동량'
+        '% compute_u (6WP_sim) : 회전 중심(ICR)의 길이방향 이동량 / longitudinal shift of the ICR'
+        '% 입력 / Inputs : V_act [m/s, rad/s];  alpha_s [rad] ICR 이동각 (0 이면 u = 0) / ICR shift angle'
+        '% 출력 / Output : u [m]'
         'R_turn = abs(V_act(1) / max(0.01, abs(V_act(2))));'
         'u = -sign(V_act(2)) * R_turn * sin(alpha_s);'}, ...
         {'from:V_act','const:alpha_s'}, {'tag:u'}, 1750, 400);
@@ -684,6 +831,14 @@ function addRobotPlant(m, P)
     %  7) Dynamics (6WP 식, 벽면판)
     fcn_box(ss, 'Dynamics', {
         'function V_dot = Dynamics(q, V_act, u, u_dot, Fr, Fl, dyn_p)'
+        '% Dynamics : 궤도차량 동역학 (Zou 2018), 벽면판 / tracked-vehicle dynamics (Zou 2018), wall version'
+        '% 입력 / Inputs'
+        '%   q [3x1: m, m, rad]  로봇 중심 자세 / robot centre pose;  V_act [2x1: m/s, rad/s] [v; omega]'
+        '%   u [m], u_dot [m/s]  ICR 이동량과 그 미분 / ICR shift and its rate'
+        '%   Fr, Fl [N]  궤도 구동력 / track forces'
+        '%   dyn_p = [m kg; l m; b m; mu_l -; mu_t -; N_mag N; g m/s^2]'
+        '% 출력 / Output : V_dot [2x1: m/s^2, rad/s^2]'
+        '% 원리 / Principle : M~ nu_dot + C~ nu + S^T (f1 + f2) = B~ tau + S^T f_g,  nu = [v; L omega]'
         '% 6WP_sim Dynamics 와 같은 식 (궤도차량 동역학, 논문 Table 1 모델). 벽면판에서 바꾼 점:'
         '%  (1) 바닥 하중 W -> 자석 흡착력 N_mag : 벽에서 마찰을 만드는 수직력'
         '%  (2) 중력 f_g = [-m g; 0; 0] 추가    : 벽면 좌표 p1 = 위'
@@ -715,6 +870,10 @@ function addRobotPlant(m, P)
     %  8) Kinematics (6WP: q_dot = S_mat * v) + 벽면 외란
     fcn_box(ss, 'Kinematics', {
         'function q_dot = Kinematics(V_act, q, u, t, dist_p)'
+        '% Kinematics : 차체 속도 -> 중심 자세 변화율 (+ 벽면 외란) / body speed -> centre pose rate (+ wall disturbance)'
+        '% 입력 / Inputs : V_act [m/s, rad/s];  q [m, m, rad] 중심 자세 / centre pose;  u [m];  t [s]'
+        '%                 dist_p = [slip_k -; 요철 진폭 A rad / wobble amplitude; 주파수 f Hz / frequency]'
+        '% 출력 / Output : q_dot [3x1: m/s, m/s, rad/s]'
         '% 6WP_sim Kinematics: q_dot = S_mat * [v; L*omega]  (여기서는 q(3) = psi 로 정리)'
         '% 벽면 외란 (실기 영상·ZeroKey 로그에서 본 현상, [실측 필요]):'
         '%   자석 궤도 크리프 : 이동 속도의 slip_k 배만큼 중력 방향(-p1) 으로 밀린다'
@@ -732,6 +891,8 @@ function addRobotPlant(m, P)
         {'from:q_dot'}, {'tag:q_act'}, 3050, 420, 50, 40);
     fcn_box(ss, 'TagPoint', {
         'function q_tag = TagPoint(q_c, r_tag)'
+        '% TagPoint : 입력 q_c [m, m, rad] 중심 자세, r_tag [2x1, m] -> 출력 q_tag [m, m, rad] 태그 자세 (= q_true)'
+        '% TagPoint : input centre pose q_c and r_tag -> output tag pose q_tag (= q_true)'
         '% 중심 -> 태그: p = c + R(psi) r_tag. 회전하면 태그는 반경 |r_tag| 원호를 그린다'
         '% Centre -> tag: p = c + R(psi) r_tag. While turning the tag moves on an arc of radius |r_tag|'
         'R = [cos(q_c(3)) -sin(q_c(3)); sin(q_c(3)) cos(q_c(3))];'
@@ -747,6 +908,10 @@ function addSensors(m, P)
     fan_inports(ss);
     fcn_box(ss, 'ZkWorld', {
         'function zk = ZkWorld(q_true, zk_ywall, noise)'
+        '% ZkWorld : 가상 ZeroKey 위치 / virtual ZeroKey position'
+        '% 입력 / Inputs : q_true [m, m, rad] 참 태그 자세 / true tag pose;  zk_ywall [m] 벽 법선 오프셋 / wall-normal offset'
+        '%                 noise [3x1, m] 백색 잡음 (sigma 1 mm) / white noise'
+        '% 출력 / Output : zk [3x1, m] 월드 [x; y; z] -> 지연 50 ms -> 20 Hz -> /zerokey/position'
         '% 벽면 (p1, p2) -> ZeroKey 월드 좌표 (x = p2, y = 벽 법선 오프셋, z = p1) + 측정 잡음'
         'zk = [q_true(2); zk_ywall; q_true(1)] + noise(:);'}, ...
         {'from:i_q_true','const:zk_ywall','rand:ZkNoise:zk_sigma^2:zk_Ts:[11 12 13]'}, {'tag:zk_raw'}, 330, 60);
@@ -756,6 +921,8 @@ function addSensors(m, P)
         {'from:zk_del'}, {'zk_meas'}, 1250, 60, 40, 40);
     fcn_box(ss, 'ZkVel', {
         'function zkv = ZkVel(q_true, V_true, r_tag)'
+        '% ZkVel : 입력 q_true [m, m, rad], V_true [m/s, rad/s], r_tag [m] -> 출력 zkv [3x1, m/s] -> /zerokey/vel'
+        '% ZkVel : inputs q_true, V_true, r_tag -> output zkv [3x1, m/s] world velocity -> /zerokey/vel'
         '% ZeroKey 속도 (월드): x = p2 방향, z = p1 방향. 태그 속도 = 중심 속도 + omega J R r_tag'
         '% ZeroKey velocity (world): x = p2, z = p1. Tag velocity = centre velocity + omega J R r_tag'
         'psi = q_true(3);  R = [cos(psi) -sin(psi); sin(psi) cos(psi)];'
@@ -766,6 +933,9 @@ function addSensors(m, P)
     if ver2()
         fcn_box(ss, 'ImuQuat', {
             'function imu = ImuQuat(q_true, V_true, t, imu_drift, noise, gnoise, imu_gyro_bias)'
+            '% ImuQuat (2 판) : 입력 q_true, V_true, t [s], imu_drift [rad/s], noise [rad], gnoise [rad/s], imu_gyro_bias [rad/s]'
+            '%                  출력 imu [5x1] = [qw; qx; qy; qz; 자이로 z rad/s] -> /imu/data'
+            '% ImuQuat (v2)   : output imu = [quaternion; gyro z] -> /imu/data'
             '% IMU 요각 -> 쿼터니언 (1 판과 같은 식) + 자이로 z = 참 요 각속도 + 바이어스 + 잡음'
             'psi = q_true(3) + imu_drift * t + noise;'
             'imu = [cos(psi/2); 0; 0; sin(psi/2); V_true(2) + imu_gyro_bias + gnoise];'}, ...
@@ -774,6 +944,8 @@ function addSensors(m, P)
     else
         fcn_box(ss, 'ImuQuat', {
             'function quat = ImuQuat(q_true, t, imu_drift, noise)'
+            '% ImuQuat : 입력 q_true [m, m, rad], t [s], imu_drift [rad/s], noise [rad] -> 출력 quat [4x1] (w,x,y,z) -> /imu/data'
+            '% ImuQuat : inputs true pose, time, drift rate, noise -> output attitude quaternion -> /imu/data'
             '% IMU 요각 = 참 heading + 드리프트 + 잡음 -> 쿼터니언 (6WP_sim Euler2Quat 와 같은 식)'
             'psi = q_true(3) + imu_drift * t + noise;'
             'quat = [cos(psi/2); 0; 0; sin(psi/2)];'}, ...
@@ -785,6 +957,8 @@ function addSensors(m, P)
     %  이 시뮬레이션의 제어기는 IMU 요각을 쓰지만, 실기 모델을 그대로 붙여도 돌도록 같이 발행한다
     fcn_box(ss, 'ZkQuat', {
         'function quat = ZkQuat(q_true, noise)'
+        '% ZkQuat : 입력 q_true, noise [rad] -> 출력 quat [4x1] -> /zerokey/orientation (이 제어기는 쓰지 않음)'
+        '% ZkQuat : output quaternion -> /zerokey/orientation (not used by this controller, kept for the real models)'
         '% ZeroKey INS 요각 = 참 heading + 잡음 (드리프트 없음, 대신 IMU 보다 잡음이 크다) -> 쿼터니언'
         'psi = q_true(3) + noise;'
         'quat = [cos(psi/2); 0; 0; sin(psi/2)];'}, ...
@@ -810,6 +984,11 @@ function addStagePlant(m, P)
     %  2) 펌웨어 궤적 생성 (move abs : maxspeed · accel 로 사다리꼴 속도)
     fcn_box(ss, 'ZaberTraj', {
         'function x_t_dot = ZaberTraj(s_goal, x_t, stage_vmax, stage_acc, stage_travel)'
+        '% ZaberTraj : Zaber 펌웨어 궤적 생성기의 모델 (우리가 바꿀 수 없는 상용 부분)'
+        '% ZaberTraj : model of the Zaber firmware trajectory generator (commercial, not ours to change)'
+        '% 입력 / Inputs : s_goal [2x1, mm] move abs 목표 / move abs target;  x_t [4x1: mm, mm, mm/s, mm/s]'
+        '%                 stage_vmax [mm/s] maxspeed;  stage_acc [mm/s^2] accel;  stage_travel [mm] 행정 / travel'
+        '% 출력 / Output : x_t_dot [4x1: mm/s, mm/s, mm/s^2, mm/s^2]'
         '% Zaber 펌웨어의 move abs 궤적 (두 축 따로).  상태 x_t = [s_t(2) mm; v_t(2) mm/s]'
         '%   목표까지 남은 거리에서 멈출 수 있는 속도 sqrt(2 a |e|) 와 maxspeed 중 작은 값으로 간다'
         '%   (가속·감속 한계 = accel 설정).  새 move abs 가 오면 그 자리에서 목표만 바뀐다'
@@ -825,6 +1004,13 @@ function addStagePlant(m, P)
     %  3) 스테퍼 + 이동 질량 (데이터시트: 이동 질량 0.063 kg, 스테이지 0.39 kg, 추력-속도 곡선)
     fcn_box(ss, 'ZaberServo', {
         'function x_dot = ZaberServo(x_t, x_s, q_true, stg_p, Fv_v, Fv_F)'
+        '% ZaberServo : Zaber 내부 위치 서보 + 캐리지 질량의 모델 (상용 펌웨어, 명령만 줄 수 있음)'
+        '% ZaberServo : model of the internal Zaber position servo and carriage mass (commercial; command only)'
+        '% 입력 / Inputs : x_t [mm, mm/s] 궤적 / trajectory;  x_s [6x1: m, m, m/s, m/s, m s, m s] 캐리지 상태 / carriage state'
+        '%                 q_true [m, m, rad] (중력 방향 계산 / for the gravity direction)'
+        '%                 stg_p = [m_X kg; m_Y kg; c N s/m; Kp N/m (2); Kd N s/m (2); Ki N/(m s) (2); g m/s^2]'
+        '%                 Fv_v [mm/s], Fv_F [N]  추력-속도 곡선 / thrust-speed curve'
+        '% 출력 / Output : x_dot [6x1: m/s, m/s, m/s^2, m/s^2, m, m]'
         '% Zaber X-LSM100B 두 축 (X = 아래 축, Y = 위 축).  상태 x_s = [s(2) m; v(2) m/s; 적분(2)]'
         '%   스테퍼는 궤적을 단단한 스프링처럼 따라간다 -> 높은 대역의 위치 루프로 나타낸다'
         '%   낼 수 있는 힘은 속도에 따라 줄어든다 (데이터시트 Thrust-Speed, B 형 24 V 곡선 Fv_v -> Fv_F)'
@@ -846,6 +1032,8 @@ function addStagePlant(m, P)
         {'from:x_s_dot'}, {'tag:x_s'}, 1500, 480, 50, 40);
     fcn_box(ss, 'Encoder', {
         'function stage_pos = Encoder(x_s, stage_travel)'
+        '% Encoder : 입력 x_s [m, m/s, m s], stage_travel [mm] -> 출력 stage_pos [2x1, mm] -> /stage/pos (20 Hz)'
+        '% Encoder : output = position reported by get pos [mm], clipped at the travel ends'
         '% 내장 엔코더 위치 [mm] (get pos 가 돌려주는 값), 행정 끝에서 막힌다'
         'stage_pos = min(max(1000 * x_s(1:2), 0), stage_travel);'}, ...
         {'from:x_s','const:stage_travel'}, {'stage_pos'}, 2100, 60);
@@ -869,6 +1057,11 @@ function addPenTrace(m, P)
     ss = add_subsys(m, 'PenTrace', [P(1) P(2) P(1)+150 P(2)+80], {}, {}, gnc_colour('measurement'));
     fcn_box(ss, 'PenTraceFcn', {
         'function [pen_true, pen_nocomp, e_pen, e_nocomp] = PenTraceFcn(q_true, stage_pos, lineAB, pen_d, stage_c)'
+        '% PenTraceFcn : 참값으로 계산한 펜 위치와 횡오차 (평가 전용, 제어기는 모름)'
+        '% PenTraceFcn : true pen position and cross error from true values (evaluation only)'
+        '% 입력 / Inputs : q_true [m, m, rad] 참 태그 자세;  stage_pos [2x1, mm] 엔코더;  lineAB [4x1, m];'
+        '%                 pen_d [2x1, m];  stage_c [mm]'
+        '% 출력 / Outputs: pen_true, pen_nocomp [2x1, m];  e_pen, e_nocomp [m]'
         '% pen_true   : 스테이지가 실제로 움직인 결과의 펜 위치 [p1; p2]'
         '% pen_nocomp : 스테이지를 중앙에 고정했을 때 펜 위치 (보상 없음 비교)'
         '% e_*        : 직선에 대한 부호 있는 횡오차 [m] (직선 진행방향의 왼쪽 +)'

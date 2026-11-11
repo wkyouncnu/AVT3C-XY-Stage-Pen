@@ -2,12 +2,12 @@ function make_fig_math()
 %MAKE_FIG_MATH  README 4 장의 수식 그림 두 장을 LaTeX 글자로 그린다
 %   Draws the two LaTeX-labelled figures of README chapter 4.
 %     ../fig_geometry.png  벽면 좌표계, 로봇·태그·레버암·스테이지·펜·직선·횡오차 기하
-%     ../fig_control.png   제어 구조 (외부 루프 -> PWM -> 내부 PI -> 동역학 / 펜 보상 -> 스테이지 서보)
+%     (제어 구조 그림은 src/diagram_control.tex, TikZ)
 %   모든 기호는 README 4 장의 식과 같다. 수치는 그림용 예시 (실제 값 아님).
 
 here = fileparts(mfilename('fullpath'));
 geometry(fullfile(here, '..', 'fig_geometry.png'));
-control(fullfile(here, '..', 'fig_control.png'));
+% 제어 구조는 TikZ (src/diagram_control.tex) 로 옮김 / control structure moved to TikZ
 frames(fullfile(here, '..', 'fig_frames.png'));
 rotation(fullfile(here, '..', 'fig_rotation.png'));
 pen_example(fullfile(here, '..', 'fig_pen_example.png'));

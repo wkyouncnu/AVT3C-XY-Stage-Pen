@@ -12,6 +12,25 @@ ROS 2 노드: Zaber X-LSM-E XY 스테이지 브리지 (rclpy)
 
 파라미터: port, x_device, y_device, publish_rate, cmd_rate, cmd_deadband, cmd_timeout, home_on_start
 실행:     python3 zaber_stage_node.py --ros-args -p port:=/dev/ttyUSB0
+
+원리
+  Zaber 스테이지의 위치 서보는 펌웨어 안에 있어 바꿀 수 없다. 이 노드는 위치 명령(move abs)을
+  보내고 위치(get pos)를 읽어 토픽으로 내보내는 다리일 뿐이며, 제어 법칙은 Simulink 쪽 PenComp 에 있다.
+  X 축 = 로봇 바디 x_B (전진), Y 축 = y_B (왼쪽). 0 = 홈(모서리), 50.8 mm = 중앙, 101.6 mm = 끝.
+
+ROS 2 node: Zaber X-LSM-E XY stage bridge (rclpy)
+
+Subscribes
+  /stage/target_pos  geometry_msgs/Point    x, y [mm]   -> last value sent as move abs at cmd_rate (non-blocking)
+  /stage/cmd_vel     geometry_msgs/Vector3  x, y [mm/s] -> move vel (auto stop after cmd_timeout without a new command)
+  /stage/stop        std_msgs/Empty                     -> decelerate and stop
+Publishes
+  /stage/pos         geometry_msgs/PointStamped x, y [mm]  (publish_rate Hz)
+
+Principle
+  The position servo runs inside the Zaber firmware and cannot be changed. This node only forwards
+  position commands (move abs) and reads positions (get pos); the control law is PenComp in Simulink.
+  X axis = robot body x_B (forward), Y axis = y_B (left). 0 = home (corner), 50.8 mm = centre, 101.6 mm = end.
 """
 import threading
 

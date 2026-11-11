@@ -1,0 +1,24 @@
+\documentclass[tikz,border=6pt]{standalone}
+\input{xystyle}
+% diagram_modes : ModeChart (Stateflow) 상태와 전이 조건, 모드마다 로봇·스테이지·펜이 하는 일
+\begin{document}
+\begin{tikzpicture}[node distance=2.15cm]
+\tikzset{st/.style={key, minimum width=2.55cm, minimum height=1.25cm}, do/.style={font=\footnotesize, align=center, anchor=north, text=ink}}
+\node[st] (m1) {\textbf{1} Goto\_Start\\ 출발점으로};
+\node[st, right=of m1] (m2) {\textbf{2} Turning\\ 제자리 회전};
+\node[st, right=of m2] (m3) {\textbf{3} Line\_Tracking\\ 직선 추종 + 펜};
+\node[st, right=of m3] (m4) {\textbf{4} Stop\_Destination\\ 끝점 유지};
+\node[blk, right=of m4, minimum width=1.6cm, minimum height=1.25cm] (m5) {\textbf{5} Done\\ 정지};
+\draw[sig] (m1) -- node[lab, above]{$\lVert c_A - \hat c\rVert$}  node[lab, below]{$< d_{reach}$} (m2);
+\draw[sig] (m2) -- node[lab, above]{1 s 뒤}  node[lab, below]{$\lvert\theta_l - \hat\psi\rvert < \theta_{tol}$} (m3);
+\draw[sig] (m3) -- node[lab, above]{남은 거리}  node[lab, below]{$< d_{reach}$} (m4);
+\draw[sig] (m4) -- node[lab, above]{2 s 뒤} (m5);
+\draw[sig] ($(m1.north)+(0,0.6)$) -- (m1.north);
+\node[do] at ($(m1.south)+(0,-0.15)$) {로봇: $v,\ \omega$ 로 중심을 $c_A$ 로\\ 스테이지: 중앙\\ 펜: 올림};
+\node[do] at ($(m2.south)+(0,-0.15)$) {로봇: $v = 0$, $\omega$ 만\\ 스테이지: 중앙\\ 펜: 올림};
+\node[do] at ($(m3.south)+(0,-0.15)$) {로봇: $v_r$ 로 진행, $\omega$ 로 조향\\ 스테이지: 식 (14) 로 보상\\ 펜: $0 \le \sigma \le L$ 에서 내림};
+\node[do] at ($(m4.south)+(0,-0.15)$) {로봇: 끝점 유지\\ 스테이지: 중앙\\ 펜: 올림};
+\node[note, anchor=north west] at ($(m1.south west)+(0,-1.75)$) {$d_{reach} = 0.03$ m,\ \ $\theta_{tol} = 1^{\circ}$ (실기 Chart 와 같은 값).\ \
+  $\hat c = \hat p - R(\hat\psi)\,r_{tag}$: 추정 중심,\ $c_A$: 출발 중심,\ $\theta_l$: 직선 방향,\ $\sigma$: 직선 위 진행 거리,\ $L = \lVert B - A\rVert$};
+\end{tikzpicture}
+\end{document}

@@ -1,0 +1,55 @@
+\documentclass[tikz,border=6pt]{standalone}
+\input{xystyle}
+% diagram_tags : ZeroKey 태그 배치 세 안 (바디 좌표, 위에서 본 그림, 축척 1 m = 12 cm)
+\begin{document}
+\begin{tikzpicture}
+\newcommand{\robot}[1]{%
+  \begin{scope}[shift={(#1,0)}, scale=12]
+    \fill[hwbg] (-0.21,-0.1715) rectangle (0.21,0.1715);
+    \draw[ink, line width=0.6pt] (-0.21,-0.1715) rectangle (0.21,0.1715);
+    \fill[mute!35] (-0.21,0.135) rectangle (0.21,0.1715);
+    \fill[mute!35] (-0.21,-0.1715) rectangle (0.21,-0.135);
+    \draw[navy, dashed, line width=0.6pt] (-0.0508,-0.0508) rectangle (0.0508,0.0508);
+    \draw[->, ink, line width=0.6pt] (0.10,-0.11) -- (0.19,-0.11) node[right, font=\footnotesize, inner sep=1pt] {$x_B$};
+    \draw[->, ink, line width=0.6pt] (0.10,-0.11) -- (0.10,-0.04) node[above, font=\footnotesize, inner sep=1pt] {$y_B$};
+    \fill[red!70!black] (0,0) circle (0.006);
+    \node[font=\footnotesize, anchor=north, inner sep=2pt] at (0,-0.006) {$P$};
+  \end{scope}}
+\newcommand{\ztag}[4]{% x y 이름 위치
+  \fill[ink] ($(#1,#2)+(-0.11,-0.11)$) rectangle ($(#1,#2)+(0.11,0.11)$);
+  \node[font=\footnotesize, #4, inner sep=2pt] at (#1,#2) {#3};}
+% (a) 현재
+\robot{0}
+\ztag{-0.96}{0.72}{$T_1$}{above}
+\draw[sig, draw=navy] (-0.96,0.72) -- node[lab, below left, text=navy, pos=0.5]{$d$} (0,0);
+\node[blk, draw=none, fill=none, anchor=north, font=\footnotesize] at (0,-2.25) {\textbf{(a) 현재: 로봇에 1 개}\\[3pt]
+  $\hat P = \hat p_1 + R(\hat\psi)(d + \Delta s)$\\[2pt]
+  $\sigma_e^2 \approx \sigma_p^2 + \ell_u^2\big(\sigma_\psi^2 + \tfrac{(\dot b_\psi T)^2}{3}\big)$\\[2pt]
+  예측 1.25 mm,\ 시뮬레이션 1.19 mm};
+% (b) 로봇 2 개, 펜을 가운데 두고 대칭
+\robot{6.4}
+\ztag{5.44}{0.72}{$T_1$}{above}
+\ztag{7.36}{-0.72}{$T_2$}{below}
+\draw[navy, line width=0.5pt, dashed] (5.44,0.72) -- (7.36,-0.72);
+\node[font=\footnotesize, text=navy, anchor=west] at (7.0,0.05) {$b = 0.2$ m};
+\node[blk, draw=none, fill=none, anchor=north, font=\footnotesize] at (6.4,-2.25) {\textbf{(b) 로봇에 2 개 (펜을 가운데에)}\\[3pt]
+  $\hat P = \tfrac12(\hat p_1 + \hat p_2) + R(\hat\psi)\,\Delta s$\\[2pt]
+  $\sigma_e^2 \approx \tfrac12\sigma_p^2 + \lvert\Delta s\rvert^2\sigma_\psi^2$\\[2pt]
+  센서 항 0.71 mm,\ 근사 시뮬레이션 0.84 mm};
+% (c) 로봇 1 개 + 펜 캐리지 1 개
+\robot{12.8}
+\ztag{11.84}{0.72}{$T_1$}{above}
+\ztag{12.8}{0.36}{$T_3$}{left=3pt}
+\draw[->, navy, line width=0.5pt] (13.2,0.36) -- (13.55,0.36);
+\draw[->, navy, line width=0.5pt] (13.2,0.36) -- (13.2,0.70);
+\node[font=\footnotesize, text=navy, anchor=west] at (13.6,0.36) {캐리지와 함께};
+\node[blk, draw=none, fill=none, anchor=north, font=\footnotesize] at (12.8,-2.25) {\textbf{(c) 로봇 1 개 + 펜 캐리지 1 개}\\[3pt]
+  $\hat P = \hat p_3 + R(\hat\psi)\,r_3$\ \ ($r_3$: 태그 $\to$ 펜 끝)\\[2pt]
+  $\sigma_e^2 \approx \sigma_p^2 + \lvert r_3\rvert^2\sigma_\psi^2$\\[2pt] 센서 항 1.0 mm,\ 근사 시뮬레이션 1.07 mm\\[2pt]
+  스테이지를 거치는 되먹임 (지연 50 ms)};
+% 범례
+\node[note, anchor=north west] at (-2.6,-5.0) {회색 띠: 궤도.\ \ 남색 점선 사각형: 스테이지 행정 $\pm 50.8$ mm (펜 $P$ 둘레).\ \ 검은 사각형: ZeroKey 태그.\ \
+  $T_1 = r_{tag} = (-0.08,\ 0.06)$ m,\ $T_2 = (0.08,\ -0.06)$ m.\\
+  센서 항은 식 (22) 의 확장 ($\sigma_p = 1$ mm, $\sigma_\psi = 0.3^{\circ}$, 두 태그 잡음 독립 가정). 근사 시뮬레이션: (b) ZeroKey 잡음 $\sigma_p/\sqrt2$ + IMU 영향 0, (c) IMU 영향 0.\\ 센서 외 오차 (요철·크리프·스테이지 동특성) 바닥 약 0.41 mm 가 더해짐. 두 태그가 같은 다중 경로 오차를 받으면 (b) 의 이득은 줄어듦};
+\end{tikzpicture}
+\end{document}

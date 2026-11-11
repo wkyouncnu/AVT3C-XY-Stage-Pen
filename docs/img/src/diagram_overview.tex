@@ -1,0 +1,48 @@
+\documentclass[tikz,border=6pt]{standalone}
+\input{xystyle}
+% diagram_overview : 시스템 구성 (장비 — NUC 노드 — Simulink 제어기), 가상 실험은 장비·노드 자리를 모델이 대신
+\begin{document}
+\begin{tikzpicture}
+\tikzset{d/.style={hw, minimum width=3.3cm, minimum height=0.95cm}, n/.style={blk, minimum width=3.4cm, minimum height=0.95cm},
+         c/.style={key, minimum width=3.3cm, minimum height=0.95cm}}
+% ---- 장비 (벽 위의 로봇)
+\node[d] (zkd) at (0,2.4)  {ZeroKey RTLS 태그\\ \footnotesize 위치 $p$, 20 Hz};
+\node[d] (imd) at (0,1.2)  {Xsens MTi IMU\\ \footnotesize heading $\psi$, 100 Hz};
+\node[d] (esc) at (0,0)    {C620 ESC $\times 2$ + 궤도\\ \footnotesize 로봇 구동 (macro)};
+\node[d] (stg) at (0,-1.2) {Zaber X-LSM100B $\times 2$\\ \footnotesize XY 스테이지 (micro)};
+\node[d] (pen) at (0,-2.4) {마커 (펜)\\ \footnotesize 벽에 직선};
+\draw[sig] (stg) -- (pen);
+\begin{scope}[on background layer]
+\node[grp, fit=(zkd)(pen), label={[ttl]north west:AVT-3C 로봇 (수직 철판 벽, 자석 흡착)}] (G1) {};
+\end{scope}
+% ---- NUC 노드
+\node[n] (zkn) at (5.6,2.4)  {ZeroKey 노드};
+\node[n] (imn) at (5.6,1.2)  {Xsens 노드};
+\node[n] (ard) at (5.6,0)    {Arduino Mega 브리지};
+\node[n] (zbn) at (5.6,-1.2) {\texttt{zaber\_stage\_node.py}};
+\draw[sig] (zkd) -- (zkn); \draw[sig] (imd) -- (imn);
+\draw[sig] (ard) -- node[lab, above]{PWM} (esc);
+\draw[sig] ($(zbn.west)+(0,0.15)$) -- node[lab, above]{RS-232} ($(stg.east)+(0,0.15)$);
+\draw[sig] ($(stg.east)+(0,-0.15)$) -- node[lab, below]{\texttt{get pos}} ($(zbn.west)+(0,-0.15)$);
+\begin{scope}[on background layer]
+\node[grp, fit=(zkn)(zbn), label={[ttl]north west:Intel NUC (Ubuntu 24.04, ROS 2 Jazzy)}] (G2) {};
+\end{scope}
+% ---- Simulink 제어기 (NUC 노드 줄에 맞춤)
+\node[c, minimum height=2.15cm] (nav) at (13.2,1.8) {RosIn $\to$ Nav\\ \footnotesize $\hat p,\ \hat\psi$};
+\node[c] (rc)  at (13.2,0.0) {Mission $\to$ RobotCtrl\\ \footnotesize $\to$ PwmMap: $v_c,\ \omega_c$};
+\node[c] (pc)  at (13.2,-1.2) {PenCtrl\\ \footnotesize $s^{\star} = s_c + 1000\,\Delta s$};
+\draw[sig] (nav) -- (rc);
+\draw[sig] (nav.east) -- ++(0.35,0) |- (pc.east);
+\begin{scope}[on background layer]
+\node[grp, fit=(nav)(pc), label={[ttl]north west:Simulink 제어기 ($T_s = 0.01$ s)}] (G3) {};
+\end{scope}
+% ---- 토픽
+\draw[sig] (zkn.east) -- node[lab, above, align=center]{\tp{/zerokey/position}\\{}\tp{/zerokey/vel}} (zkn.east -| nav.west);
+\draw[sig] (imn.east) -- node[lab, above]{\tp{/imu/data}} (imn.east -| nav.west);
+\draw[sig] (rc.west) -- node[lab, above]{\tp{/motor\_pwm} [count]} (ard.east);
+\draw[sig] ($(pc.west)+(0,0.15)$) -- node[lab, above]{\tp{/stage/target\_pos} [mm]} ($(zbn.east)+(0,0.15)$);
+\draw[sig] ($(zbn.east)+(0,-0.15)$) -- node[lab, below]{\tp{/stage/pos} [mm]} ($(pc.west)+(0,-0.15)$);\node[note, anchor=north west, text width=17cm] at ($(G1.south west)+(0,-0.15)$) {%
+  실기: \texttt{XY\_2\_pen\_ros2(\_v2).slx} 가 오른쪽 상자 (\tp{ROS\_DOMAIN\_ID} = 0).\ \
+  가상 실험: \texttt{XY\_1\_pen\_sim(\_v2).slx} 안의 RobotPlant·Sensors·StagePlant 가 왼쪽·가운데를 대신하고 같은 토픽을 주고받음 (도메인 77).};
+\end{tikzpicture}
+\end{document}

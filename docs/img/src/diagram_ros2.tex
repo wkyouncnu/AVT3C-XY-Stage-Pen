@@ -1,0 +1,35 @@
+\documentclass[tikz,border=6pt]{standalone}
+\input{xystyle}
+% diagram_ros2 : 실기 ROS 2 그래프 (노드 = 상자, 토픽 = 화살표). 형식·필드·단위·주기
+\begin{document}
+\begin{tikzpicture}
+\node[key, minimum width=4.2cm, minimum height=7.2cm] (c) at (0,0) {\textbf{Simulink 제어기 노드}\\[3pt]
+  \texttt{XY\_2\_pen\_ros2(\_v2).slx}\\[2pt] (가상 실험: \texttt{XY\_1} 윗줄)\\[8pt]
+  RosIn $\to$ Nav $\to$ Mission\\ $\to$ RobotCtrl $\to$ PwmMap\\ PenCtrl $\to$ RosOut\\[8pt]
+  주기 $T_s = 0.01$ s};
+% ---- 왼쪽: 센서 노드
+\node[hw, minimum width=3.4cm, minimum height=2.0cm] (zk) at (-10.0,2.3) {\textbf{ZeroKey 노드}\\ RTLS 태그 1개\\ (INSMODE2)};
+\node[hw, minimum width=3.4cm, minimum height=1.6cm] (xs) at (-10.0,-1.6) {\textbf{Xsens 노드}\\ MTi IMU (USB)};
+\draw[sig] ($(zk.east)+(0,0.55)$) -- node[lab, above]{\tp{/zerokey/position}} node[lab, below, pos=0.45]{\tp{PointStamped}: \tp{point.x,y,z} [m], 20 Hz}
+  ($(c.west)+(0,2.85)$);
+\draw[sig] ($(zk.east)+(0,-0.55)$) -- node[lab, above]{\tp{/zerokey/vel}} node[lab, below, pos=0.45]{\tp{TwistStamped}: \tp{twist.linear.x,y,z}\\{}[m/s], 20 Hz}
+  ($(c.west)+(0,1.75)$);
+\draw[sig] (xs.east) -- node[lab, above]{\tp{/imu/data}} node[lab, below, align=center]{\tp{sensor\_msgs/Imu}: \tp{orientation}\\ (쿼터니언, 100 Hz)\\ 2 판: \tp{angular\_velocity.z} [rad/s]}
+  ($(c.west)+(0,-1.6)$);
+% ---- 오른쪽: 구동 노드
+\node[hw, minimum width=3.6cm, minimum height=2.0cm] (ar) at (9.4,2.3) {\textbf{로봇 브리지}\\ Arduino Mega\\ $\to$ C620 ESC $\to$ 궤도 모터};
+\node[hw, minimum width=3.6cm, minimum height=2.4cm] (zb) at (9.4,-1.6) {\textbf{\texttt{zaber\_stage\_node.py}}\\ RS-232 115200 bps\\ $\to$ X-LSM100B $\times 2$\\ (\texttt{move abs}, \texttt{get pos})};
+\draw[sig] ($(c.east)+(0,2.3)$) -- node[lab, above]{\tp{/motor\_pwm}} node[lab, below, align=center]{\tp{geometry\_msgs/Point}\\ \tp{x} 왼쪽, \tp{y} 오른쪽 [count], 100 Hz}
+  (ar.west);
+\draw[sig] ($(c.east)+(0,-1.0)$) -- node[lab, above]{\tp{/stage/target\_pos}} node[lab, below]{\tp{Point}: \tp{x} = X, \tp{y} = Y [mm], 100 Hz}
+  ($(zb.west)+(0,0.6)$);
+\draw[sig] ($(zb.west)+(0,-0.6)$) -- node[lab, above]{\tp{/stage/pos}} node[lab, below]{\tp{PointStamped}: \tp{point.x,y} [mm], 20 Hz}
+  ($(c.east)+(0,-2.2)$);
+% ---- 부가
+\node[opt, minimum width=3.6cm, font=\footnotesize] (aux) at (9.4,-4.6) {\tp{/stage/cmd\_vel} (Vector3, mm/s)\\ \tp{/stage/stop} (Empty)};
+\draw[optsig] (aux) -- (zb);
+\node[note, anchor=north west] at (-12,-3.9) {\textbf{도메인}\ \ 실기 \tp{ROS\_DOMAIN\_ID} = 0, 가상 실험 77\\[2pt]
+  \textbf{가상 실험}\ \ 왼쪽 두 노드와 \tp{/stage/pos} 는 \tp{PlantRosOut} 이,\\ \hspace*{4.3em}오른쪽 두 노드는 \tp{PlantRosIn} 이 대신함 (같은 이름·형식)\\[2pt]
+  \tp{/zerokey/orientation} (QuaternionStamped) 도 발행되나 이 제어기는 쓰지 않음};
+\end{tikzpicture}
+\end{document}

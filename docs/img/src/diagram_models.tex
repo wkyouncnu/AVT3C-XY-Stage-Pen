@@ -1,0 +1,44 @@
+\documentclass[tikz,border=6pt]{standalone}
+\input{xystyle}
+% diagram_models : Simulink 파일 4 개의 관계. 윗줄 = 제어기 (네 파일 공통), 아랫줄 = 가상 실험장 (_sim 만), InnerPI = 2 판만
+\begin{document}
+\begin{tikzpicture}[node distance=0.55cm]
+\tikzset{s/.style={key, minimum height=1.25cm, minimum width=1.75cm}, p/.style={hw, minimum height=1.25cm, minimum width=1.9cm}}
+% ---- 제어기 줄
+\node[s] (ri) {RosIn\\ 구독};
+\node[s, right=of ri] (nv) {Nav\\ $\hat p,\hat\psi$};
+\node[s, right=of nv] (ms) {Mission\\ 모드};
+\node[s, right=of ms] (rc) {RobotCtrl\\ $v_c,\omega_c$};
+\node[opt, right=of rc, minimum height=1.25cm, minimum width=1.9cm, fill=white] (pi) {InnerPI\\ \footnotesize 2 판만};
+\node[s, right=of pi] (pw) {PwmMap\\ \tp{calc\_pwm}};
+\node[s, right=of pw] (ro) {RosOut\\ 발행};
+\node[s, below=0.45cm of rc] (pc) {PenCtrl\\ $s^{\star}$};
+\draw[sig] (ri)--(nv); \draw[sig] (nv)--(ms); \draw[sig] (ms)--(rc); \draw[sig] (rc)--(pi); \draw[sig] (pi)--(pw); \draw[sig] (pw)--(ro);
+\draw[sig] (pc.east) -| (ro.south);
+\draw[sig] (ms.south) |- (pc.west);
+\begin{scope}[on background layer]
+\node[grp, fit=(ri)(ro)(pc), label={[ttl, anchor=south west]north west:제어기 줄 = \texttt{XY\_2\_pen\_ros2} 의 전부 (네 파일 공통, 같은 빌더 함수)}] (G1) {};
+\end{scope}
+% ---- 가상 실험장 줄
+\node[p, below=2.6cm of ro] (pri) {PlantRosIn\\ 구독};
+\node[p, left=of pri] (rp) {RobotPlant\\ 동역학};
+\node[p, left=of rp] (se) {Sensors\\ 잡음·지연};
+\node[p, left=of se] (pro) {PlantRosOut\\ 발행};
+\node[p, below=0.45cm of rp] (sp) {StagePlant\\ Zaber 모델};
+\node[blk, minimum height=1.25cm, left=1.3cm of pro, fill=white] (ev) {PenTrace · Logging\\ Animate (평가·기록)};
+\draw[sig] (pri)--(rp); \draw[sig] (rp)--(se); \draw[sig] (se)--(pro);
+\draw[sig] (pri.south) |- (sp.east);
+\draw[sig] (sp.west) -| (pro.south);
+\begin{scope}[on background layer]
+\node[grp, fit=(pri)(pro)(sp)(ev), label={[ttl, anchor=north west]south west:가상 실험장 줄 = \texttt{XY\_1\_pen\_sim} 에만 (실기 장비 자리)}] (G2) {};
+\end{scope}
+% ---- ROS 2 루프백
+\draw[sig, draw=navy] ($(ro.south)+(0.35,0)$) -- node[lab, right, text=navy]{\tp{/motor\_pwm}\\ \tp{/stage/target\_pos}} ($(pri.north)+(0.35,0)$);
+\draw[sig, draw=navy] ($(pro.north)$) -- ++(0,0.4) -| node[lab, left, pos=0.8, text=navy]{\tp{/zerokey/*}, \tp{/imu/data}\\ \tp{/stage/pos}} (ri.south);
+\node[note, anchor=north west, text width=15cm] at ($(G2.south west)+(0,-0.6)$) {%
+  \textbf{\_sim}\ \ 두 줄이 한 파일, ROS 2 토픽으로만 연결 (도메인 77, 루프백)\\
+  \textbf{\_ros2}\ \ 윗줄만. 실기 장비가 아랫줄 자리에서 같은 토픽을 주고받음 (도메인 0)\\
+  \textbf{\_v2}\ \ RobotCtrl 와 PwmMap 사이에 InnerPI (속도·요 각속도 PI). Nav 가 $V_{meas}$ 를 더 냄\\
+  1 판 \texttt{XY\_1\_pen\_sim}, \texttt{XY\_2\_pen\_ros2}\quad 2 판 \texttt{XY\_1\_pen\_sim\_v2}, \texttt{XY\_2\_pen\_ros2\_v2}};
+\end{tikzpicture}
+\end{document}

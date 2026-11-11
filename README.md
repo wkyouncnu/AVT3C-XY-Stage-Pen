@@ -3,6 +3,7 @@
 - 작성: 충남대학교 자율운항시스템공학과 윤원근 교수
 - 저장소: <https://github.com/wkyouncnu/AVT3C-XY-Stage-Pen>
 - 매뉴얼(PDF): [docs/manual/AVT3C_XY_Stage_Pen.pdf](docs/manual/AVT3C_XY_Stage_Pen.pdf)
+- 해설서(PDF, 원리·유도·설계 근거 서술): [docs/manual/AVT3C_XY_Stage_Pen_Theory.pdf](docs/manual/AVT3C_XY_Stage_Pen_Theory.pdf), 원본 [THEORY.md](THEORY.md)
 
 ![시스템 구성](docs/img/diagram_overview.svg)
 
@@ -88,6 +89,10 @@
 
 ### 2.1 토픽
 
+![ROS 2 노드와 토픽](docs/img/diagram_ros2.svg)
+
+*그림 2. ROS 2 노드 (상자) 와 토픽 (화살표). 화살표 아래는 메시지 형식, 쓰는 필드, 단위, 주기*
+
 | 토픽 | 형식 | 발행 → 구독 | 주기 | 내용 |
 |---|---|---|---|---|
 | `/zerokey/position` | geometry_msgs/PointStamped | 센서 → 제어기 | 20 Hz | 태그 월드 좌표 [m]. x = 벽 수평(왼쪽 +), z = 높이 |
@@ -99,8 +104,21 @@
 | `/stage/target_pos` | geometry_msgs/Point | 제어기 → 스테이지 노드 | 100 Hz | 목표 X, Y [mm] (노드가 25 Hz 로 솎아 전송) |
 | `/stage/cmd_vel`, `/stage/stop` | Vector3, Empty | 보조 → 스테이지 노드 | 필요 시 | 속도 명령 (워치독 0.5 s), 정지 |
 
+필드 단위 대응 (Simulink 안 신호 이름과 단위)
+
+| 토픽 · 필드 | Simulink 신호 (상자) | 크기 · 단위 | 제어기 안에서의 의미 |
+|---|---|---|---|
+| `/zerokey/position` `point.x, y, z` | `zerokey_position` (RosIn) | 3, m | Nav 에서 $\hat p = [z;\ x]$ = [높이; 수평] 로 바꿈. `y` (벽 법선) 는 쓰지 않음 |
+| `/zerokey/vel` `twist.linear.x, y, z` | `zerokey_vel` (RosIn) | 3, m/s | 지연 보상 (`tau_pred` > 0) 과 2 판 $u_B$ 에만 사용 |
+| `/imu/data` `orientation.w, x, y, z` | `imu_quat` (1 판), `imu_data(1:4)` (2 판) | 4, – | 요각 $\mathrm{atan2}(2(q_wq_z + q_xq_y),\ 1 - 2(q_y^2 + q_z^2))$, 첫 샘플 기준 상대값 + $\psi_0$ |
+| `/imu/data` `angular_velocity.z` | `imu_data(5)` (2 판만) | 1, rad/s | 2 판 요 각속도 PI 되먹임 $r$ |
+| `/stage/pos` `point.x, y` | `stage_pos_meas` (RosIn) | 2, mm | 중앙 유지 (`K_c`, `K_ci` > 0) 에만 사용. 기본 설정의 펜 보상은 쓰지 않음 |
+| `/motor_pwm` `x, y` | `motor_pwm` (PwmMap) | 2, count (= µs) | [왼쪽; 오른쪽], 1500 정지, 1100–1900. 오른쪽은 부호 반전 |
+| `/stage/target_pos` `x, y` | `stage_target_pos` (PenCtrl) | 2, mm | [X; Y], X = $x_B$ (전진) 축, Y = $y_B$ (왼쪽) 축, 0–101.6 |
+
 - 가상 실험에서 운동모델·센서·스테이지 모델은 위 토픽을 실제로 발행하고, 제어기는 구독만 함
 - 따라서 제어기는 참값(`q_true`, `x_s`)을 보지 못하고 실기와 같은 정보만으로 동작함
+- 펜 다운 신호 `pen_on` 은 발행하지 않음 (기록·평가용). 펜 승강 장치와 그 토픽이 없으므로 실기에서 마커를 언제 벽에 대는지 확인 필요 (14 장)
 
 ### 2.2 좌표 규약
 
@@ -118,9 +136,21 @@
 
 ## 3. 제어기 계층 구조
 
-![제어기 계층](docs/img/diagram_hierarchy.svg)
+![제어 구조](docs/img/diagram_control.svg)
 
-*그림 2. 제어기 계층 구조와 단별 신호*
+*그림 3. 제어 구조와 신호 단위 (위: 로봇 macro 루프, 아래: 스테이지 micro 루프, 맨 아래: 측정 되먹임)*
+
+| 도면에서 | 입력 → 출력 (단위) | 의미 |
+|---|---|---|
+| Nav | ZeroKey 위치 [m], IMU 쿼터니언 → $\hat p$ [m], $\hat\psi$ [rad] | 태그 위치와 heading 의 측정값. 제어기가 아는 로봇 상태의 전부 |
+| Mission | $\hat p,\ \hat\psi$ → 모드, $W_{prev},\ W$ [m], $t_{line}$ [s], $A,\ B$ [m] | 언제 무엇을 할지 정함 (출발점 이동 → 회전 → 직선 → 정지) |
+| RobotCtrl | 기준점 $x_r$ [m], $\hat p,\ \hat\psi$ → $v_c$ [m/s], $\omega_c$ [rad/s] | 로봇이 직선을 따라가게 하는 바깥 루프 (식 (11)) |
+| PwmMap | $v_c,\ \omega_c$ → $u_L,\ u_R$ [count] | 실기 `calc_pwm`. 속도 명령을 ESC 펄스 폭으로 바꿈 (식 (8)–(9)) |
+| AVT-3C 로봇 | $u_L,\ u_R$ → 중심 $c$ [m], $\psi$ [rad] | ESC 속도 루프 + 궤도 동역학. 가상 실험에서는 RobotPlant |
+| PenComp | $\hat p,\ \hat\psi,\ A,\ B$ → $s^{\star}$ [mm] | 펜이 직선 위에 오도록 스테이지 목표를 계산 (식 (14)) |
+| Zaber 스테이지 | $s^{\star}$ [mm] → $s$ [mm] | 상용 펌웨어가 위치를 따라감. 외부에서는 위치 명령과 위치 읽기만 가능 |
+| 펜 끝 | $c,\ \psi,\ s$ → $P$ [m] | 벽 위 마커 위치. 제어기는 측정하지 않음 (평가는 PenTrace) |
+| 센서 | $p,\ \psi$ → $\hat p,\ \hat\psi$ | 잡음·지연·드리프트가 더해진 측정. 펜 정확도의 상한 (10.5 절) |
 
 ### 3.1 단별 역할
 
@@ -157,7 +187,7 @@
 
 ![미션 모드](docs/img/diagram_modes.svg)
 
-*그림 3. ModeChart 전이*
+*그림 4. ModeChart 전이 조건과 모드별 로봇·스테이지·펜의 동작*
 
 | 모드 | 제어 법칙 (6WP_sim · 실기 모델과 같은 식) | 펜 |
 |---|---|---|
@@ -179,13 +209,11 @@
 
 ![기하](docs/img/fig_geometry.png)
 
-*그림 4. 벽면 좌표계와 펜 보상 기하 (레버암·스테이지 크기는 읽기 쉽게 확대, 축척 아님)*
+*그림 5. 벽면 좌표계와 펜 보상 기하 (레버암·스테이지 크기는 읽기 쉽게 확대, 축척 아님)*
 
-![제어 구조](docs/img/fig_control.png)
+- 제어 구조와 신호 단위는 그림 3
 
-*그림 5. 제어 구조 (위: 로봇 macro 루프, 아래: 스테이지 micro 루프, 맨 아래: 측정 되먹임)*
-
-### 4.0 그림 4 읽는 법
+### 4.0 그림 5 읽는 법
 
 | 그림에서 | 의미 |
 |---|---|
@@ -199,9 +227,9 @@
 | 빨간 원 $P$ | 실제 펜 끝 |
 | 남색 마름모 $p^{\star}$ | $c_0$ 를 직선에 내린 수선의 발 = 펜 목표 |
 | 빨간 화살표 $e$ | 펜 횡오차. 직선에서 $n$ (위쪽) 방향으로 잰 거리 |
-| 축척 | 레버암·스테이지는 읽기 쉽게 확대. 실제 비율은 그림 6 (b) 와 그림 8 (a) |
+| 축척 | 레버암·스테이지는 읽기 쉽게 확대. 실제 비율은 그림 6 (b) 와 그림 9 (a) |
 
-- 그림 4 는 펜이 아직 직선에 닿지 않은 중간 상태 ($P \ne p^{\star}$) 를 그린 것. 보상이 끝나면 $P = p^{\star}$
+- 그림 5 는 펜이 아직 직선에 닿지 않은 중간 상태 ($P \ne p^{\star}$) 를 그린 것. 보상이 끝나면 $P = p^{\star}$
 
 ### 4.1 좌표계
 
@@ -507,6 +535,13 @@ $$
 
 #### 4.6.1 식 (13)–(14) 의 단계별 의미
 
+![펜 보상 계산 순서와 단위](docs/img/diagram_penchain.svg)
+
+*그림 8. PenComp 계산 순서와 각 단계의 좌표계·단위 (빨간 상자: m → mm 변환)*
+
+- 1000 은 단위 변환 계수. 제어기의 길이는 m, Zaber 펌웨어와 `/stage/*` 토픽은 mm 이므로 $\Delta s$ [m] × 1000 = [mm]
+- $s_c$ = 50.8 mm 는 원점 이동. Zaber 의 0 은 홈 위치 (행정 한쪽 끝) 이고 $\Delta s = 0$ 은 행정 가운데이므로 더함
+
 | 단계 | 식 | 좌표계 | 의미 |
 |---|---|---|---|
 | 1 | $R(\hat\psi)\,d$ | 바디 → 벽면 | 바디에 고정된 레버암 (태그 → 펜) 을 현재 heading 으로 돌려 벽면 벡터로 만듦 |
@@ -528,7 +563,7 @@ $$
 
 ![펜 보상 수치 예](docs/img/fig_pen_example.png)
 
-*그림 8. 펜 보상 수치 예. (a) 벽면 (축척대로), (b) 스테이지 명령, (c) 계산 순서*
+*그림 9. 펜 보상 수치 예. (a) 벽면 (축척대로), (b) 스테이지 명령, (c) 계산 순서*
 
 | 양 | 계산 | 값 |
 |---|---|---|
@@ -731,12 +766,26 @@ $$
 
 ![XY_1_pen_sim 최상위](1_시뮬레이션/img/XY_1_pen_sim.png)
 
-*그림 9. XY_1_pen_sim 최상위 (윗줄 제어기, 오른쪽 아래 가상 실험장, 왼쪽 아래 평가·기록·실시간 화면)*
+*그림 10. XY_1_pen_sim 최상위 (윗줄 제어기, 오른쪽 아래 가상 실험장, 왼쪽 아래 평가·기록·실시간 화면)*
 
-| 모델 | 구성 | 용도 |
+![Simulink 파일 4 개의 관계](docs/img/diagram_models.svg)
+
+*그림 11. Simulink 파일 4 개의 관계 (윗줄 제어기는 네 파일 공통, 아랫줄 가상 실험장은 `_sim` 에만, InnerPI 는 2 판에만)*
+
+| 파일 | 제어기 줄 | 가상 실험장 줄 | 내부 PI | ROS 도메인 | 용도 |
+|---|---|---|---|---|---|
+| `XY_1_pen_sim.slx` | 있음 | 있음 (RobotPlant, Sensors, StagePlant, PlantRosIn/Out) + PenTrace, Logging, Animate | 없음 | 77 | 가상 실험 1 판 |
+| `XY_2_pen_ros2.slx` | 있음 | 없음 (실기 장비가 대신) | 없음 | 0 | 실기 1 판 |
+| `XY_1_pen_sim_v2.slx` | 있음 | 있음 | InnerPI | 77 | 가상 실험 2 판 |
+| `XY_2_pen_ros2_v2.slx` | 있음 | 없음 | InnerPI | 0 | 실기 2 판 |
+
+| 구분 | `_sim` 과 `_ros2` 의 차이 | 1 판과 2 판의 차이 |
 |---|---|---|
-| `XY_1_pen_sim.slx` | 제어기 (RosIn, Nav, Mission, RobotCtrl, PwmMap, PenCtrl, RosOut) + 가상 실험장 (PlantRosIn, RobotPlant, StagePlant, Sensors, PlantRosOut) + PenTrace, Logging, Animate | 가상 실험 (도메인 77) |
-| `XY_2_pen_ros2.slx` | 같은 빌더 함수로 만든 제어기 윗줄만 | 실기 (도메인 0) |
+| 무엇이 다른가 | `_sim` 은 같은 제어기에 가상 로봇·센서·스테이지를 붙인 것. `_ros2` 는 제어기만 있고 실제 장비와 토픽을 주고받음 | 2 판은 `RobotCtrl` 와 `PwmMap` 사이에 실기 Xsens 모델과 같은 속도·요 각속도 PI 를 둠 (12.2 절) |
+| 제어기 식 | 같음 (같은 빌더 함수) | 바깥 루프·펜 보상 같음. `PwmMap` 입력이 속도 명령 (1 판) 인지 PI 출력 (2 판) 인지만 다름 |
+| 추가 입력 | – | `/imu/data` 의 `angular_velocity.z`, Nav 출력 $V_{meas} = [u_B;\ r]$ |
+| 실행 시간 | `_sim` 은 미션이 끝나면 정지 (`T_run` 70 s) | 같음 |
+| 결과 (가상 실험) | – | 펜 RMS 1 판 1.18–1.20 mm, 2 판 1.22–1.23 mm |
 
 - 모든 계산 코드는 모델 안의 MATLAB Function 블록에 있음 (외부 .m 함수 없음)
 - 왼쪽 → 오른쪽 배치: 항법 (RosIn, Nav) → 미션 → 제어 → 배분 → ROS 경계·플랜트 → 측정
@@ -758,9 +807,37 @@ $$
 | 스테이지 모델 | `1_시뮬레이션/img/XY_1_pen_sim__StagePlant.png` |
 | 센서 | `1_시뮬레이션/img/XY_1_pen_sim__Sensors.png` |
 
+MATLAB Function 블록별 입출력 (각 블록 코드 머리에 한·영 같은 내용의 주석)
+
+| 블록 (상자) | 입력 (단위) | 출력 (단위) | 식 | 근거 |
+|---|---|---|---|---|
+| NavFcn (Nav) | ZeroKey 위치 [m], 속도 [m/s], IMU 쿼터니언, $\psi_0$ [rad], $\tau_{pred}$ [s] | `pose` = $[\hat p_1;\ \hat p_2;\ \hat\psi]$ [m, m, rad] (2 판: + $V_{meas}$ [m/s, rad/s]) | $\hat p = [z;\ x]$, $\hat\psi = \mathrm{yaw} - \mathrm{yaw}_0 + \psi_0$ | 실기 `plane_project` |
+| Guards (Mission) | `pose`, $A,\ B,\ d$, `line_pre`, `line_post`, $r_{tag}$ [m] | `dist_start` [m], `th_err` [rad], `along_rem` [m] | $\lVert c_A - \hat c\rVert$, $\mathrm{wrap}(\theta_l - \hat\psi)$, $u^{\top}(r_B - \hat p)$ | 실기 Chart |
+| ModeChart (Mission) | 위 셋, 시각 $t$ [s] | `mode`, `t_line` [s] | 그림 4 | 6WP_sim Chart |
+| Waypoints (Mission) | `mode`, 직선 기하 [m] | `WP_prev`, `WP_target`, `lineAB` [m] | $r_A = A - R(\theta_l)d - u\,\ell_{pre}$, $c_A = r_A - R(\theta_l) r_{tag}$ | 4.5 절 |
+| Fcn1 Goto_Start (RobotCtrl) | `WP_target` [m], `pose` | $v$ [m/s], $\omega$ [rad/s] | 식 (12), 중심 기준 | 6WP_sim |
+| Fcn2 Turning | `WP_prev`, `WP_target`, `pose` | $v = 0$, $\omega$ [rad/s] | $\omega = k_\alpha\,\mathrm{wrap}(\theta_l - \hat\psi)$ | 6WP_sim |
+| Fcn3 Line_Tracking | 선분 [m], `t_line` [s], `pose`, `/stage/pos` [mm] | $v$ [m/s], $\omega$ [rad/s], `e_cross` [m] | 식 (11) (+ 4.10 절 중앙 유지) | 6WP_sim, 실기 게인 |
+| Fcn4 Stop_Destination | `WP_target`, `pose` | $v$, $\omega$ | 식 (12) | 6WP_sim |
+| SpeedErr (InnerPI, 2 판) | $v_c$ [m/s], $\omega_c$ [rad/s], $V_{meas}$, `mode` | $e_v$ [m/s], $e_\omega$ [rad/s], 리셋 | 식 (23) | 실기 Xsens 모델 |
+| calc_pwm (PwmMap) | 1 판 $v_c,\ \omega_c$ / 2 판 $\bar V,\ \bar W$ [–] | `motor_pwm` [count] | 식 (8)–(9) | 실기 MATLAB Function6 |
+| PenComp (PenCtrl) | `lineAB` [m], `mode`, `pose`, $d$ [m], $s_c$ [mm] | $s^{\star}$ [mm], `pen_on`, $\sigma$ [m] | 식 (13)–(16), 그림 8 | 4.6 절 |
+| EscInv (RobotPlant) | `motor_pwm` [count] | 궤도 속도 명령 [m/s] | 데드존 30 count, 400 count = 0.2 m/s | 가정 [실측 필요] |
+| SpeedErr (RobotPlant) | 궤도 속도 [m/s], $V$ | $e_v$, $L e_\omega$ [m/s] | $v_c = (v_L + v_R)/2$, $\omega_c = (v_R - v_L)/B$ | 6WP_sim |
+| Control_allocation | $\tau_X$, $\tau_N$ [N] | $F_r,\ F_l$ [N] | $\tilde B^{-1}[\tau_X;\ \tau_N]$ | 6WP_sim |
+| compute_u | $V$, $\alpha$ [rad] | $u$ [m] | $u = -\mathrm{sgn}(\omega) R_t\sin\alpha$ | 6WP_sim |
+| Dynamics | $q$, $V$, $u$, $\dot u$, $F_r,\ F_l$ | $\dot V$ [m/s², rad/s²] | 식 (4)–(7) | 4.3 절 |
+| Kinematics | $V$, $q$, $u$, $t$ | $\dot q$ (중심) [m/s, m/s, rad/s] | 식 (2) + 벽면 외란 | 4.2 절 |
+| TagPoint | 중심 자세 $q_c$, $r_{tag}$ | `q_true` (태그) | 식 (2a) | 4.2 절 |
+| ZkWorld, ZkVel, ImuQuat, ZkQuat (Sensors) | `q_true`, `V_true`, 잡음 | 토픽 값 [m], [m/s], 쿼터니언 | 식 (19) | 5.3 절 |
+| ZaberTraj (StagePlant) | $s^{\star}$ [mm] | 궤적 [mm, mm/s] | 사다리꼴 (104 mm/s, 500 mm/s²) | 데이터시트 |
+| ZaberServo | 궤적, 캐리지 상태, `q_true` | 가속도 [m/s²] | 식 (17)–(18) | 4.7 절 |
+| Encoder | 캐리지 위치 [m] | `stage_pos` [mm] | $1000\,x$, 0–101.6 포화 | `get pos` |
+| PenTraceFcn (평가) | `q_true`, `stage_pos` [mm] | 참 펜 위치 [m], 횡오차 [m] | $P = p + R(\psi)(d + (s - s_c)/1000)$ | 그림 8 (6)–(7) |
+
 ![StagePlant](1_시뮬레이션/img/XY_1_pen_sim__StagePlant.png)
 
-*그림 10. StagePlant 내부 (명령 ZOH → 지연 → 펌웨어 궤적 → 서보 → 엔코더)*
+*그림 12. StagePlant 내부 (명령 ZOH → 지연 → 펌웨어 궤적 → 서보 → 엔코더)*
 
 ---
 
@@ -804,7 +881,7 @@ $$
 
 ![대시보드](1_시뮬레이션/img/XY_1_dashboard.png)
 
-*그림 11. 실시간 대시보드 (왼쪽 3D 벽면·펜 확대, 가운데 v·ω 명령 대비 실제와 펜 횡오차, 오른쪽 스테이지 캐리지와 현재 게인)*
+*그림 13. 실시간 대시보드 (왼쪽 3D 벽면·펜 확대, 가운데 v·ω 명령 대비 실제와 펜 횡오차, 오른쪽 스테이지 캐리지와 현재 게인)*
 
 Run 버튼으로 실행할 때의 동작
 
@@ -902,23 +979,23 @@ Run 버튼으로 실행할 때의 동작
 
 ![벽면 결과](1_시뮬레이션/img/XY_1_result_wall.png)
 
-*그림 12. 벽면 궤적 (파랑 목표 직선, 빨강 보상 펜 자국, 회색 보상 없는 펜 자국, 점선 로봇 태그 경로)*
+*그림 14. 벽면 궤적 (파랑 목표 직선, 빨강 보상 펜 자국, 회색 보상 없는 펜 자국, 점선 로봇 태그 경로)*
 
 ![시간 응답](1_시뮬레이션/img/XY_1_result_time.png)
 
-*그림 13. 펜 횡오차, 스테이지 위치, 모드, 펜 상태*
+*그림 15. 펜 횡오차, 스테이지 위치, 모드, 펜 상태*
 
 ### 10.4 동영상
 
 | 파일 | 내용 |
 |---|---|
-| `1_시뮬레이션/video/XY_1_live_view.mp4` | 그림 11 대시보드, 1600 × 900, 20 fps, 23.9 s (이전 판 플랜트로 녹화, 시뮬레이션 47.8 s 를 2 배속) |
+| `1_시뮬레이션/video/XY_1_live_view.mp4` | 그림 13 대시보드, 1600 × 900, 20 fps, 23.9 s (이전 판 플랜트로 녹화, 시뮬레이션 47.8 s 를 2 배속) |
 
 - `XY_record_live` 로 생성. 기록 재생 + 화면 밖 렌더링이므로 녹화 중 다른 창·메신저가 찍히지 않음
 
 ### 10.5 내부 루프와 오차 요인 진단
 
-대시보드의 명령 대비 실제 값 (그림 11 가운데) 으로 내부 루프와 게인을 점검한 결과. 모든 표는 4.2 절 수정 후 플랜트로 2026-11-11 재실행한 값 (`1_시뮬레이션/logs/gain_sweep_a.mat`, `gain_sweep_b.mat`, `error_budget.mat`).
+대시보드의 명령 대비 실제 값 (그림 13 가운데) 으로 내부 루프와 게인을 점검한 결과. 모든 표는 4.2 절 수정 후 플랜트로 2026-11-11 재실행한 값 (`1_시뮬레이션/logs/gain_sweep_a.mat`, `gain_sweep_b.mat`, `error_budget.mat`).
 
 요 각속도 떨림 (경우마다 2 회 실행)
 
@@ -994,7 +1071,7 @@ Run 버튼으로 실행할 때의 동작
 
 ![비교 막대](1_시뮬레이션/img/XY_compare_bar.png)
 
-*그림 14. 경우별 펜 횡오차 (왼쪽 스테이지 보상, 오른쪽 같은 주행에서 스테이지를 중앙에 고정했을 때)*
+*그림 16. 경우별 펜 횡오차 (왼쪽 스테이지 보상, 오른쪽 같은 주행에서 스테이지를 중앙에 고정했을 때)*
 
 ### 11.1 결과
 
@@ -1015,7 +1092,7 @@ Run 버튼으로 실행할 때의 동작
 
 ![비교 시계열](1_시뮬레이션/img/XY_compare_time.png)
 
-*그림 15. 위: 펜 횡오차 (스테이지 느슨 · 기준 · 센서 잡음 0), 아래: 스테이지 Y (기준 · 중앙 유지)*
+*그림 17. 위: 펜 횡오차 (스테이지 느슨 · 기준 · 센서 잡음 0), 아래: 스테이지 Y (기준 · 중앙 유지)*
 
 ### 11.2 해석
 
@@ -1093,7 +1170,7 @@ Run 버튼으로 실행할 때의 동작
 
 ![InnerPI](1_시뮬레이션/img/XY_1_pen_sim_v2__InnerPI.png)
 
-*그림 16. 2 판 InnerPI 상자 (오차 계산 → 이산 PI 두 개, 모드 전환 시 적분 리셋)*
+*그림 18. 2 판 InnerPI 상자 (오차 계산 → 이산 PI 두 개, 모드 전환 시 적분 리셋)*
 
 1 판 대비 바뀐 상자
 
@@ -1130,7 +1207,7 @@ $$
 
 ![2 판 시간 응답](1_시뮬레이션/img/XY_1v2_result_time.png)
 
-*그림 17. 2 판 기본 설정의 펜 횡오차, 스테이지 위치, 모드*
+*그림 19. 2 판 기본 설정의 펜 횡오차, 스테이지 위치, 모드*
 
 해석
 
@@ -1179,7 +1256,8 @@ $$
 | 로봇 질량 · 흡착력 · 마찰 | 12 kg · 400 N · μ_l 0.05, μ_t 0.5 | 실측 |
 | ESC 데드존 · 궤도 시정수 · 최대 구동력 | 30 count · 0.15 s · 200 N | 실측 |
 | ZeroKey 지연 · 잡음 · 정지 절대 오차 | 50 ms · 1 mm · 미정 | 정지 로그 |
-| ZeroKey 태그 수 | 1개 (로봇) | 진행 보고서에는 마커부 + MC 2개로 기재됨. 실제 구성 확인 |
+| ZeroKey 태그 수 | 1개 (로봇) | 진행 보고서에는 마커부 + MC 2개로 기재됨. 실제 구성 확인. 배치 비교는 해설서 7 장 (로봇 몸체에 펜을 사이에 두고 2 개: 근사 시뮬레이션 0.84 mm) |
+| 펜 승강 | 장치·토픽 없음 (`pen_on` 은 기록용) | 마커를 벽에 대는 시점과 방법 |
 | 벽면 크리프 · heading 요철 | 8 % · ±1.5°, 0.35 Hz | 실기 영상·로그 |
 | 펜 홀더 질량 | 0.10 kg | 실측 |
 

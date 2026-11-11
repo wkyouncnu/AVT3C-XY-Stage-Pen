@@ -1,0 +1,46 @@
+\documentclass[tikz,border=6pt]{standalone}
+\input{xystyle}
+% diagram_control : 제어 구조. 윗줄 로봇(macro), 아랫줄 스테이지(micro), 맨 아래 센서 되먹임. 신호마다 단위
+\begin{document}
+\begin{tikzpicture}
+% ---- 블록
+\node[key, minimum width=2.0cm] (nav) at (0,-1.5) {\textbf{Nav}\\ 항법\\[2pt] $\hat p,\ \hat\psi$};
+\node[key, minimum width=2.3cm] (mis) at (3.1,-1.5) {\textbf{Mission}\\ 미션 (Stateflow)\\[2pt] 모드 1--5};
+\node[key, minimum width=4.1cm] (rc) at (9.6,0) {\textbf{RobotCtrl} (macro)\\[2pt]
+   $e = R^{\top}(\hat\psi)\,(x_r - \hat p)$\\
+   $v_c = v_r\cos e_\theta + k_x e_x$\\
+   $\omega_c = k_y e_y + k_\psi \sin e_\theta$};
+\node[key, minimum width=4.1cm] (pc) at (9.6,-3.2) {\textbf{PenComp} (micro)\\[2pt]
+   $c_0 = \hat p + R(\hat\psi)\,d,\ \ p^{\star} = A + \sigma u$\\
+   $\Delta s = R^{\top}(\hat\psi)(p^{\star}-\hat p) - d$\\
+   $s^{\star} = s_c + 1000\,\Delta s$};
+\node[key, minimum width=2.6cm] (pw) at (15.2,0) {\textbf{PwmMap}\\ \texttt{calc\_pwm}\\[2pt] $(v_c,\omega_c)\!\to\!(u_L,u_R)$};
+\node[hw, minimum width=2.9cm] (zb) at (15.2,-3.2) {\textbf{Zaber 스테이지}\\ 펌웨어 궤적 + 서보\\ (상용, 명령만 가능)};
+\node[hw, minimum width=3.7cm] (rb) at (20.9,0) {\textbf{AVT-3C 로봇}\\ ESC·모터·궤도\\[2pt]
+   $\tilde M\dot V + \tilde C V + \tilde f = \tilde B\tau + \tilde f_g$\\ $\dot c = S(\psi)\,V$};
+\node[hw, minimum width=3.7cm] (pen) at (20.9,-3.2) {\textbf{펜 끝} (벽 위의 점)\\[2pt]
+   $P = p + R(\psi)\Big(d + \dfrac{s - s_c}{1000}\Big)$};
+\node[hw, minimum width=13cm] (sen) at (10.4,-5.9) {\textbf{센서 (가상 실험: Sensors 상자 / 실기: 장비)}\\[2pt]
+   ZeroKey:\ $\hat p = p(t-\tau_{zk}) + \eta_p$\ \ (20 Hz, $\sigma_p = 1$ mm, $\tau_{zk} = 50$ ms)\qquad
+   Xsens:\ $\hat\psi = \psi + \eta_\psi + \dot b_\psi\, t$\ \ (100 Hz)};
+% ---- 신호
+\draw[sig] (nav) -- node[lab, above]{$\hat p$\,[m]\\$\hat\psi$\,[rad]} (mis);
+\draw[sig] (nav.north) |- node[lab, above, pos=0.72]{\tp{pose} $=[\hat p_1;\ \hat p_2;\ \hat\psi]$\ \ [m, m, rad]} ($(rc.west)+(0,0.35)$);
+\draw[sig] (nav.south) |- ($(pc.west)+(0,-0.35)$);
+\draw[sig] (mis.east) -- ++(0.55,0) |- ($(rc.west)+(0,-0.3)$);
+\draw[sig] ($(mis.east)+(0.55,0)$) |- ($(pc.west)+(0,0.3)$);
+\node[lab, anchor=west] at ($(mis.east)+(0.6,0.75)$) {$W_{prev},W$\,[m]\\ $t_{line}$\,[s], mode};
+\node[lab, anchor=west] at ($(mis.east)+(0.6,-0.75)$) {$A,B$\,[m]\\ mode};
+\draw[sig] (rc) -- node[lab, above]{$v_c$\,[m/s]\\ $\omega_c$\,[rad/s]} (pw);
+\draw[sig] (pw) -- node[lab, above]{\tp{/motor\_pwm}\\ $u_L,u_R$\,[count]} (rb);
+\draw[sig] (pc) -- node[lab, above]{\tp{/stage/}\\[-1pt]\tp{target\_pos}} node[lab, below]{$s^{\star}$\,[mm]} (zb);
+\draw[sig] (zb) -- node[lab, above]{$s$\,[mm]} node[lab, below]{캐리지} (pen);
+\draw[sig] (rb) -- node[lab, right]{$c,\ \psi$\\ 기구 결합} (pen);
+\draw[sig] (rb.east) -- ++(0.5,0) |- node[lab, right, pos=0.25]{$p$\,[m]\\ $\psi$\,[rad]\\ (태그)} (sen.east);
+\draw[sig] (sen.west) -| node[lab, left, pos=0.75]{\tp{/zerokey/}\\\tp{position}\\ \tp{/imu/data}} ($(nav.west)+(-0.6,0)$) -- (nav.west);
+\draw[optsig] (zb.north) -- ++(0,0.9) -| node[lab, right, pos=0.75, text=mute]{\tp{/stage/pos} [mm]\\ (선택: 중앙 유지)} ($(rc.south)+(1.2,0)$);
+% ---- 구역 표시
+\node[ttl, anchor=south west] at ($(rc.north west)+(0,0.05)$) {macro: 로봇이 진행과 큰 이동을 맡음};
+\node[ttl, anchor=north west] at ($(pc.south west)+(0,-0.05)$) {micro: 스테이지가 직선과의 어긋남만 지움};
+\end{tikzpicture}
+\end{document}

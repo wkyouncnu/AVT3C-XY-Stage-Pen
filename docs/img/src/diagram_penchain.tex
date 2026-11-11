@@ -1,0 +1,29 @@
+\documentclass[tikz,border=6pt]{standalone}
+\input{xystyle}
+% diagram_penchain : PenComp 계산 순서와 좌표계·단위 (1000 의 위치)
+\begin{document}
+\begin{tikzpicture}[node distance=0.75cm]
+\tikzset{b/.style={key, minimum height=1.45cm, minimum width=2.5cm}, h/.style={hw, minimum height=1.45cm, minimum width=2.5cm},
+         fr/.style={font=\footnotesize, text=mute, anchor=north}}
+\node[blk, minimum height=1.45cm, minimum width=2.2cm] (in) {측정·목표\\ $\hat p,\ \hat\psi$\\ $A,\ B$};
+\node[b, right=of in] (s1) {(1) 중앙일 때 펜\\ $c_0 = \hat p + R(\hat\psi)\,d$};
+\node[b, right=of s1] (s2) {(2) 수선의 발\\ $p^{\star} = A + \sigma u$\\ $\sigma = u^{\top}(c_0 - A)$};
+\node[b, right=of s2] (s3) {(3) 바디로 옮김\\ $\Delta s = R^{\top}(\hat\psi)(p^{\star}-\hat p) - d$};
+\node[b, right=of s3, draw=red!60!black, line width=1pt] (s4) {(4) 단위 변환\\ $1000\,\Delta s$};
+\node[b, right=of s4] (s5) {(5) 원점 이동\\ $s^{\star} = s_c + 1000\,\Delta s$};
+\foreach \n/\t in {in/{벽면 $\mathcal W$, m}, s1/{벽면 $\mathcal W$, m}, s2/{벽면 $\mathcal W$, m}, s3/{바디 $\mathcal B$, m}, s4/{바디 $\mathcal B$, mm}, s5/{스테이지 $\mathcal S$, mm}}
+  \node[fr] at ($(\n.south)+(0,-0.05)$) {\t};
+\draw[sig] (in)--(s1); \draw[sig] (s1)--(s2); \draw[sig] (s2)--(s3);
+\draw[sig] (s3)-- node[lab, above]{m} (s4); \draw[sig] (s4)-- node[lab, above]{mm} (s5);
+% ---- 실제 장치 쪽 (되돌아오는 길)
+\node[h, below=1.7cm of s5] (zb) {Zaber 펌웨어\\ \texttt{move abs} $s^{\star}$\\ $\to$ 캐리지 $s$ [mm]};
+\node[h, left=of zb] (r1) {(6) 원점·단위 되돌림\\ $\Delta s = \dfrac{s - s_c}{1000}$ [m]};
+\node[h, left=of r1, minimum width=4.6cm] (r2) {(7) 실제 펜 끝 (벽면 $\mathcal W$, m)\\ $P = p + R(\psi)\,(d + \Delta s)$};
+\draw[sig] ($(s5.south)+(1.2,0)$) -- node[lab, right]{\tp{/stage/target\_pos}\\ $[X;\ Y]$ mm} ($(zb.north)+(1.2,0)$);
+\draw[sig] (zb) -- (r1); \draw[sig] (r1) -- (r2);
+\node[note, anchor=north west, text width=19cm] at ($(in.south west |- r2.south)+(0,-0.35)$) {%
+  컨트롤러 안의 길이는 SI 단위 m, Zaber 와 토픽 \tp{/stage/*} 은 mm 를 씀 ($1\ \mathrm{m} = 1000\ \mathrm{mm}$).
+  Zaber 의 0 은 홈 (행정 한쪽 끝) 이므로 중앙 $s_c = 50.8$ mm 를 더함. (6) 은 (4)·(5) 의 역이며 펜 위치를 계산할 때 (\texttt{PenTrace}) 씀.\\
+  검산: (3) 을 (7) 에 넣으면 $P = \hat p + R R^{\top}(p^{\star} - \hat p) = p^{\star}$ (측정이 정확할 때).};
+\end{tikzpicture}
+\end{document}

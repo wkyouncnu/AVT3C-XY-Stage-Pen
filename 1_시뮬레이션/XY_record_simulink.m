@@ -123,7 +123,9 @@ setappdata(0, 'XYREC', st);
 set_param(m, 'StartFcn', 'XY_record_simulink(''attach'')');
 L('sim start');
 try
-    sim(m);
+    assignin('base','XY_batch',1);  assignin('base','animate',0);
+    sim(m, 'ReturnWorkspaceOutputs','on');
+    assignin('base','XY_batch',0);  assignin('base','animate',1);
     L('sim OK');
 catch e
     L(['sim FAIL: ' getReport(e, 'extended', 'hyperlinks','off')]);

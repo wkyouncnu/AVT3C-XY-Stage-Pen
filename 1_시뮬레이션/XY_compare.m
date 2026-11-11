@@ -42,7 +42,8 @@ for k = XY_compare_only
     stg_p = [m_sx; m_sy; c_s; Kp_s; Kd_s; Ki_s; g_acc];
     T_run = 40 + 0.7/v_ref;
     fprintf('\n[%d/%d] %s — %s\n', k, size(cases,1), cases{k,1}, cases{k,2});
-    out = sim('XY_1_pen_sim');
+    XY_batch = 1;  animate = 0;
+    out = sim('XY_1_pen_sim', 'ReturnWorkspaceOutputs','on');
     lg = out.log;
     [t, ep] = xy_getd(lg, 'e_pen');   [~, en] = xy_getd(lg, 'e_nocomp');
     [~, on] = xy_getd(lg, 'pen_on');  [~, sp] = xy_getd(lg, 'stage_pos');

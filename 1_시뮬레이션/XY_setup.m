@@ -135,6 +135,9 @@ tau_pred  = 0;                % ZeroKey 지연 보상 시간 [s] (Nav, 0 이면 
 %% 9. 애니메이션
 anim_speed = 2.0;
 anim_fps   = 25;
+animate    = 1;               % Run 버튼으로 돌릴 때 실시간 화면 (0 이면 끔, 빨라진다)
+anim_Ts    = 0.1;             % 실시간 화면 갱신 주기 [s]
+XY_batch   = 0;               % 1 이면 StopFcn (XY_stop) 이 그림을 그리지 않는다 — 스크립트가 세운다
 stl_file   = fullfile(here, '..', '4_CAD', 'AVT-3C.stl');
 
 fprintf('XY_setup 완료: 선 %.2f m, 레버암 %.3f m, ZeroKey %.0f Hz, ROS_DOMAIN_ID %d (가상 실험)\n', ...

@@ -24,7 +24,9 @@ catch e
 end
 
 try
-    out = sim('XY_1_pen_sim');  status{end+1} = 'sim OK';
+    XY_batch = 1;  animate = 0;
+    out = sim('XY_1_pen_sim', 'ReturnWorkspaceOutputs','on');  status{end+1} = 'sim OK';
+    XY_batch = 0;  animate = 1;
 catch e
     status{end+1} = ['sim FAIL: ' e.message];  disp(getReport(e,'extended'));
 end

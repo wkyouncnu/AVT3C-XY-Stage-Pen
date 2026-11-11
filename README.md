@@ -72,6 +72,7 @@
 │   ├── XY_2_pen_ros2.slx     실기 (제어기만)
 │   ├── XY_run_all.m          설정 → 빌드 → 실행 → 그림 → 동영상
 │   ├── XY_compare.m          설계 선택 비교 (11 장), XY_compare_plot.m
+│   ├── XY_animate.m          Run 버튼 실시간 화면, XY_stop.m (StopFcn: 결과 그림)
 │   ├── XY_plot.m, XY_animate_video.m, XY_record_simulink.m
 │   ├── img/                  모델 그림, 결과 그래프
 │   └── video/                결과 동영상
@@ -255,16 +256,20 @@ $$
 
 ![XY_1_pen_sim 최상위](1_시뮬레이션/img/XY_1_pen_sim.png)
 
-*그림 5. XY_1_pen_sim 최상위 (윗줄 제어기, 아랫줄 가상 실험장, 맨 아래 평가·기록)*
+*그림 5. XY_1_pen_sim 최상위 (윗줄 제어기, 오른쪽 아래 가상 실험장, 왼쪽 아래 평가·기록·실시간 화면)*
 
 | 모델 | 구성 | 용도 |
 |---|---|---|
-| `XY_1_pen_sim.slx` | 제어기 (RosIn, Nav, Mission, RobotCtrl, PwmMap, PenCtrl, RosOut) + 가상 실험장 (PlantRosIn, RobotPlant, StagePlant, Sensors, PlantRosOut) + PenTrace, Logging | 가상 실험 (도메인 77) |
+| `XY_1_pen_sim.slx` | 제어기 (RosIn, Nav, Mission, RobotCtrl, PwmMap, PenCtrl, RosOut) + 가상 실험장 (PlantRosIn, RobotPlant, StagePlant, Sensors, PlantRosOut) + PenTrace, Logging, Animate | 가상 실험 (도메인 77) |
 | `XY_2_pen_ros2.slx` | 같은 빌더 함수로 만든 제어기 윗줄만 | 실기 (도메인 0) |
 
 - 모든 계산 코드는 모델 안의 MATLAB Function 블록에 있음 (외부 .m 함수 없음)
-- 왼쪽 → 오른쪽 배치: 미션 → 제어 → 배분 → ROS 경계·플랜트 → 측정
-- 서브시스템 사이 신호는 포트 옆 Goto/From (선은 수평 직선)
+- 왼쪽 → 오른쪽 배치: 항법 (RosIn, Nav) → 미션 → 제어 → 배분 → ROS 경계·플랜트 → 측정
+- 상자 사이 신호는 선으로 바로 연결 (선에 신호 이름). 상자는 앞 상자의 포트 높이에 맞춰 선이 수평 직선
+- 서브시스템 안도 선으로 연결 (Simulink 층 배치). Goto/From 은 두 경우에만 사용
+  - 기록·평가용 탭 (Logging, PenTrace, Animate 가 꺼내 쓰는 신호)
+  - RobotCtrl 안에서 모드 상자 네 개가 같은 입력을 나눠 쓰는 곳
+- 제어기와 가상 실험장은 선이 아니라 ROS 2 토픽으로만 연결 (RosOut → PlantRosIn, PlantRosOut → RosIn)
 - 블록에는 숫자 대신 파라미터 이름 (`XY_setup.m` 하나만 고치면 됨)
 - 제어기는 연속, ode4 고정 스텝 0.005 s. 이산 블록 (센서 ZOH, Nav persistent, 명령 ZOH) 은 Description 에 이유 기재
 - 기록은 Bus Creator → ZOH (0.01 s) → To Workspace `log` 하나
@@ -310,6 +315,7 @@ $$
 
 | 목적 | 명령 | 소요 |
 |---|---|---|
+| Simulink 에서 바로 | `XY_setup` 후 `XY_1_pen_sim.slx` 를 열고 Run 버튼 | 약 30 s. 실행 중 실시간 화면, 끝나면 결과 그림 두 장 |
 | 전체 (설정 → 빌드 → 실행 → 그림 → 동영상) | `XY_run_all` | 약 3 분 |
 | 가상 실험 한 번 | `XY_1_pen_sim_run` | 약 40 s (실시간 1×) |
 | 결과 그림만 | `M = XY_plot(out)` | – |
@@ -319,6 +325,16 @@ $$
 
 - 실시간 1× 로 도는 이유: ROS 2 루프백에서 발행·구독 시점이 실기와 같아야 함
 - 미션이 끝나면 (모드 5) 자동 정지
+
+Run 버튼으로 실행할 때의 동작
+
+| 항목 | 내용 |
+|---|---|
+| 실시간 화면 | Animate 상자 → `XY_animate.m`, 0.1 s 마다 갱신. 벽면 정면 모습 (목표 직선, 로봇 외형·heading, 스테이지 행정, 펜 자국), 제목에 직선 오차 [mm]·스테이지 위치 |
+| 끄기 | `animate = 0` 후 다시 Run (시뮬레이션은 실시간 1× 그대로) |
+| 종료 후 | StopFcn `XY_stop.m` 이 `log` 를 `out.log` 로 옮기고 `XY_plot(out)` 실행 → 벽면 궤적, 시간 응답 그림, 명령창에 RMS |
+| 이어서 | `XY_animate_video(out)` 으로 3D 동영상 |
+| 스크립트 실행 | `XY_batch = 1`, `animate = 0` 으로 두 기능을 끄고 `sim(..., 'ReturnWorkspaceOutputs','on')` 반환값 사용 |
 
 ---
 
@@ -369,17 +385,20 @@ $$
 
 | 구분 | 실행 | 대상 | 기준 |
 |---|---|---|---|
-| 모델 구조 | `build_xy_models` | 두 모델 | `check_lines` 7 항목 0, `check_flow` 통과, `check_tags` 0 |
+| 모델 구조 | `build_xy_models` | 두 모델 | `check_flow` 0, `check_tags` 0, `check_lines` 겹침·관통·사선·블록겹침 0 |
 | ROS 루프백 | `XY_1_pen_sim_run` | 토픽 발행·구독 | 미션 모드 1 → 5 완주 |
 | 실기 모델 | `update diagram` (도메인 0) | `XY_2_pen_ros2` | 오류 없음 |
 | 펜 정확도 | `XY_plot` | 펜 다운 구간 | 횡오차 RMS ≤ 2 mm, 스테이지 포화 없음 |
 
 ### 10.2 모델 구조 결과
 
-| 모델 | check_lines | 2회 꺾임 | Goto / From | 판정 |
-|---|---|---|---|---|
-| XY_1_pen_sim | 0 | 0 | 78 / 123 | 통과 |
-| XY_2_pen_ros2 | 0 | 0 | 35 / 60 | 통과 |
+| 모델 | check_flow | check_tags | 겹침·관통·사선·블록겹침 | 3회 이상 꺾임 | Goto / From |
+|---|---|---|---|---|---|
+| XY_1_pen_sim | 0 | 0 | 0 | 10 | 26 / 44 |
+| XY_2_pen_ros2 | 0 | 0 | 0 | 1 | 19 / 29 |
+
+- 3회 이상 꺾인 선 10 개 중 7 개는 운동모델 안의 적분기 되먹임 (V, q, x_t, x_s 를 앞 블록으로 되돌리는 선), 3 개는 최상위의 긴 연결 (pose, q_true, stage_target_pos)
+- 이전 판 (Goto/From 연결, 78 / 123) 은 이 항목이 0 이었으나 신호 흐름이 선으로 보이지 않아 선 연결로 바꿈. 되먹임 선을 다시 Goto/From 으로 숨기지 않음
 
 ### 10.3 가상 실험 결과 (기준 조건)
 

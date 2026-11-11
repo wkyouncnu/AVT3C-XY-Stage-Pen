@@ -49,6 +49,8 @@ function build_sim()
     set_param(m, 'SolverType','Fixed-step', 'SolverName','ode4', ...
                  'FixedStep','Ts_plant', 'StopTime','T_run', 'SimulationMode','normal');
     %  ROS 2 루프백: 토픽이 실제 DDS 를 지나므로 실시간보다 빨리 돌리지 않는다
+    %  Run 버튼: To Workspace log 가 base 에 바로 생기고, 끝나면 XY_stop 이 결과 그림을 띄운다
+    set_param(m, 'ReturnWorkspaceOutputs','off', 'StopFcn','XY_stop');
     try, set_param(m, 'EnablePacing','on', 'PacingRate', 1); catch, end
     L = layout();
     addController(m, L);
@@ -59,12 +61,14 @@ function build_sim()
     addPlantRosOut(m, L.prout);
     addPenTrace(m,    L.trace);
     addLogging(m,     L.log, log_signals(true));
-    wire_tags(m);
+    %  실시간 화면 (끄기: animate = 0). 그리는 일은 XY_animate.m
+    add_animate_box(m, {'q_true','pen_true','pen_on','stage_pos','lineAB'}, 'XY_animate', '', [L.log(1)+330 L.log(2)], 'anim_Ts');
+    wire_direct(m);
     note(m, 'n_title', ['XY_1_pen_sim : AVT-3C 벽면 로봇 + XY 스테이지 펜 직선 긋기 — 가상 실험 (ROS 2 루프백)' newline ...
         '윗줄 = 제어기 (XY_2_pen_ros2 와 같은 상자).  아랫줄 = 가상 실험장 (6WP_sim 동역학 + 센서 + Zaber 모델)' newline ...
-        '두 줄은 Goto/From 이 아니라 ROS 2 토픽으로만 이어진다.   실행 전 >> XY_setup'], 60, 10);
+        '제어기와 가상 실험장은 선이 아니라 ROS 2 토픽으로만 이어진다 (RosOut → PlantRosIn,  PlantRosOut → RosIn).   실행 전 >> XY_setup'], 60, 10);
     note(m, 'n_plant', ['▼ 가상 실험장 — /motor_pwm · /stage/target_pos 를 구독하고' newline ...
-        '   /zerokey/position · /zerokey/vel · /imu/data · /zerokey/orientation · /stage/pos 를 발행한다'], L.prin(1), L.prin(2) - 110);
+        '   /zerokey/position · /zerokey/vel · /imu/data · /zerokey/orientation · /stage/pos 를 발행한다'], L.prin(1), L.prin(2) - 70);
     note(m, 'n_eval', '▼ 평가·기록 — 참값으로 계산한 펜 자국 (제어기는 모른다), To Workspace log', L.trace(1), L.trace(2) - 50);
     save_system(m);  close_system(m);
     fprintf('  %s 생성\n', m);
@@ -74,11 +78,12 @@ function build_real()
     m = 'XY_2_pen_ros2';  fresh(m);
     set_param(m, 'SolverType','Fixed-step', 'SolverName','ode4', ...
                  'FixedStep','Ts_ctrl', 'StopTime','T_run_ros', 'SimulationMode','normal');
+    set_param(m, 'ReturnWorkspaceOutputs','off', 'StopFcn','XY_stop');
     try, set_param(m, 'EnablePacing','on', 'PacingRate', 1); catch, end
     L = layout();
     addController(m, L);
     addLogging(m, L.log, log_signals(false));
-    wire_tags(m);
+    wire_direct(m);
     note(m, 'n_title', ['XY_2_pen_ros2 : 실기 — XY_1_pen_sim 의 윗줄(제어기)과 같은 상자' newline ...
         '구독 /zerokey/position /zerokey/vel /imu/data /stage/pos    발행 /motor_pwm /stage/target_pos' newline ...
         '실행 전 >> XY_setup ; setenv(''ROS_DOMAIN_ID'', num2str(ros_domain_real))'], 60, 10);
@@ -100,14 +105,21 @@ end
 function finish_model(m, here)
 %  강의 도구로 색·치수를 맞추고 검사·도면을 남긴다. 도구가 없어도 모델은 남는다.
     load_system(m);
+    %  서브시스템 안: arrangeSystem 으로 층 배치 (선이 왼쪽 -> 오른쪽으로 흐른다).
+    %  맨 위: 빌더 자리를 쓰고, 상자를 앞 상자의 포트 높이에 맞춘 뒤 선을 다시 긋는다.
+    %  (tidy_model 은 쓰지 않는다: 되먹임 선을 다시 Goto/From 으로 바꾸고 출력 없는 ROS 상자를 구석으로 내린다)
+    arrange_subs(m);
     try, paint_roles(m); catch e, warning('paint_roles: %s', e.message); end
     try, mss_style(m);   catch e, warning('mss_style: %s', e.message); end
+    align_root(m);
+    connect_root(m);
     save_system(m);
     try
         [n, ~, n2] = check_lines(m, false);
         fprintf('  %s check_lines 지적 %d, 꺾임2회 %d\n', m, n, n2);
     catch e, warning('check_lines: %s', e.message); end
     try, check_tags(m, true);   catch e, warning('check_tags: %s', e.message); end
+    try, nf = check_flow(m); fprintf('  %s check_flow 어긋남 %d\n', m, nf); catch e, warning('check_flow: %s', e.message); end
     try
         export_diagram(m, fullfile(here,'img'));
         subs = find_system(m, 'SearchDepth',1, 'BlockType','SubSystem');
@@ -125,27 +137,28 @@ end
 %  배치 — 상자 자리 [x y 폭 포트수]
 % =====================================================================
 function L = layout()
-%  강의 규칙 (check_flow): 왼쪽 -> 오른쪽 = 미션 -> 제어 -> 배분 -> ROS 경계·플랜트 -> 기록
-%    윗줄 왼쪽   제어기   Mission -> RobotCtrl -> PwmMap -> RosOut   (+ PenCtrl 아래)
-%    윗줄 오른쪽 ROS 입력 RosIn -> Nav  ->  pose 는 Goto/From 으로 왼쪽 Mission 에 되돌아간다
-%    아랫줄      가상 실험장 (ROS 경계 아래)  PlantRosIn -> RobotPlant -> Sensors -> PlantRosOut
-%    맨 아래     평가·기록 (PenTrace, Logging)
-    W = 150;  Y1 = 140;  Y1b = 560;  Y2 = 980;  Y2b = 1380;  Y3 = 1560;   % 평가·기록은 사슬 전체 아래 (check_flow)
-    col = @(k) 200 + (k-1)*600;   % 상자 사이에 Goto(출력) 와 From(입력) 이 나란히 들어갈 폭
-    L.mission = [col(1) Y1  W 5];
-    L.robot   = [col(2) Y1  W 5];
-    L.pen     = [col(2) Y1b W 3];
-    L.pwm     = [col(3) Y1  W 2];
-    L.rosout  = [col(4) Y1  W 2];
-    L.rosin   = [col(5) Y1  W 4];
-    L.nav     = [col(6) Y1  W 2];
-    L.prin    = [col(4) Y2  W 2];
-    L.rplant  = [col(5) Y2  W 2];
-    L.splant  = [col(5) Y2b W 2];
-    L.sensors = [col(6) Y2  W 4];
-    L.prout   = [col(7) Y2  W 5];
-    L.trace   = [col(1) Y3];
-    L.log     = [col(2) Y3];
+%  강의 규칙 (check_flow): 왼쪽 -> 오른쪽 = 항법 -> 미션 -> 제어 -> 배분 -> ROS 경계·플랜트 -> 기록
+%    윗줄   제어기   RosIn -> Nav -> Mission -> RobotCtrl -> PwmMap -> RosOut   (PenCtrl 은 RobotCtrl 아래)
+%    오른쪽 아래     가상 실험장  PlantRosIn -> RobotPlant -> Sensors -> PlantRosOut  (StagePlant 는 RobotPlant 아래)
+%    왼쪽 아래       평가·기록 (PenTrace, Logging) — 사슬 전체보다 아래
+%  상자 사이는 선으로 바로 잇는다 (Goto/From 은 기록용 탭만). 그래서 열 간격은 선 이름이 들어갈 만큼만
+    W = 160;  Y1 = 140;
+    col = @(k) 120 + (k-1)*330;
+    L.rosin   = [col(1) Y1      W 4];
+    L.nav     = [col(2) Y1      W 3];
+    L.mission = [col(3) Y1      W 5];
+    L.robot   = [col(4) Y1      W 6];
+    L.pen     = [col(4) Y1+430  W 3];
+    L.pwm     = [col(5) Y1      W 2];
+    L.rosout  = [col(6) Y1      W 2];
+    Y2 = 480;  cp = @(k) col(5) + 60 + (k-1)*330;
+    L.prin    = [cp(1) Y2       W 2];
+    L.rplant  = [cp(2) Y2       W 2];
+    L.splant  = [cp(2) Y2+200   W 2];
+    L.sensors = [cp(3) Y2       W 4];
+    L.prout   = [cp(4) Y2       W 5];
+    L.trace   = [col(1) 900];
+    L.log     = [col(2) 900];
 end
 
 function pos = boxpos(P, nports)
@@ -362,7 +375,7 @@ function addRobotCtrl(m, P)
         for j = 1:numel(ins)
             b = port_xy(ss, nm, 'Inport', j);
             add_block('simulink/Signal Routing/From', [ss '/Fr_' ins{j} '_' num2str(k)], ...
-                      'GotoTag', ['i_' ins{j}], 'Position', [X-150 b(2)-11 X-60 b(2)+11]);
+                      'GotoTag', ['i_' ins{j}], 'Position', [X-210 b(2)-11 X-60 b(2)+11]);
             add_line(ss, ['Fr_' ins{j} '_' num2str(k) '/1'], sprintf('%s/%d', nm, j));
         end
         %  Enable: mode == k  (상자 바로 위)
@@ -1030,4 +1043,183 @@ end
 
 function note(m, tag, txt, x, y)
     add_block('built-in/Note', [m '/' tag], 'Position',[x y x y], 'Text', txt);
+end
+
+% =====================================================================
+%  선으로 잇기 — 가독성: 신호 흐름이 선으로 보이게, Goto/From 은 기록용 탭만
+% =====================================================================
+%  1) 맨 위 상자들을 같은 이름의 포트끼리 선으로 바로 잇는다 (선에 신호 이름)
+%  2) 모든 서브시스템 안의 로컬 Goto/From 쌍을 선으로 바꾼다
+%  3) Logging · PenTrace 가 쓰는 신호만 만든 상자 안에 전역 Goto (탭) 를 하나씩 둔다
+%  (가상 실험장과 제어기 사이는 포트 이름이 달라 이어지지 않는다 — 둘은 ROS 2 토픽으로만 이어진다)
+function wire_direct(m)
+    connect_root(m);
+    collapse_all(m);
+    shift_ctrl_inputs(m);
+    tap_gotos(m);
+end
+
+function shift_ctrl_inputs(m)
+%  RobotCtrl: 입력 포트·Goto 를 From 열 가까이로 (빈 띠를 줄인다)
+    ss = [m '/RobotCtrl'];
+    if getSimulinkBlockHandle(ss) < 0, return; end
+    bl = [find_system(ss, 'SearchDepth',1, 'BlockType','Inport'); ...
+          find_system(ss, 'SearchDepth',1, 'BlockType','Goto', 'TagVisibility','local')];
+    for k = 1:numel(bl)
+        p = get_param(bl{k}, 'Position');  set_param(bl{k}, 'Position', p + [180 0 180 0]);
+    end
+end
+
+function connect_root(m)
+%  같은 이름의 출력 -> 입력 포트를 선으로 잇는다 (이미 있는 맨 위 선은 지우고 다시)
+    old = find_system(m, 'SearchDepth',1, 'FindAll','on', 'Type','line');
+    for k = 1:numel(old), try, delete_line(old(k)); catch, end, end
+    subs = find_system(m, 'SearchDepth',1, 'BlockType','SubSystem');
+    src = containers.Map();
+    for k = 1:numel(subs)
+        ph = get_param(subs{k}, 'PortHandles');
+        outs = find_system(subs{k}, 'SearchDepth',1, 'BlockType','Outport');
+        for j = 1:numel(outs)
+            src(get_param(outs{j}, 'Name')) = ph.Outport(str2double(get_param(outs{j}, 'Port')));
+        end
+    end
+    for k = 1:numel(subs)
+        ph = get_param(subs{k}, 'PortHandles');
+        ins = find_system(subs{k}, 'SearchDepth',1, 'BlockType','Inport');
+        for j = 1:numel(ins)
+            nm = get_param(ins{j}, 'Name');
+            if ~isKey(src, nm), continue; end
+            h = add_line(m, src(nm), ph.Inport(str2double(get_param(ins{j}, 'Port'))), 'autorouting','smart');
+            set_param(h, 'Name', nm);
+        end
+    end
+end
+
+function collapse_all(m)
+    subs = find_system(m, 'LookUnderMasks','all', 'FollowLinks','on', 'BlockType','SubSystem');
+    for k = 1:numel(subs)
+        if ~strcmp(get_param(subs{k}, 'SFBlockType'), 'NONE'), continue; end   % MATLAB Function · Chart 제외
+        collapse_tags(subs{k});
+    end
+end
+
+function collapse_tags(sys)
+    gos = find_system(sys, 'SearchDepth',1, 'BlockType','Goto', 'TagVisibility','local');
+    keep_in = endsWith(sys, '/RobotCtrl');   % 모드 상자 네 개가 같은 입력을 나눠 쓴다 -> 입력은 태그가 더 읽기 쉽다
+    for k = 1:numel(gos)
+        tag = get_param(gos{k}, 'GotoTag');
+        if keep_in && startsWith(tag, 'i_'), continue; end
+        frs = find_system(sys, 'SearchDepth',1, 'BlockType','From', 'GotoTag', tag);
+        lg = get_param(gos{k}, 'LineHandles');
+        if isempty(frs) || lg.Inport < 0, continue; end
+        sp = get_param(lg.Inport, 'SrcPortHandle');
+        dst = [];
+        for j = 1:numel(frs)
+            lf = get_param(frs{j}, 'LineHandles');
+            if lf.Outport > 0
+                dst = [dst; get_param(lf.Outport, 'DstPortHandle')]; %#ok<AGROW>
+                delete_line(lf.Outport);
+            end
+            delete_block(frs{j});
+        end
+        delete_line(lg.Inport);  delete_block(gos{k});
+        for j = 1:numel(dst)
+            if dst(j) > 0, add_line(sys, sp, dst(j), 'autorouting','smart'); end
+        end
+    end
+end
+
+function tap_gotos(m)
+%  기록 상자가 From 으로 꺼내 쓰는 신호를, 그 신호를 내보내는 상자 안 출력 포트 옆에 전역 Goto 로 건다
+    need = {};
+    for b = {'Logging','PenTrace','Animate'}
+        if getSimulinkBlockHandle([m '/' b{1}]) < 0, continue; end
+        fr = find_system([m '/' b{1}], 'BlockType','From');
+        need = [need; cellstr(get_param(fr, 'GotoTag'))]; %#ok<AGROW>
+    end
+    need = unique(need);
+    hg = find_system(m, 'LookUnderMasks','all', 'BlockType','Goto', 'TagVisibility','global');
+    have = {};  if ~isempty(hg), have = cellstr(get_param(hg, 'GotoTag')); end
+    subs = find_system(m, 'SearchDepth',1, 'BlockType','SubSystem');
+    for k = 1:numel(subs)
+        outs = find_system(subs{k}, 'SearchDepth',1, 'BlockType','Outport');
+        for j = 1:numel(outs)
+            nm = get_param(outs{j}, 'Name');
+            if ~ismember(nm, need) || ismember(nm, have), continue; end
+            lo = get_param(outs{j}, 'LineHandles');
+            if lo.Inport < 0, continue; end
+            sp = get_param(lo.Inport, 'SrcPortHandle');
+            p = get_param(outs{j}, 'Position');
+            w = max(70, 7*numel(nm) + 20);
+            g = [subs{k} '/Tap_' nm];
+            add_block('simulink/Signal Routing/Goto', g, 'GotoTag', nm, 'TagVisibility','global', ...
+                      'Position', [p(1)-w-10 p(4)+20 p(1)-10 p(4)+42]);
+            gp = get_param(g, 'PortHandles');
+            add_line(subs{k}, sp, gp.Inport, 'autorouting','smart');
+            have{end+1} = nm; %#ok<AGROW>
+        end
+    end
+end
+
+function arrange_subs(m)
+    ws = warning('off', 'all');
+    subs = find_system(m, 'LookUnderMasks','all', 'BlockType','SubSystem');
+    for k = 1:numel(subs)
+        if ~strcmp(get_param(subs{k}, 'SFBlockType'), 'NONE'), continue; end
+        if endsWith(subs{k}, '/RobotCtrl'), continue; end   % M1 -> M4 순서를 빌더 자리 그대로
+        try, Simulink.BlockDiagram.arrangeSystem(subs{k}); catch, end
+    end
+    warning(ws);
+end
+
+function align_root(m)
+%  상자를 앞 상자의 출력 포트 높이에 맞춰 위아래로만 옮긴다 -> 맨 위 선이 수평 직선이 된다
+    P = {'RosIn','zerokey_position','Nav','zerokey_position';
+         'Nav','pose','Mission','pose';
+         'Mission','WP_prev','RobotCtrl','WP_prev';
+         'RobotCtrl','v_cmd','PwmMap','v_cmd';
+         'PwmMap','motor_pwm','RosOut','motor_pwm';
+         'PlantRosIn','motor_pwm_rx','RobotPlant','motor_pwm_rx';
+         'RobotPlant','q_true','Sensors','q_true';
+         'Sensors','zk_meas','PlantRosOut','zk_meas'};
+    for k = 1:size(P,1)
+        a = [m '/' P{k,1}];  b = [m '/' P{k,3}];
+        if getSimulinkBlockHandle(a) < 0 || getSimulinkBlockHandle(b) < 0, continue; end
+        ya = port_y(a, 'Outport', P{k,2});  yb = port_y(b, 'Inport', P{k,4});
+        if isnan(ya) || isnan(yb), continue; end
+        p = get_param(b, 'Position');  d = ya - yb;
+        set_param(b, 'Position', p + [0 d 0 d]);
+    end
+    %  아래에 놓인 상자는 위 상자 바로 밑으로
+    below(m, 'RobotCtrl', 'PenCtrl', 70);
+    below(m, 'RobotPlant', 'StagePlant', 80);
+    %  평가·기록은 사슬 전체 바로 아래 (check_flow: 종착 상자는 사슬보다 아래면 x 를 따지지 않는다)
+    subs = find_system(m, 'SearchDepth',1, 'BlockType','SubSystem');
+    yb = 0;
+    for k = 1:numel(subs)
+        if any(strcmp(get_param(subs{k},'Name'), {'PenTrace','Logging','Animate'})), continue; end
+        p = get_param(subs{k}, 'Position');  yb = max(yb, p(4));
+    end
+    for b = {'PenTrace','Logging','Animate','n_eval'}
+        h = getSimulinkBlockHandle([m '/' b{1}]);
+        if h < 0, continue; end
+        p = get_param(h, 'Position');
+        if strcmp(b{1}, 'n_eval'), y0 = yb + 40; else, y0 = yb + 110; end
+        set_param(h, 'Position', [p(1) y0 p(3) y0 + p(4) - p(2)]);
+    end
+end
+
+function below(m, top, bot, gap)
+    a = [m '/' top];  b = [m '/' bot];
+    if getSimulinkBlockHandle(a) < 0 || getSimulinkBlockHandle(b) < 0, return; end
+    pa = get_param(a, 'Position');  pb = get_param(b, 'Position');
+    set_param(b, 'Position', [pb(1) pa(4)+gap pb(3) pa(4)+gap+pb(4)-pb(2)]);
+end
+
+function y = port_y(blk, kind, name)
+    y = NaN;
+    ports = find_system(blk, 'SearchDepth',1, 'BlockType', kind, 'Name', name);
+    if isempty(ports), return; end
+    ph = get_param(blk, 'PortHandles');  n = str2double(get_param(ports{1}, 'Port'));
+    q = get_param(ph.(kind)(n), 'Position');  y = q(2);
 end

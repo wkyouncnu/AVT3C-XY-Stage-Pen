@@ -8,7 +8,9 @@ here = fileparts(mfilename('fullpath'));  cd(here);
 XY_setup;
 if ~isfile('XY_1_pen_sim.slx'), build_xy_models(1); end
 
-out = sim('XY_1_pen_sim');
+XY_batch = 1;  animate = 0;
+out = sim('XY_1_pen_sim', 'ReturnWorkspaceOutputs','on');
+XY_batch = 0;  animate = 1;
 M = XY_plot(out);
 if ~exist('make_video','var') || make_video
     XY_animate_video(out);

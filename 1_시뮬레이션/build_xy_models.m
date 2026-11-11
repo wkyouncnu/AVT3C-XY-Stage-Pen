@@ -1,4 +1,4 @@
-function build_xy_models(which)
+function build_xy_models(which, ver)
 % BUILD_XY_MODELS  XY 스테이지 펜 제어 Simulink 모델을 코드로 만든다.
 %
 %   >> XY_setup
@@ -27,7 +27,19 @@ function build_xy_models(which)
 %   계산 코드는 모두 모델 안 MATLAB Function 블록에 들어 있다 (외부 .m 함수 없음).
 %   이 빌더가 그 코드를 블록에 써 넣는다 — 모델을 고칠 때는 이 파일을 고치고 다시 만든다.
 
+%   >> build_xy_models([1 2], 2)   % 2 판: 실기 모델의 내부 PI (속도·요 각속도) 를 넣은 모델
+%     XY_1_pen_sim_v2.slx, XY_2_pen_ros2_v2.slx  — 1 판 모델 (XY_1_pen_sim, XY_2_pen_ros2) 은 건드리지 않는다
+%     2 판에서 바뀌는 것 / v2 adds (1 판은 그대로):
+%       RosIn   /imu/data 에서 angular_velocity.z 도 읽는다 (imu_data = [쿼터니언; 자이로 z])
+%       Nav     V_meas = [u_body; r] 를 낸다 (ZeroKey 속도를 heading 으로 바디 좌표에, IMU 자이로 z)
+%       InnerPI 실기 Tracked_UGV_ZeroKey_XsensIMU 의 PID Controller2·3 과 같은 이산 PI 두 개
+%       PwmMap  PI 출력 V, W (-0.5 ~ 0.5) 를 그대로 calc_pwm 에 넣는다 (속도 정규화 없음)
+%       Sensors IMU 메시지에 자이로 z (참 각속도 + 잡음) 를 같이 실어 발행
+
     if nargin < 1, which = [1 2]; end
+    if nargin < 2, ver = 1; end
+    ver2(ver == 2);
+    sfx = '';  if ver == 2, sfx = '_v2'; end
     here = fileparts(mfilename('fullpath'));
     cd(here);
     addpath(here);  addpath(fullfile(here, '..', '_tools'));
@@ -36,16 +48,25 @@ function build_xy_models(which)
     end
     if ~isfolder(fullfile(here,'img')), mkdir(fullfile(here,'img')); end
 
-    if any(which == 1), build_sim();  finish_model('XY_1_pen_sim', here);  end
-    if any(which == 2), build_real(); finish_model('XY_2_pen_ros2', here); end
+    if any(which == 1), build_sim(['XY_1_pen_sim' sfx]);   finish_model(['XY_1_pen_sim' sfx], here);  end
+    if any(which == 2), build_real(['XY_2_pen_ros2' sfx]); finish_model(['XY_2_pen_ros2' sfx], here); end
+    ver2(false);
     fprintf('\n완료.\n');
+end
+
+function v = ver2(set)
+%  2 판 (내부 PI) 을 만드는 중인지 / true while building the v2 (inner PI) models
+    persistent V
+    if isempty(V), V = false; end
+    if nargin, V = set; end
+    v = V;
 end
 
 % =====================================================================
 %  모델 두 개
 % =====================================================================
-function build_sim()
-    m = 'XY_1_pen_sim';  fresh(m);
+function build_sim(m)
+    fresh(m);
     set_param(m, 'SolverType','Fixed-step', 'SolverName','ode4', ...
                  'FixedStep','Ts_plant', 'StopTime','T_run', 'SimulationMode','normal');
     %  ROS 2 루프백: 토픽이 실제 DDS 를 지나므로 실시간보다 빨리 돌리지 않는다
@@ -68,7 +89,7 @@ function build_sim()
     add_animate_box(m, {'q_true','pen_true','pen_on','stage_pos','lineAB','e_pen','v_cmd','w_cmd','V_true','mode'}, 'XY_animate', '', [L.log(1)+330 L.log(2)], 'anim_Ts');
     hold_inputs([m '/Animate'], 'AnimateFcn', 'anim_Ts');
     wire_direct(m);
-    note(m, 'n_title', ['XY_1_pen_sim : AVT-3C 벽면 로봇 + XY 스테이지 펜 직선 긋기 — 가상 실험 (ROS 2 루프백)' newline ...
+    note(m, 'n_title', [m ' : AVT-3C 벽면 로봇 + XY 스테이지 펜 직선 긋기 — 가상 실험 (ROS 2 루프백)' v2_line() newline ...
         '윗줄 = 제어기 (XY_2_pen_ros2 와 같은 상자).  아랫줄 = 가상 실험장 (6WP_sim 동역학 + 센서 + Zaber 모델)' newline ...
         '제어기와 가상 실험장은 선이 아니라 ROS 2 토픽으로만 이어진다 (RosOut → PlantRosIn,  PlantRosOut → RosIn).   실행 전 >> XY_setup'], 60, 10);
     note(m, 'n_plant', ['▼ 가상 실험장 — /motor_pwm · /stage/target_pos 를 구독하고' newline ...
@@ -78,8 +99,8 @@ function build_sim()
     fprintf('  %s 생성\n', m);
 end
 
-function build_real()
-    m = 'XY_2_pen_ros2';  fresh(m);
+function build_real(m)
+    fresh(m);
     set_param(m, 'SolverType','Fixed-step', 'SolverName','ode4', ...
                  'FixedStep','Ts_ctrl', 'StopTime','T_run_ros', 'SimulationMode','normal');
     set_param(m, 'ReturnWorkspaceOutputs','off', 'StopFcn','XY_stop');
@@ -88,11 +109,19 @@ function build_real()
     addController(m, L);
     addLogging(m, L.log, log_signals(false));
     wire_direct(m);
-    note(m, 'n_title', ['XY_2_pen_ros2 : 실기 — XY_1_pen_sim 의 윗줄(제어기)과 같은 상자' newline ...
+    note(m, 'n_title', [m ' : 실기 — 가상 실험 모델의 윗줄(제어기)과 같은 상자' v2_line() newline ...
         '구독 /zerokey/position /zerokey/vel /imu/data /stage/pos    발행 /motor_pwm /stage/target_pos' newline ...
         '실행 전 >> XY_setup ; setenv(''ROS_DOMAIN_ID'', num2str(ros_domain_real))'], 60, 10);
     save_system(m);  close_system(m);
     fprintf('  %s 생성\n', m);
+end
+
+function s = v2_line()
+%  2 판이면 제목 주석에 붙일 한 줄 / extra title line for the v2 models
+    s = '';
+    if ver2()
+        s = '   [2 판: InnerPI = 실기 내부 PI, 되먹임 V_meas]';
+    end
 end
 
 %  제어기 = 두 모델이 공유하는 상자들 (같은 함수로 만든다)
@@ -101,6 +130,7 @@ function addController(m, L)
     addNav(m,       L.nav);
     addMission(m,   L.mission);
     addRobotCtrl(m, L.robot);
+    if ver2(), addInnerPI(m, L.inner); end
     addPwmMap(m,    L.pwm);
     addPenCtrl(m,   L.pen);
     addRosOut(m,    L.rosout);
@@ -117,6 +147,7 @@ function finish_model(m, here)
     try, mss_style(m);   catch e, warning('mss_style: %s', e.message); end
     align_root(m);
     connect_root(m);
+    fix_const_crossings(m);
     save_system(m);
     try
         [n, ~, n2] = check_lines(m, false);
@@ -155,6 +186,11 @@ function L = layout()
     L.pen     = [col(4) Y1+430  W 3];
     L.pwm     = [col(5) Y1      W 2];
     L.rosout  = [col(6) Y1      W 2];
+    if ver2()   % 2 판: RobotCtrl 과 PwmMap 사이에 InnerPI 열 하나
+        L.inner  = [col(5) Y1      W 3];
+        L.pwm    = [col(6) Y1      W 2];
+        L.rosout = [col(7) Y1      W 2];
+    end
     Y2 = 480;  cp = @(k) col(5) + 60 + (k-1)*330;
     L.prin    = [cp(1) Y2       W 2];
     L.rplant  = [cp(2) Y2       W 2];
@@ -175,16 +211,21 @@ end
 % =====================================================================
 function addRosIn(m, P)
 %  ROSIN — 실기 토픽 구독. 제어기는 이 네 신호로만 로봇·스테이지 상태를 안다
+    imu = 'imu_quat';  fimu = {'orientation.w','orientation.x','orientation.y','orientation.z'};
+    if ver2()   % 2 판: 요 각속도 PI 의 되먹임으로 자이로 z 도 읽는다 (실기 ang_vel_z)
+        imu = 'imu_data';  fimu = [fimu, {'angular_velocity.z'}];
+    end
     ss = add_subsys(m, 'RosIn', boxpos(P,4), {}, ...
-                    {'zerokey_position','zerokey_vel','imu_quat','stage_pos_meas'}, gnc_colour('ros'));
+                    {'zerokey_position','zerokey_vel',imu,'stage_pos_meas'}, gnc_colour('ros'));
     add_sub(ss, 'SubZk',   '/zerokey/position', 'geometry_msgs/PointStamped', {'point.x','point.y','point.z'}, 60,  'zerokey_position');
     add_sub(ss, 'SubZkV',  '/zerokey/vel',      'geometry_msgs/TwistStamped', {'twist.linear.x','twist.linear.y','twist.linear.z'}, 300, 'zerokey_vel');
-    add_sub(ss, 'SubImu',  '/imu/data',         'sensor_msgs/Imu', {'orientation.w','orientation.x','orientation.y','orientation.z'}, 540, 'imu_quat');
+    add_sub(ss, 'SubImu',  '/imu/data',         'sensor_msgs/Imu', fimu, 540, imu);
     add_sub(ss, 'SubStg',  '/stage/pos',        'geometry_msgs/PointStamped', {'point.x','point.y'}, 820, 'stage_pos_meas');
 end
 
 function addNav(m, P)
 %  NAV — ZeroKey 월드 좌표 + IMU 쿼터니언 -> 측정 자세 pose = [p1; p2; psi]
+    if ver2(), addNav2(m, P); return; end
     ss = add_subsys(m, 'Nav', boxpos(P,3), {'zerokey_position','zerokey_vel','imu_quat'}, {'pose'}, gnc_colour('ros'));
     code = {
         'function pose = NavFcn(zerokey_position, zerokey_vel, imu_quat, psi0, tau_pred)'
@@ -423,8 +464,78 @@ function addRobotCtrl(m, P)
     add_line(ss, 'Fr_e_cross/1', 'e_cross/1');
 end
 
+function addNav2(m, P)
+%  NAV (2 판) — pose 에 더해 내부 PI 되먹임 V_meas = [u_body; r] 를 낸다
+%    u_body : ZeroKey 평면 속도를 heading 으로 바디 좌표에 옮긴 전진 속도 (실기 MATLAB Function14 의 u)
+%    r      : IMU 자이로 z [rad/s] (실기 ang_vel_z)
+%  Nav (v2): also outputs V_meas = [u_body; r] for the inner PI loops, as in the real Xsens model.
+    ss = add_subsys(m, 'Nav', boxpos(P,3), {'zerokey_position','zerokey_vel','imu_data'}, {'pose','V_meas'}, gnc_colour('ros'));
+    code = {
+        'function [pose, V_meas] = NavFcn(zerokey_position, zerokey_vel, imu_data, psi0, tau_pred)'
+        '% 벽면 평면 좌표 (실기 plane_project 와 같은 규약)'
+        '%   p1 = world z (높이),  p2 = world x (수평, 벽 정면에서 왼쪽 +)'
+        '% heading: /imu/data 쿼터니언의 요각을 첫 유효 샘플 기준 0 으로 잡고 psi0 를 더한다'
+        '% imu_data = [qw; qx; qy; qz; 자이로 z]'
+        'persistent yaw0 ok'
+        'if isempty(ok), ok = false; yaw0 = 0; end'
+        'qw = imu_data(1); qx = imu_data(2); qy = imu_data(3); qz = imu_data(4);'
+        'yaw = atan2(2*(qw*qz + qx*qy), 1 - 2*(qy*qy + qz*qz));'
+        'if ~ok && (abs(qw) + abs(qx) + abs(qy) + abs(qz)) > 0.5'
+        '    yaw0 = yaw;  ok = true;'
+        'end'
+        'a = yaw - yaw0 + psi0;'
+        'psi = atan2(sin(a), cos(a));'
+        'pose = [zerokey_position(3); zerokey_position(1); psi];'
+        'pose(1:2) = pose(1:2) + tau_pred * [zerokey_vel(3); zerokey_vel(1)];'
+        '% 바디 전진 속도 (실기 transform_state 의 u 와 같은 식)'
+        'p1d = zerokey_vel(3);  p2d = zerokey_vel(1);'
+        'u_body = p1d * cos(psi) + p2d * sin(psi);'
+        'V_meas = [u_body; imu_data(5)];'};
+    fcn_box(ss, 'NavFcn', code, {'in:zerokey_position','in:zerokey_vel','in:imu_data','const:psi0','const:tau_pred'}, {'pose','V_meas'});
+    set_disc(ss, 'NavFcn', 'Ts_ctrl');
+    set_param([ss '/NavFcn'], 'Description', '이산: persistent (첫 요각 기억) — 구독 주기와 같다');
+end
+
+function addInnerPI(m, P)
+%  INNERPI (2 판) — 실기 Tracked_UGV_ZeroKey_XsensIMU 의 PID Controller2 (속도) · 3 (요 각속도) 와 같은 PI
+%    e_v = v_cmd - u_body           -> PI (Kin_Pv, Kin_Iv), 출력 [0, 0.5]   -> V
+%    e_w = w_cmd - w_fb_gain * r    -> PI (Kin_Pw, Kin_Iw), 출력 [-0.5, 0.5] -> W
+%    실기와 같이 이산 (Forward Euler, Ts_ctrl), 적분 clamping. 앞먹임 없음.
+%    w_fb_gain : 실기 모델 Multiply7 의 값 0.1443 을 기본으로 둔다 (단위가 맞으려면 1). XY_setup 10 절
+%  Inner PI (v2): the two discrete PI loops of the real Xsens model, same gains, limits and feedback.
+%    inner_reset = 1 : 모드가 바뀌는 순간 두 적분기를 0 으로 (실기 모델에는 없음, XY 2 판에서 더함).
+%      속도 PI 는 출력 하한이 0 이고 앞먹임이 없어, 모드 1 -> 2 에서 v_cmd 가 0 이 되어도 적분값이
+%      남아 회전하는 동안 로봇이 계속 전진한다 (시뮬레이션: 0.05–0.1 m/s, 직선 시작점 100 mm 어긋남)
+    ss = add_subsys(m, 'InnerPI', boxpos(P,4), {'v_cmd','w_cmd','V_meas','mode'}, {'V_bar','W_bar'}, gnc_colour('control'));
+    fcn_box(ss, 'SpeedErr', {
+        'function [e_v, e_w, rst] = SpeedErr(v_cmd, w_cmd, V_meas, mode, w_fb_gain, inner_reset)'
+        '% 실기 Sum3 = V_cmd(1) - u,   Sum4 = V_cmd(2) - 0.1443 * ang_vel_z'
+        'persistent m_prev'
+        'if isempty(m_prev), m_prev = mode; end'
+        'e_v = v_cmd - V_meas(1);'
+        'e_w = w_cmd - w_fb_gain * V_meas(2);'
+        '% 모드가 바뀐 샘플에서만 1 -> PI 적분기 리셋 (inner_reset = 0 이면 실기와 같이 리셋 없음)'
+        'rst = double(inner_reset ~= 0 && mode ~= m_prev);'
+        'm_prev = mode;'}, ...
+        {'in:v_cmd','in:w_cmd','in:V_meas','in:mode','const:w_fb_gain','const:inner_reset'}, {'tag:e_v','tag:e_w','tag:rst'}, 330, 60);
+    set_disc(ss, 'SpeedErr', 'Ts_ctrl');
+    set_param([ss '/SpeedErr'], 'Description', '이산: persistent (이전 모드 기억) — 제어 주기와 같다');
+    pid = {'TimeDomain','Discrete-time', 'SampleTime','Ts_ctrl', 'IntegratorMethod','Forward Euler', ...
+           'Form','Parallel', 'D','0', 'LimitOutput','on', 'AntiWindupMode','clamping', 'ExternalReset','level'};
+    blk_box(ss, 'simulink/Continuous/PID Controller', 'PI_v', ...
+        [pid, {'P','Kin_Pv', 'I','Kin_Iv', 'UpperSaturationLimit','0.5', 'LowerSaturationLimit','0'}], ...
+        {'from:e_v','from:rst'}, {'V_bar'}, 800, 60, 100, 60);
+    blk_box(ss, 'simulink/Continuous/PID Controller', 'PI_w', ...
+        [pid, {'P','Kin_Pw', 'I','Kin_Iw', 'UpperSaturationLimit','0.5', 'LowerSaturationLimit','-0.5'}], ...
+        {'from:e_w','from:rst'}, {'W_bar'}, 800, 220, 100, 60);
+    for b = {'PI_v','PI_w'}
+        set_param([ss '/' b{1}], 'Description', '이산: 실기 모델의 PID Controller2·3 과 같은 이산 PI (Forward Euler, 0.01 s). 리셋 입력은 2 판에서 더함');
+    end
+end
+
 function addPwmMap(m, P)
 %  PWMMAP — (v, w) -> /motor_pwm [left; right]. 실기 calc_pwm 과 같은 식 (데드밴드 역보상 포함)
+    if ver2(), addPwmMap2(m, P); return; end
     ss = add_subsys(m, 'PwmMap', boxpos(P,2), {'v_cmd','w_cmd'}, {'motor_pwm'}, gnc_colour('allocation'));
     code = {
         'function motor_pwm = calc_pwm(v_cmd, w_cmd, v_full, w_full, db_v, db_w)'
@@ -443,6 +554,25 @@ function addPwmMap(m, P)
         'motor_pwm = [max(1100, min(1900, NEUTRAL + left_raw));'
         '             max(1100, min(1900, NEUTRAL + right_inv))];'};
     fcn_box(ss, 'calc_pwm', code, {'in:v_cmd','in:w_cmd','const:v_full','const:w_full','const:db_v','const:db_w'}, {'motor_pwm'});
+end
+
+function addPwmMap2(m, P)
+%  PWMMAP (2 판) — PI 출력 V, W (-0.5 ~ 0.5) -> /motor_pwm. 실기 MATLAB Function6 calc_pwm 그대로
+    ss = add_subsys(m, 'PwmMap', boxpos(P,2), {'V_bar','W_bar'}, {'motor_pwm'}, gnc_colour('allocation'));
+    code = {
+        'function motor_pwm = calc_pwm(V, W, db_v, db_w)'
+        '% 실기 MATLAB Function6 calc_pwm 과 같은 식 (throttle_sign = steer_sign = 1)'
+        'NEUTRAL = 1500;  MAX_OFFSET = 400;  V_EPS = 0.02;  W_EPS = 0.10;'
+        'db_v_c = max(0, min(MAX_OFFSET, db_v));'
+        'db_w_c = max(0, min(MAX_OFFSET, db_w));'
+        'throttle = db_v_c * tanh(V / V_EPS) + (MAX_OFFSET - db_v_c) * (V / 0.5);'
+        'steer    = db_w_c * tanh(W / W_EPS) + (MAX_OFFSET - db_w_c) * (W / 0.5);'
+        'left_raw  = throttle - steer;'
+        'right_raw = throttle + steer;'
+        'right_inv = -right_raw;                         % 우측 모터 물리적 반전'
+        'motor_pwm = [max(1100, min(1900, NEUTRAL + left_raw));'
+        '             max(1100, min(1900, NEUTRAL + right_inv))];'};
+    fcn_box(ss, 'calc_pwm', code, {'in:V_bar','in:W_bar','const:db_v','const:db_w'}, {'motor_pwm'});
 end
 
 function addPenCtrl(m, P)
@@ -594,8 +724,9 @@ end
 
 function addSensors(m, P)
 %  SENSORS — 운동모델 참값 -> 실기 센서가 내는 값 (ZeroKey 위치·속도, IMU 쿼터니언)
+    imu = 'imu_quat_meas';  if ver2(), imu = 'imu_meas'; end   % 2 판: [쿼터니언; 자이로 z]
     ss = add_subsys(m, 'Sensors', boxpos(P,4), {'q_true','V_true'}, ...
-                    {'zk_meas','zk_vel_meas','imu_quat_meas','zk_quat_meas'}, gnc_colour('env'));
+                    {'zk_meas','zk_vel_meas',imu,'zk_quat_meas'}, gnc_colour('env'));
     fan_inports(ss);
     fcn_box(ss, 'ZkWorld', {
         'function zk = ZkWorld(q_true, zk_ywall, noise)'
@@ -614,14 +745,24 @@ function addSensors(m, P)
         'zkv = [p2d; 0; p1d];'}, {'from:i_q_true','from:i_V_true'}, {'tag:zkv_raw'}, 330, 360);
     blk_box(ss, 'simulink/Discrete/Zero-Order Hold', 'ZkVHold', {'SampleTime','zk_Ts'}, ...
         {'from:zkv_raw'}, {'zk_vel_meas'}, 1250, 360, 40, 40);
-    fcn_box(ss, 'ImuQuat', {
-        'function quat = ImuQuat(q_true, t, imu_drift, noise)'
-        '% IMU 요각 = 참 heading + 드리프트 + 잡음 -> 쿼터니언 (6WP_sim Euler2Quat 와 같은 식)'
-        'psi = q_true(3) + imu_drift * t + noise;'
-        'quat = [cos(psi/2); 0; 0; sin(psi/2)];'}, ...
-        {'from:i_q_true','clock','const:imu_drift','rand:ImuNoise:imu_sigma^2:imu_Ts:21'}, {'tag:imu_raw'}, 330, 600);
+    if ver2()
+        fcn_box(ss, 'ImuQuat', {
+            'function imu = ImuQuat(q_true, V_true, t, imu_drift, noise, gnoise, imu_gyro_bias)'
+            '% IMU 요각 -> 쿼터니언 (1 판과 같은 식) + 자이로 z = 참 요 각속도 + 바이어스 + 잡음'
+            'psi = q_true(3) + imu_drift * t + noise;'
+            'imu = [cos(psi/2); 0; 0; sin(psi/2); V_true(2) + imu_gyro_bias + gnoise];'}, ...
+            {'from:i_q_true','from:i_V_true','clock','const:imu_drift','rand:ImuNoise:imu_sigma^2:imu_Ts:21', ...
+             'rand:GyroNoise:imu_gyro_sigma^2:imu_Ts:22','const:imu_gyro_bias'}, {'tag:imu_raw'}, 330, 600);
+    else
+        fcn_box(ss, 'ImuQuat', {
+            'function quat = ImuQuat(q_true, t, imu_drift, noise)'
+            '% IMU 요각 = 참 heading + 드리프트 + 잡음 -> 쿼터니언 (6WP_sim Euler2Quat 와 같은 식)'
+            'psi = q_true(3) + imu_drift * t + noise;'
+            'quat = [cos(psi/2); 0; 0; sin(psi/2)];'}, ...
+            {'from:i_q_true','clock','const:imu_drift','rand:ImuNoise:imu_sigma^2:imu_Ts:21'}, {'tag:imu_raw'}, 330, 600);
+    end
     blk_box(ss, 'simulink/Discrete/Zero-Order Hold', 'ImuHold', {'SampleTime','imu_Ts'}, ...
-        {'from:imu_raw'}, {'imu_quat_meas'}, 1250, 600, 40, 40);
+        {'from:imu_raw'}, {imu}, 1250, 600, 40, 40);
     %  ZeroKey INS 자세 (/zerokey/orientation) — 실기 모델 Tracked_UGV_ZeroKey_* 가 구독한다.
     %  이 시뮬레이션의 제어기는 IMU 요각을 쓰지만, 실기 모델을 그대로 붙여도 돌도록 같이 발행한다
     fcn_box(ss, 'ZkQuat', {
@@ -694,10 +835,12 @@ end
 
 function addPlantRosOut(m, P)
 %  PLANTROSOUT — 가상 센서·스테이지가 실기와 같은 토픽을 발행한다
-    ss = add_subsys(m, 'PlantRosOut', boxpos(P,5), {'zk_meas','zk_vel_meas','imu_quat_meas','stage_pos','zk_quat_meas'}, {}, gnc_colour('ros'));
+    imu = 'imu_quat_meas';  fimu = {'orientation.w','orientation.x','orientation.y','orientation.z'};
+    if ver2(), imu = 'imu_meas';  fimu = [fimu, {'angular_velocity.z'}]; end   % 2 판: 한 메시지에 자세 + 자이로
+    ss = add_subsys(m, 'PlantRosOut', boxpos(P,5), {'zk_meas','zk_vel_meas',imu,'stage_pos','zk_quat_meas'}, {}, gnc_colour('ros'));
     add_pub(ss, 'PubZk',  '/zerokey/position', 'geometry_msgs/PointStamped', {'point.x','point.y','point.z'}, 60,  'zk_meas', '');
     add_pub(ss, 'PubZkV', '/zerokey/vel',      'geometry_msgs/TwistStamped', {'twist.linear.x','twist.linear.y','twist.linear.z'}, 300, 'zk_vel_meas', '');
-    add_pub(ss, 'PubImu', '/imu/data',         'sensor_msgs/Imu', {'orientation.w','orientation.x','orientation.y','orientation.z'}, 540, 'imu_quat_meas', '');
+    add_pub(ss, 'PubImu', '/imu/data',         'sensor_msgs/Imu', fimu, 540, imu, '');
     add_pub(ss, 'PubStg', '/stage/pos',        'geometry_msgs/PointStamped', {'point.x','point.y'}, 820, 'stage_pos', 'stage_Ts');
     add_pub(ss, 'PubZkQ', '/zerokey/orientation', 'geometry_msgs/QuaternionStamped', ...
             {'quaternion.w','quaternion.x','quaternion.y','quaternion.z'}, 1060, 'zk_quat_meas', '');
@@ -750,6 +893,10 @@ end
 function s = log_signals(sim)
     s = {'pose','mode','pen_on','v_cmd','w_cmd','e_cross','motor_pwm','stage_target_pos', ...
          'stage_pos_meas','zerokey_position','zerokey_vel','imu_quat','lineAB'};
+    if ver2()   % 2 판: IMU 신호 이름이 바뀌고 내부 PI 신호를 같이 기록
+        s{strcmp(s, 'imu_quat')} = 'imu_data';
+        s = [s, {'V_meas','V_bar','W_bar'}];
+    end
     if sim
         s = [s, {'q_true','V_true','stage_pos','pen_true','pen_nocomp','e_pen','e_nocomp'}];
     end
@@ -1045,6 +1192,38 @@ function wire_tags(m)
     end
 end
 
+
+function fix_const_crossings(m)
+%  서브시스템 안에서 남의 선이 지나가는 Constant 블록을 왼쪽으로 민다 (최대 4 번, 50 px 씩)
+%  Shift Constant blocks left while an unrelated line crosses them (arrangeSystem leftovers).
+    cs = find_system(m, 'LookUnderMasks','all', 'BlockType','Constant');
+    for k = 1:numel(cs)
+        sys = get_param(cs{k}, 'Parent');
+        if strcmp(sys, m), continue; end
+        for it = 1:4
+            if ~const_crossed(sys, cs{k}), break; end
+            set_param(cs{k}, 'Position', get_param(cs{k}, 'Position') - [50 0 50 0]);
+        end
+    end
+end
+
+function tf = const_crossed(sys, c)
+    r = get_param(c, 'Position');  hc = get_param(c, 'Handle');  tf = false;
+    ls = find_system(sys, 'SearchDepth',1, 'FindAll','on', 'Type','line');
+    for j = 1:numel(ls)
+        if get_param(ls(j), 'SrcBlockHandle') == hc, continue; end
+        pts = get_param(ls(j), 'Points');
+        for i = 1:size(pts,1)-1
+            a = pts(i,:);  b = pts(i+1,:);
+            if a(2) == b(2)          % 수평 선분
+                if a(2) > r(2) && a(2) < r(4) && max(a(1),b(1)) > r(1) && min(a(1),b(1)) < r(3), tf = true; return; end
+            elseif a(1) == b(1)      % 수직 선분
+                if a(1) > r(1) && a(1) < r(3) && max(a(2),b(2)) > r(2) && min(a(2),b(2)) < r(4), tf = true; return; end
+            end
+        end
+    end
+end
+
 function note(m, tag, txt, x, y)
     add_block('built-in/Note', [m '/' tag], 'Position',[x y x y], 'Text', txt);
 end
@@ -1188,6 +1367,8 @@ function align_root(m)
          'Nav','pose','Mission','pose';
          'Mission','WP_prev','RobotCtrl','WP_prev';
          'RobotCtrl','v_cmd','PwmMap','v_cmd';
+         'RobotCtrl','v_cmd','InnerPI','v_cmd';      % 2 판
+         'InnerPI','V_bar','PwmMap','V_bar';         % 2 판
          'PwmMap','motor_pwm','RosOut','motor_pwm';
          'PlantRosIn','motor_pwm_rx','RobotPlant','motor_pwm_rx';
          'RobotPlant','q_true','Sensors','q_true';

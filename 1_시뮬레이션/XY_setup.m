@@ -140,5 +140,15 @@ anim_Ts    = 0.2;             % 실시간 화면 갱신 주기 [s] (Animate 입�
 XY_batch   = 0;               % 1 이면 StopFcn (XY_stop) 이 그림을 그리지 않는다 — 스크립트가 세운다
 stl_file   = fullfile(here, '..', '4_CAD', 'AVT-3C.stl');
 
+%% 10. 2 판 내부 PI (XY_1_pen_sim_v2, XY_2_pen_ros2_v2 만 쓴다 — 1 판 모델은 이 값을 읽지 않는다)
+%  실기 Tracked_UGV_ZeroKey_XsensIMU 의 PID Controller2 (속도) · 3 (요 각속도) 와 같은 값
+%  v2 only: the inner PI loops of the real Xsens model (same gains, limits and feedback).
+Kin_Pv = 0.15;  Kin_Iv = 0.8;     % 속도 PI:   e_v = v_cmd - u_body,             출력 V in [0, 0.5]
+Kin_Pw = 1.5;   Kin_Iw = 1.5;     % 요 각속도 PI: e_w = w_cmd - w_fb_gain * r,     출력 W in [-0.5, 0.5]
+w_fb_gain = 1.0;                  % 자이로 z 되먹임 배율. 실기 모델 Multiply7 은 0.1443 (rad/s 명령과 단위가 안 맞아 시뮬레이션에서 ω 진동) [확인 필요]
+inner_reset = 1;                  % 1: 모드가 바뀔 때 PI 적분기 리셋 (실기 모델에는 없음). 0: 실기와 같음
+imu_gyro_sigma = deg2rad(0.1);    % 자이로 z 잡음 1 sigma [rad/s] (Xsens MTi 급)
+imu_gyro_bias  = 0;               % 자이로 z 바이어스 [rad/s]
+
 fprintf('XY_setup 완료: 선 %.2f m, 레버암 %.3f m, ZeroKey %.0f Hz, ROS_DOMAIN_ID %d (가상 실험)\n', ...
         norm(pen_B - pen_A), norm(pen_d), 1/zk_Ts, ros_domain_sim);

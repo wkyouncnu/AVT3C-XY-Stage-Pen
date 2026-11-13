@@ -57,21 +57,21 @@ T(-E.h+2, -E.h-12, 'stage travel $\pm 50.8$ mm', 'Color',C.stg, 'FontSize',12);
 arw(ax, [0 0], [250 0], 'k', 1.4, 9);  T(255, -2, '$x_B$ (forward)');
 arw(ax, [0 0], [0 205], 'k', 1.4, 9);  T(-20, 218, '$y_B$ (left)');
 t = E.rtag;  tg = t + E.gB;
-plot(ax, t(1), t(2), 's', 'MarkerSize',12, 'MarkerFaceColor',C.pur, 'MarkerEdgeColor','k');
-T(t(1)-120, t(2)+18, 'tag $p_T$ $(-80,\ 60)$');
+plot(ax, t(1), t(2), 's', 'MarkerSize',12, 'MarkerFaceColor',[0.2 0.2 0.2], 'MarkerEdgeColor','k');
+T(t(1)-150, t(2)-22, '$\hat p$ (tag), body $(-80.0,\ 60.0)$');
 arw(ax, t', [0 0], C.pur, 2.0, 9);
-T(-215, 10, sprintf('$\\mathtt{pen\\_d} = d = (%.0f,\\ %.0f)$', E.d), 'Color',C.pur, 'FontSize',14);
+T(-215, 10, sprintf('$d = (%.1f,\\ %.1f)$', E.d), 'Color',C.pur, 'FontSize',15);
 arw(ax, t', tg', C.grn, 2.0, 9);
-T(60, 100, sprintf('$R^{\\top}(p_{des} - p_T) = (%.1f,\\ %.1f)$', E.gB), 'Color',C.grn, 'FontSize',14);
+T(45, 100, sprintf('$R^{\\top}(\\hat\\psi)\\,(p^{\\star} - \\hat p) = (%.1f,\\ %.1f)$', E.gB), 'Color',C.grn, 'FontSize',14);
 % 성분 (점선) / components (dotted)
 plot(ax, [t(1) t(1)+E.d(1)], [t(2) t(2)], ':', 'Color',C.pur, 'LineWidth',1.2);
 plot(ax, [t(1) t(1)+E.gB(1)], [t(2)+4 t(2)+4], ':', 'Color',C.grn, 'LineWidth',1.2);
-T(t(1)-10, t(2)+16, '$x_B$ parts: 80 (purple), 80.6 (green)', 'FontSize',11);
+T(t(1)-10, t(2)+16, '$x_B$ parts: 80.0 (purple $d$), 80.6 (green)', 'FontSize',11);
 plot(ax, [0 0], [t(2) 0], ':', 'Color',C.pur, 'LineWidth',1.2);
-T(60, 40, '$y_B$ parts: $-60$ (purple), $-49.3$ (green)', 'FontSize',11);
+T(60, 40, '$y_B$ parts: $-60.0$ (purple $d$), $-49.3$ (green)', 'FontSize',11);
 plot(ax, 0, 0, 'o', 'MarkerSize',9, 'MarkerFaceColor','w', 'MarkerEdgeColor','k', 'LineWidth',1.2);
-T(6, -16, 'stage centre $=$ pen at $s = s_c$', 'FontSize',12);
-plot(ax, tg(1), tg(2), 'o', 'MarkerSize',8, 'MarkerFaceColor',C.red, 'MarkerEdgeColor','k');
+T(6, -16, 'stage centre ($s = s_c$): pen at $c_0$', 'FontSize',12);
+plot(ax, tg(1), tg(2), 'd', 'MarkerSize',9, 'MarkerFaceColor',C.grn, 'MarkerEdgeColor','k');
 rectangle(ax, 'Position',[-18 -10 36 34], 'EdgeColor',C.gry, 'LineStyle','--');
 T(-215, -205, 'body frame: the picture is the same whatever way the robot faces on the wall', 'FontSize',12);
 T(-230, 245, '(a) body frame $\mathcal{B}$, to scale [mm]', 'FontSize',15);
@@ -87,13 +87,13 @@ arw(ax, a0', tg', C.grn, 2.0, 1.1);
 arw(ax, [0 0], E.eb', C.org, 2.6, 1.1);
 plot(ax, [0 E.eb(1)], [0 0], ':', 'Color',C.org);  plot(ax, [E.eb(1) E.eb(1)], [0 E.eb(2)], ':', 'Color',C.org);
 plot(ax, 0, 0, 'o', 'MarkerSize',10, 'MarkerFaceColor','w', 'MarkerEdgeColor','k', 'LineWidth',1.2);
-plot(ax, tg(1), tg(2), 'o', 'MarkerSize',10, 'MarkerFaceColor',C.red, 'MarkerEdgeColor','k');
-T(-15, 5, 'from tag', 'Color',C.pur, 'FontSize',12);
-T(-6.5, 20, 'from tag', 'Color',C.grn, 'FontSize',12);
-T(1.5, 5.5, sprintf('$e_b = (%.1f,\\ %.1f)$ mm', E.eb), 'Color',C.org, 'FontSize',15);
-T(1.2, -1.6, 'stage centre', 'FontSize',12);
-T(tg(1)+1.0, tg(2)+0.6, 'where the pen must go', 'Color',C.red, 'FontSize',12);
-T(-16.5, -7.5, '$\mathtt{pen\_d} + e_b = R^{\top}(p_{des} - p_T)$', 'FontSize',15);
+plot(ax, tg(1), tg(2), 'd', 'MarkerSize',11, 'MarkerFaceColor',C.grn, 'MarkerEdgeColor','k');
+T(-15.5, 5, '$d$ (from $\hat p$)', 'Color',C.pur, 'FontSize',13);
+T(-7.5, 20, '$R^{\top}(\hat\psi)(p^{\star} - \hat p)$ (from $\hat p$)', 'Color',C.grn, 'FontSize',13);
+T(1.5, 5.5, sprintf('$\\Delta s = (%.2f,\\ %.2f)$ mm', E.eb), 'Color',C.org, 'FontSize',15);
+T(1.2, -1.6, 'stage centre ($c_0$)', 'FontSize',12);
+T(tg(1)+1.0, tg(2)+0.6, '$p^{\star}$: where the pen must go', 'Color',C.grn, 'FontSize',12);
+T(-16.5, -7.5, '$d + \Delta s = R^{\top}(\hat\psi)\,(p^{\star} - \hat p)$', 'FontSize',15);
 xlabel(ax, '$x_B$ [mm] (from the stage centre)', 'Interpreter','latex', 'FontSize',13);
 ylabel(ax, '$y_B$ [mm]', 'Interpreter','latex', 'FontSize',13);
 set(ax, 'TickLabelInterpreter','latex', 'FontSize',11);
@@ -117,15 +117,15 @@ plot(ax, E.B(1), E.B(2), 'o', 'MarkerSize',9, 'MarkerFaceColor',C.navy, 'MarkerE
 T(E.A(1)-25, E.A(2)+28, '$A\ (-700,\ 300)$', 'Color',C.navy);  T(E.B(1)-90, E.B(2)+28, '$B\ (500,\ 300)$', 'Color',C.navy);
 arw(ax, E.A', (E.A + 150*E.u)', C.navy, 2.0, 16);  T(E.A(1)+70, E.A(2)-28, '$u = (1,\ 0)$', 'Color',C.navy);
 arw(ax, E.A', (E.A + 120*E.n)', C.navy, 2.0, 16);  T(E.A(1)+8, E.A(2)+128, '$n = (0,\ 1)$', 'Color',C.navy);
-plot(ax, E.p(1), E.p(2), 's', 'MarkerSize',11, 'MarkerFaceColor',C.pur, 'MarkerEdgeColor','k');
+plot(ax, E.p(1), E.p(2), 's', 'MarkerSize',11, 'MarkerFaceColor',[0.2 0.2 0.2], 'MarkerEdgeColor','k');
 plot(ax, E.c0(1), E.c0(2), 'o', 'MarkerSize',8, 'MarkerFaceColor','w', 'MarkerEdgeColor','k', 'LineWidth',1.2);
-plot(ax, E.pst(1), E.pst(2), 'o', 'MarkerSize',8, 'MarkerFaceColor',C.grn, 'MarkerEdgeColor','k');
+plot(ax, E.pst(1), E.pst(2), 'd', 'MarkerSize',9, 'MarkerFaceColor',C.grn, 'MarkerEdgeColor','k');
 % sigma 치수선 / dimension line
 yd = 70;
 plot(ax, [E.A(1) E.A(1)], [E.A(2)-15 yd-10], ':', 'Color',C.gry);
 plot(ax, [E.pst(1) E.pst(1)], [E.c0(2)-15 yd-10], ':', 'Color',C.gry);
 arw(ax, [E.A(1) yd], [E.pst(1) yd], 'k', 1.3, 16);  arw(ax, [E.pst(1) yd], [E.A(1) yd], 'k', 1.3, 16);
-T(-640, yd-28, sprintf('$\\sigma = u^{\\top}(p_c - A) = %.0f$ mm  (how far along the line)', E.sg));
+T(-640, yd-28, sprintf('$\\sigma = u^{\\top}(c_0 - A) = %.1f$ mm  (how far along the line)', E.sg));
 plot(ax, [E.pst(1) E.B(1)], [yd yd], ':', 'Color',C.gry);  plot(ax, [E.B(1) E.B(1)], [yd-10 E.B(2)-15], ':', 'Color',C.gry);
 T(-20, yd-28, sprintf('$L - \\sigma = %.0f$ mm to go', E.L - E.sg), 'FontSize',12, 'Color',C.gry);
 T(-60, 520, '$\hat\psi = 3^{\circ}$: nose $3^{\circ}$ above the line', 'FontSize',13);
@@ -140,18 +140,18 @@ ax = axes(fig, 'Position',[0.63 0.10 0.36 0.82]);  hold(ax,'on');  axis(ax,'equa
 T = @(x,y,s,varargin) text(ax, x, y, s, 'Interpreter','latex', 'FontSize',14, varargin{:});
 plot(ax, [-235 -10], [300 300], '-', 'Color',C.blu, 'LineWidth',4);
 T(-232, 304, 'line $y = 300$', 'Color',C.navy, 'FontSize',12);
-plot(ax, E.p(1), E.p(2), 's', 'MarkerSize',12, 'MarkerFaceColor',C.pur, 'MarkerEdgeColor','k');
-T(E.p(1)-30, E.p(2)+8, '$p_T = \hat p\ (-200,\ 345)$', 'FontSize',13);
+plot(ax, E.p(1), E.p(2), 's', 'MarkerSize',12, 'MarkerFaceColor',[0.2 0.2 0.2], 'MarkerEdgeColor','k');
+T(E.p(1)-30, E.p(2)+8, '$\hat p = (-200.0,\ 345.0)$ (tag)', 'FontSize',13);
 arw(ax, E.p', E.c0', C.pur, 2.0, 3.5);
-T(-200, 291, sprintf('$R\\,\\mathtt{pen\\_d} = (%.1f,\\ %.1f)$', E.R*E.d), 'Color',C.pur, 'FontSize',13);
+T(-200, 291, sprintf('$R(\\hat\\psi)\\,d = (%.1f,\\ %.1f)$', E.R*E.d), 'Color',C.pur, 'FontSize',13);
 arw(ax, E.p', E.pst', C.grn, 2.0, 3.5);
-T(-158, 333, sprintf('$p_{des} - p_T = (%.1f,\\ %.1f)$', E.g), 'Color',C.grn, 'FontSize',13);
+T(-158, 333, sprintf('$p^{\\star} - \\hat p = (%.1f,\\ %.1f)$', E.g), 'Color',C.grn, 'FontSize',13);
 arw(ax, E.c0', E.pst', C.org, 2.4, 3.5);
 plot(ax, E.c0(1), E.c0(2), 'o', 'MarkerSize',10, 'MarkerFaceColor','w', 'MarkerEdgeColor','k', 'LineWidth',1.3);
-T(E.c0(1)+3, E.c0(2)-5, sprintf('$p_c = c_0 = (%.1f,\\ %.1f)$', E.c0), 'FontSize',13);
-plot(ax, E.pst(1), E.pst(2), 'o', 'MarkerSize',10, 'MarkerFaceColor',C.grn, 'MarkerEdgeColor','k');
-T(E.pst(1)+3, E.pst(2)+6, sprintf('$p_{des} = A + \\sigma u = (%.1f,\\ %.1f)$', E.pst), 'Color',C.grn, 'FontSize',13);
-T(E.c0(1)+3, 294.5, sprintf('$e_0 = %.1f$ mm', E.e0), 'Color',C.org, 'FontSize',13);
+T(E.c0(1)+3, E.c0(2)-5, sprintf('$c_0 = (%.1f,\\ %.1f)$', E.c0), 'FontSize',13);
+plot(ax, E.pst(1), E.pst(2), 'd', 'MarkerSize',11, 'MarkerFaceColor',C.grn, 'MarkerEdgeColor','k');
+T(E.pst(1)+3, E.pst(2)+6, sprintf('$p^{\\star} = A + \\sigma u = (%.1f,\\ %.1f)$', E.pst), 'Color',C.grn, 'FontSize',13);
+T(E.c0(1)+3, 294.5, sprintf('$R(\\hat\\psi)\\Delta s = -e_0 n$, $e_0 = %.2f$ mm', E.e0), 'Color',C.org, 'FontSize',13);
 xb = E.c0 + 22*E.R(:,1);  yb = E.c0 + 22*E.R(:,2);
 arw(ax, E.c0', xb', 'k', 1.0, 2.5);  T(xb(1)+1, xb(2)-1, '$x_B$', 'FontSize',12);
 arw(ax, E.c0', yb', 'k', 1.0, 2.5);  T(yb(1)-9, yb(2)+3, '$y_B$', 'FontSize',12);
@@ -171,16 +171,16 @@ for pnl = 1:2
     if pnl == 1
         ax = axes(fig, 'Position',[0.02 0.08 0.46 0.84]);  M = eye(2);  o = E.p;
         ttl = '(a) on the wall: $\mathcal{W}$ components';
-        lg = sprintf('$p_{des} - p_T = (%.1f,\\ %.1f)$', E.g);
-        ld = sprintf('$R\\,\\mathtt{pen\\_d} = (%.1f,\\ %.1f)$', E.R*E.d);
-        le = sprintf('$R\\,e_b = (%.1f,\\ %.1f)$', E.R*E.eb);
+        lg = sprintf('$p^{\\star} - \\hat p = (%.1f,\\ %.1f)$', E.g);
+        ld = sprintf('$R(\\hat\\psi)\\,d = (%.1f,\\ %.1f)$', E.R*E.d);
+        le = sprintf('$R(\\hat\\psi)\\,\\Delta s = (%.2f,\\ %.2f)$', E.R*E.eb);
         Rb = E.R;
     else
         ax = axes(fig, 'Position',[0.52 0.08 0.46 0.84]);  M = E.R';  o = E.p;
-        ttl = '(b) multiplied by $R^{\top}$: $\mathcal{B}$ components';
-        lg = sprintf('$R^{\\top}(p_{des} - p_T) = (%.1f,\\ %.1f)$', E.gB);
-        ld = sprintf('$\\mathtt{pen\\_d} = (%.0f,\\ %.0f)$', E.d);
-        le = sprintf('$e_b = (%.1f,\\ %.1f)$', E.eb);
+        ttl = '(b) multiplied by $R^{\top}(\hat\psi)$: $\mathcal{B}$ components';
+        lg = sprintf('$R^{\\top}(\\hat\\psi)\\,(p^{\\star} - \\hat p) = (%.1f,\\ %.1f)$', E.gB);
+        ld = sprintf('$d = (%.1f,\\ %.1f)$', E.d);
+        le = sprintf('$\\Delta s = (%.2f,\\ %.2f)$', E.eb);
         Rb = eye(2);
     end
     hold(ax,'on');  axis(ax,'equal');  axis(ax,'off');
@@ -209,11 +209,11 @@ for pnl = 1:2
     arw(ax, [0 0], q0', C.pur, 2.2, 4);
     arw(ax, [0 0], qs', C.grn, 2.2, 4);
     arw(ax, q0', qs', C.org, 2.8, 4);
-    plot(ax, 0, 0, 's', 'MarkerSize',12, 'MarkerFaceColor',C.pur, 'MarkerEdgeColor','k');
+    plot(ax, 0, 0, 's', 'MarkerSize',12, 'MarkerFaceColor',[0.2 0.2 0.2], 'MarkerEdgeColor','k');
     plot(ax, q0(1), q0(2), 'o', 'MarkerSize',9, 'MarkerFaceColor','w', 'MarkerEdgeColor','k', 'LineWidth',1.2);
-    plot(ax, qs(1), qs(2), 'o', 'MarkerSize',9, 'MarkerFaceColor',C.grn, 'MarkerEdgeColor','k');
-    T(-22, -10, '$p_T$', 'FontSize',14);
-    T(q0(1)+4, q0(2)-9, '$p_c$', 'FontSize',14);  T(qs(1)+4, qs(2)+7, '$p_{des}$', 'Color',C.grn, 'FontSize',14);
+    plot(ax, qs(1), qs(2), 'd', 'MarkerSize',10, 'MarkerFaceColor',C.grn, 'MarkerEdgeColor','k');
+    T(-22, -10, '$\hat p$', 'FontSize',15);
+    T(q0(1)+4, q0(2)-9, '$c_0$', 'FontSize',15);  T(qs(1)+4, qs(2)+7, '$p^{\star}$', 'Color',C.grn, 'FontSize',15);
     T(-95, 70, lg, 'Color',C.grn);  T(-95, 56, ld, 'Color',C.pur);  T(-95, 42, le, 'Color',C.org);
     if pnl == 1
         % 초록 화살표를 x_B, y_B 위로 내린 그림자 / projections of the green arrow on x_B and y_B
@@ -223,7 +223,7 @@ for pnl = 1:2
         plot(ax, px(1), px(2), '.', 'Color',C.grn, 'MarkerSize',14);  plot(ax, py(1), py(2), '.', 'Color',C.grn, 'MarkerSize',14);
         T(px(1)-30, px(2)+9, sprintf('%.1f along $x_B$', E.gB(1)), 'Color',C.grn, 'FontSize',12);
         T(py(1)+3, py(2)-4, sprintf('%.1f along $y_B$', E.gB(2)), 'Color',C.grn, 'FontSize',12);
-        T(-95, -118, 'shadows of the green arrow on the robot axes $=$ $R^{\top}(p_{des} - p_T)$', 'FontSize',12);
+        T(-95, -118, 'shadows of the green arrow on the robot axes $=$ $R^{\top}(\hat\psi)\,(p^{\star} - \hat p)$', 'FontSize',12);
     else
         T(-95, -118, 'same arrows turned by $-\hat\psi = -3^{\circ}$: robot axes now horizontal and vertical', 'FontSize',12);
     end
@@ -231,7 +231,7 @@ for pnl = 1:2
     xlim(ax, [-100 130]);  ylim(ax, [-125 100]);
 end
 annotation(fig, 'arrow', [0.475 0.525], [0.52 0.52], 'LineWidth',1.6);
-annotation(fig, 'textbox', [0.465 0.53 0.07 0.05], 'String','$R^{\top}$', 'Interpreter','latex', ...
+annotation(fig, 'textbox', [0.455 0.53 0.09 0.05], 'String','$R^{\top}(\hat\psi)$', 'Interpreter','latex', ...
     'FontSize',18, 'EdgeColor','none', 'HorizontalAlignment','center');
 exportgraphics(fig, f, 'Resolution',200);  close(fig);
 end
@@ -251,8 +251,8 @@ plot(ax, E.sc, E.sc, '+', 'Color','k', 'MarkerSize',16, 'LineWidth',1.6);
 T(E.sc-49, E.sc-5, '$s_c = (50.8,\ 50.8)$: controller $0$', 'FontSize',13);
 arw(ax, [E.sc E.sc], E.s', C.org, 2.6, 3);
 plot(ax, E.s(1), E.s(2), 'o', 'MarkerSize',11, 'MarkerFaceColor',C.red, 'MarkerEdgeColor','k');
-T(E.s(1)+2, E.s(2)+5, sprintf('$s_{cmd} = (%.2f,\\ %.2f)$', E.s), 'Color',C.red, 'FontSize',14);
-T(E.sc+3, E.sc+4, '$1000\,e_b$', 'Color',C.org, 'FontSize',14);
+T(E.s(1)+2, E.s(2)+5, sprintf('$s^{\\star} = (%.2f,\\ %.2f)$', E.s), 'Color',C.red, 'FontSize',14);
+T(E.sc+3, E.sc+4, '$1000\,\Delta s$', 'Color',C.org, 'FontSize',14);
 % 잘못된 경우 / wrong cases
 w1 = E.eb;  plot(ax, w1(1), w1(2), 'x', 'Color',C.gry, 'MarkerSize',14, 'LineWidth',2);
 T(w1(1)+3, w1(2)+3, sprintf('no $+s_c$: $(%.2f,\\ %.2f)$ near home', w1), 'Color',C.gry, 'FontSize',12);
@@ -266,7 +266,7 @@ title(ax, '(a) Zaber stage, body-fixed, 1 grid = 25.4 mm', 'Interpreter','latex'
 % ---- (b) 세 눈금 / three scales for the Y axis
 ax = axes(fig, 'Position',[0.52 0.06 0.46 0.88]);  hold(ax,'on');  axis(ax,'off');
 T = @(x,y,s,varargin) text(ax, x, y, s, 'Interpreter','latex', 'FontSize',14, varargin{:});
-rows = {'controller, metre: $e_{b,Y}$', 'controller, mm: $1000\,e_{b,Y}$', 'Zaber, mm: $s_c + 1000\,e_{b,Y}$'};
+rows = {'controller, metre: $\Delta s_Y$', 'controller, mm: $1000\,\Delta s_Y$', 'Zaber, mm: $s^{\star}_Y = s_c + 1000\,\Delta s_Y$'};
 vals = {[-0.0508 0 0.0107 0.0508], [-50.8 0 10.72 50.8], [0 50.8 61.52 101.6]};
 lab  = {{'$-0.0508$','$0$','$0.0107$','$0.0508$'}, {'$-50.8$','$0$','$10.72$','$50.8$'}, {'$0$','$50.8$','$61.52$','$101.6$'}};
 X = [0 0.5 0.605 1];  yy = [0.80 0.50 0.20];

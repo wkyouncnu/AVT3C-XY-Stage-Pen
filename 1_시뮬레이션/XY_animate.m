@@ -167,9 +167,9 @@ end
 
 % =====================================================================
 function S = live_scene(parent, P, A, B, pts)
-%  벽면 + 로봇(STL) + XY 스테이지 + 펜 3D 장면. 화면 X = -p2, Y = p1, Z = 벽 바깥.
-%  3D 장면 그림 규칙 (화면 X = -p2, Y = p1, Z = 벽 바깥).
-W = @(p1, p2) [-p2(:), p1(:)];
+%  벽면 + 로봇(STL) + XY 스테이지 + 펜 3D 장면. 화면 X = 벽면 x (오른쪽), Y = 벽면 y (위), Z = 벽 바깥
+%  Wall + robot (STL) + XY stage + pen, 3D. Screen X = wall x (right), Y = wall y (up), Z = out of the wall
+W = @(x, y) [x(:), y(:)];
 
 th = atan2(B(2)-A(2), B(1)-A(1));  u = [cos(th) sin(th)];
 Rl = [cos(th) -sin(th); sin(th) cos(th)];
@@ -225,7 +225,7 @@ S.update = @update;
         q = q(:);  psi = q(3);
         R = [cos(psi) -sin(psi); sin(psi) cos(psi)];
         ctr = q(1:2) - R*P.r_tag(:);
-        M  = makehgtform('translate',[W(ctr(1), ctr(2)) 0]) * makehgtform('zrotate', psi + pi/2);
+        M  = makehgtform('translate',[W(ctr(1), ctr(2)) 0]) * makehgtform('zrotate', psi);
         sp = sp(:).';  c0 = P.stage_c(:).';  if isscalar(c0), c0 = [c0 c0]; end
         ds = (sp - c0) / 1000;
         for g = [g1 g2]

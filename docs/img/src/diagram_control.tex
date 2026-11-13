@@ -25,7 +25,7 @@
    Xsens:\ $\hat\psi = \psi + \eta_\psi + \dot b_\psi\, t$\ \ (100 Hz)};
 % ---- 신호
 \draw[sig] (nav) -- node[lab, above]{$\hat p$\,[m]\\$\hat\psi$\,[rad]} (mis);
-\draw[sig] (nav.north) |- node[lab, above, pos=0.72]{\tp{pose} $=[\hat p_1;\ \hat p_2;\ \hat\psi]$\ \ [m, m, rad]} ($(rc.west)+(0,0.35)$);
+\draw[sig] (nav.north) |- node[lab, above, pos=0.72]{\tp{pose} $=[\hat x;\ \hat y;\ \hat\psi]$\ \ [m, m, rad]} ($(rc.west)+(0,0.35)$);
 \draw[sig] (nav.south) |- ($(pc.west)+(0,-0.35)$);
 \draw[sig] (mis.east) -- ++(0.55,0) |- ($(rc.west)+(0,-0.3)$);
 \draw[sig] ($(mis.east)+(0.55,0)$) |- ($(pc.west)+(0,0.3)$);

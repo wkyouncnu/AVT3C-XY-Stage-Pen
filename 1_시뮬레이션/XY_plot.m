@@ -5,7 +5,7 @@ function M = XY_plot(out, imgdir)
 %
 %   그림 1  벽면: 목표 직선 · 로봇(태그) 경로 · 실제 펜 자국(보상) · 보상 없을 때 펜 자국
 %   그림 2  시간: 펜 횡오차(보상 / 없음) · 스테이지 위치 · 미션 모드 · 펜 상태
-%   벽면 그림은 벽을 정면에서 본 모습이다: 가로축 = -p2 (오른쪽 +), 세로축 = p1 (위 +)
+%   벽면 그림은 벽을 정면에서 본 모습이다: 가로축 = x (오른쪽 +), 세로축 = y (위 +)
 
 if nargin < 2, imgdir = fullfile(fileparts(mfilename('fullpath')), 'img'); end
 if ~isfolder(imgdir), mkdir(imgdir); end
@@ -43,13 +43,13 @@ fprintf('  스테이지 사용 범위  x %.1f ~ %.1f mm,  y %.1f ~ %.1f mm (행�
 %% 그림 1 — 벽면
 f1 = figure('Color','w','Position',[80 80 1100 560], 'Name','벽면 궤적');
 ax = axes(f1); hold(ax,'on'); grid(ax,'on'); axis(ax,'equal');
-plot(ax, -[A(2) B(2)], [A(1) B(1)], '-', 'Color',[0.6 0.75 1], 'LineWidth',6, 'DisplayName','목표 직선');
-plot(ax, -q(:,2), q(:,1), 'k:', 'LineWidth',1.0, 'DisplayName','로봇 태그 경로');
+plot(ax, [A(1) B(1)], [A(2) B(2)], '-', 'Color',[0.6 0.75 1], 'LineWidth',6, 'DisplayName','목표 직선');
+plot(ax, q(:,1), q(:,2), 'k:', 'LineWidth',1.0, 'DisplayName','로봇 태그 경로');
 pnn = pn; pnn(~on,:) = NaN;  ptt = pt; ptt(~on,:) = NaN;
-plot(ax, -pnn(:,2), pnn(:,1), '-', 'Color',[0.55 0.55 0.55], 'LineWidth',1.5, 'DisplayName','펜 자국 — 보상 없음');
-plot(ax, -ptt(:,2), ptt(:,1), 'r-', 'LineWidth',2.0, 'DisplayName','펜 자국 — 스테이지 보상');
-plot(ax, -q(1,2), q(1,1), 'bo', 'MarkerFaceColor','b', 'DisplayName','출발');
-xlabel(ax,'수평 -p_2 [m]  (벽 정면에서 오른쪽 +)'); ylabel(ax,'높이 p_1 [m]');
+plot(ax, pnn(:,1), pnn(:,2), '-', 'Color',[0.55 0.55 0.55], 'LineWidth',1.5, 'DisplayName','펜 자국 — 보상 없음');
+plot(ax, ptt(:,1), ptt(:,2), 'r-', 'LineWidth',2.0, 'DisplayName','펜 자국 — 스테이지 보상');
+plot(ax, q(1,1), q(1,2), 'bo', 'MarkerFaceColor','b', 'DisplayName','출발');
+xlabel(ax,'수평 x [m]  (벽 정면에서 오른쪽 +)'); ylabel(ax,'높이 y [m]');
 title(ax, sprintf('펜 횡오차 RMS  보상 %.2f mm  /  보상 없음 %.2f mm', M.e_rms_mm, M.enc_rms_mm));
 legend(ax,'Location','southoutside','Orientation','horizontal');
 exportgraphics(f1, fullfile(imgdir,'XY_1_result_wall.png'), 'Resolution',150);

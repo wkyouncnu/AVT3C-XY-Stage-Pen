@@ -225,28 +225,29 @@ function addRosIn(m, P)
 end
 
 function addNav(m, P)
-%  NAV — ZeroKey 월드 좌표 + IMU 쿼터니언 -> 측정 자세 pose = [p1; p2; psi]
+%  NAV — ZeroKey 월드 좌표 + IMU 쿼터니언 -> 측정 자세 pose = [x; y; psi] (벽면)
     if ver2(), addNav2(m, P); return; end
     ss = add_subsys(m, 'Nav', boxpos(P,3), {'zerokey_position','zerokey_vel','imu_quat'}, {'pose'}, gnc_colour('ros'));
     code = {
-        'function pose = NavFcn(zerokey_position, zerokey_vel, imu_quat, psi0, tau_pred)'
+        'function pose = NavFcn(zerokey_position, zerokey_vel, imu_quat, psi0, tau_pred, zk_xsign)'
         '% NavFcn : 센서 토픽 -> 측정 자세 (항법)'
         '% NavFcn : sensor topics -> measured pose (navigation)'
         '% 입력 / Inputs'
-        '%   zerokey_position [3x1, m]   /zerokey/position point.(x,y,z). 태그 월드 좌표: x 벽 수평(왼쪽 +), y 벽 법선, z 높이'
-        '%                               tag world position: x horizontal (left +), y wall normal, z height'
+        '%   zerokey_position [3x1, m]   /zerokey/position point.(x,y,z). 태그 월드 좌표: x 벽 수평, y 벽 법선, z 높이'
+        '%                               tag world position: x horizontal, y wall normal, z height'
         '%   zerokey_vel      [3x1, m/s] /zerokey/vel twist.linear.(x,y,z). 태그 월드 속도 / tag world velocity'
         '%   imu_quat         [4x1, -]   /imu/data orientation (w,x,y,z). Xsens 자세 쿼터니언 / Xsens attitude quaternion'
-        '%   psi0             [1, rad]   출발 heading (천장 방향 = 0) / initial heading (0 = toward the ceiling)'
+        '%   psi0             [1, rad]   출발 heading (오른쪽 0, 천장 pi/2) / initial heading (0 = right, pi/2 = up)'
         '%   tau_pred         [1, s]     ZeroKey 지연 보상 시간 (0 = 끔) / ZeroKey latency compensation (0 = off)'
+        '%   zk_xsign         [-1 / +1]  ZeroKey x 방향: -1 = 벽 정면에서 왼쪽 +, +1 = 오른쪽 + / ZeroKey x: -1 left +, +1 right +'
         '% 출력 / Output'
-        '%   pose [3x1: m, m, rad]  [p1; p2; psi] = 태그 벽면 위치 (p1 높이, p2 수평) + heading'
-        '%                          [p1; p2; psi] = tag position on the wall (p1 height, p2 horizontal) + heading'
+        '%   pose [3x1: m, m, rad]  [x; y; psi] = 태그 벽면 위치 (x 오른쪽 +, y 위 +) + heading (x 축에서 반시계)'
+        '%                          [x; y; psi] = tag position on the wall (x right, y up) + heading (CCW from x)'
         '% 원리 / Principle'
-        '%   벽면 좌표는 p1 = z, p2 = x (실기 plane_project 와 같은 규약). 철판 벽에서는 자력계를 못 쓰므로'
-        '%   heading 은 절대 방위가 아니라 첫 유효 샘플의 요각을 0 으로 잡은 상대 요각에 psi0 를 더한 값이다.'
-        '%   Wall coordinates p1 = z, p2 = x (same convention as plane_project). The steel wall disturbs the'
-        '%   magnetometer, so heading is the yaw relative to the first valid sample, plus psi0.'
+        '%   벽면 x = zk_xsign * ZeroKey x, 벽면 y = ZeroKey z (REP-103 형: z 가 벽 바깥인 오른손 좌표계).'
+        '%   철판 벽에서는 자력계를 못 쓰므로 heading 은 첫 유효 샘플의 요각을 0 으로 잡은 상대 요각에 psi0 를 더한 값이다.'
+        '%   Wall x = zk_xsign * ZeroKey x, wall y = ZeroKey z (REP-103 style, right-handed with z out of the wall).'
+        '%   The steel wall disturbs the magnetometer, so heading is the yaw relative to the first valid sample, plus psi0.'
         'persistent yaw0 ok'
         'if isempty(ok), ok = false; yaw0 = 0; end'
         'qw = imu_quat(1); qx = imu_quat(2); qy = imu_quat(3); qz = imu_quat(4);'
@@ -255,10 +256,10 @@ function addNav(m, P)
         '    yaw0 = yaw;  ok = true;'
         'end'
         'a = yaw - yaw0 + psi0;'
-        'pose = [zerokey_position(3); zerokey_position(1); atan2(sin(a), cos(a))];'
+        'pose = [zk_xsign * zerokey_position(1); zerokey_position(3); atan2(sin(a), cos(a))];'
         '% ZeroKey 지연 보상 (tau_pred = 0 이면 끔): 측정 속도로 tau_pred 만큼 앞으로 내다본다'
-        'pose(1:2) = pose(1:2) + tau_pred * [zerokey_vel(3); zerokey_vel(1)];'};
-    fcn_box(ss, 'NavFcn', code, {'in:zerokey_position','in:zerokey_vel','in:imu_quat','const:psi0','const:tau_pred'}, {'pose'});
+        'pose(1:2) = pose(1:2) + tau_pred * [zk_xsign * zerokey_vel(1); zerokey_vel(3)];'};
+    fcn_box(ss, 'NavFcn', code, {'in:zerokey_position','in:zerokey_vel','in:imu_quat','const:psi0','const:tau_pred','const:zk_xsign'}, {'pose'});
     set_disc(ss, 'NavFcn', 'Ts_ctrl');
     set_param([ss '/NavFcn'], 'Description', '이산: persistent (첫 요각 기억) — 구독 주기와 같다');
 end
@@ -286,7 +287,7 @@ function addMission(m, P)
         '% Guards : Stateflow 전이 조건에 쓸 거리·각 (실기 Chart 의 dist, th_err, dist_to_WP2 와 같은 뜻)'
         '% Guards : distances and angle used by the Stateflow transitions (dist, th_err, dist_to_WP2 of the real Chart)'
         '% 입력 / Inputs'
-        '%   pose         [3x1: m, m, rad] 측정 태그 자세 [p1; p2; psi] / measured tag pose'
+        '%   pose         [3x1: m, m, rad] 측정 태그 자세 [x; y; psi] / measured tag pose'
         '%   pen_A, pen_B [2x1, m]   펜이 그릴 직선의 시작·끝 (벽면) / start and end of the pen line (wall)'
         '%   pen_d        [2x1, m]   태그 -> 펜 레버암, 바디 좌표, 스테이지 중앙일 때 / tag-to-pen lever arm, body frame, stage centred'
         '%   line_pre, line_post [m] 직선 앞뒤로 로봇이 더 가는 거리 / run-in and run-out lengths of the robot segment'
@@ -545,18 +546,18 @@ function addNav2(m, P)
 %  Nav (v2): also outputs V_meas = [u_body; r] for the inner PI loops, as in the real Xsens model.
     ss = add_subsys(m, 'Nav', boxpos(P,3), {'zerokey_position','zerokey_vel','imu_data'}, {'pose','V_meas'}, gnc_colour('ros'));
     code = {
-        'function [pose, V_meas] = NavFcn(zerokey_position, zerokey_vel, imu_data, psi0, tau_pred)'
+        'function [pose, V_meas] = NavFcn(zerokey_position, zerokey_vel, imu_data, psi0, tau_pred, zk_xsign)'
         '% NavFcn (2 판) : 1 판 NavFcn 에 내부 PI 되먹임 V_meas 를 더한 것'
         '% NavFcn (v2)   : v1 NavFcn plus the inner-PI feedback V_meas'
         '% 입력 / Inputs'
-        '%   zerokey_position [3x1, m], zerokey_vel [3x1, m/s], psi0 [rad], tau_pred [s] : 1 판과 같음 / as in v1'
+        '%   zerokey_position [3x1, m], zerokey_vel [3x1, m/s], psi0 [rad], tau_pred [s], zk_xsign : 1 판과 같음 / as in v1'
         '%   imu_data [5x1]  [qw; qx; qy; qz (-); 자이로 z (rad/s)] = /imu/data orientation + angular_velocity.z'
         '% 출력 / Outputs'
-        '%   pose   [3x1: m, m, rad]  [p1; p2; psi]'
+        '%   pose   [3x1: m, m, rad]  [x; y; psi] (벽면 / wall)'
         '%   V_meas [2x1: m/s, rad/s] [u_body; r] = ZeroKey 속도의 바디 전진 성분, 자이로 요 각속도'
         '%                            forward body speed from the ZeroKey velocity, gyro yaw rate'
         '% 원리 / Principle'
-        '%   u_body = x_B^T p_dot = p1_dot cos psi + p2_dot sin psi (실기 transform_state 의 u)'
+        '%   u_body = x_B^T p_dot = x_dot cos psi + y_dot sin psi (실기 transform_state 의 u)'
         'persistent yaw0 ok'
         'if isempty(ok), ok = false; yaw0 = 0; end'
         'qw = imu_data(1); qx = imu_data(2); qy = imu_data(3); qz = imu_data(4);'
@@ -566,13 +567,13 @@ function addNav2(m, P)
         'end'
         'a = yaw - yaw0 + psi0;'
         'psi = atan2(sin(a), cos(a));'
-        'pose = [zerokey_position(3); zerokey_position(1); psi];'
-        'pose(1:2) = pose(1:2) + tau_pred * [zerokey_vel(3); zerokey_vel(1)];'
+        'pose = [zk_xsign * zerokey_position(1); zerokey_position(3); psi];'
+        'pd = [zk_xsign * zerokey_vel(1); zerokey_vel(3)];   % 벽면 속도 [x_dot; y_dot]'
+        'pose(1:2) = pose(1:2) + tau_pred * pd;'
         '% 바디 전진 속도 (실기 transform_state 의 u 와 같은 식)'
-        'p1d = zerokey_vel(3);  p2d = zerokey_vel(1);'
-        'u_body = p1d * cos(psi) + p2d * sin(psi);'
+        'u_body = pd(1) * cos(psi) + pd(2) * sin(psi);'
         'V_meas = [u_body; imu_data(5)];'};
-    fcn_box(ss, 'NavFcn', code, {'in:zerokey_position','in:zerokey_vel','in:imu_data','const:psi0','const:tau_pred'}, {'pose','V_meas'});
+    fcn_box(ss, 'NavFcn', code, {'in:zerokey_position','in:zerokey_vel','in:imu_data','const:psi0','const:tau_pred','const:zk_xsign'}, {'pose','V_meas'});
     set_disc(ss, 'NavFcn', 'Ts_ctrl');
     set_param([ss '/NavFcn'], 'Description', '이산: persistent (첫 요각 기억) — 구독 주기와 같다');
 end
@@ -702,9 +703,9 @@ function addPenCtrl(m, P)
         '% PenComp : 펜 기구학 보상. 펜이 직선 위에 오도록 스테이지 위치 명령을 계산한다'
         '% PenComp : pen kinematic compensation. Computes the stage position command that puts the pen on the line'
         '% 입력 / Inputs'
-        '%   lineAB  [4x1, m]   [A; B] 펜이 그릴 직선, 벽면 좌표 (p1 높이, p2 수평) / pen line in wall coordinates'
+        '%   lineAB  [4x1, m]   [A; B] 펜이 그릴 직선, 벽면 좌표 (x 오른쪽, y 위) / pen line in wall coordinates (x right, y up)'
         '%   mode    [-]        미션 모드. 3 (직선 추종) 일 때만 보상 / mission mode; compensates only in mode 3'
-        '%   pose    [3x1: m, m, rad]  측정 태그 자세 [p1; p2; psi] (Nav) / measured tag pose'
+        '%   pose    [3x1: m, m, rad]  측정 태그 자세 [x; y; psi] (Nav) / measured tag pose'
         '%   pen_d   [2x1, m]   태그 -> 펜 레버암, 바디 좌표 [x_B; y_B], 스테이지 중앙일 때 (= d)'
         '%                      tag-to-pen lever arm in body axes, with the stage centred (= d)'
         '%   stage_c [mm]       스테이지 중앙 (50.8, 두 축 같음) / stage centre (50.8 on both axes)'
@@ -841,7 +842,7 @@ function addRobotPlant(m, P)
         '% 원리 / Principle : M~ nu_dot + C~ nu + S^T (f1 + f2) = B~ tau + S^T f_g,  nu = [v; L omega]'
         '% 6WP_sim Dynamics 와 같은 식 (궤도차량 동역학, 논문 Table 1 모델). 벽면판에서 바꾼 점:'
         '%  (1) 바닥 하중 W -> 자석 흡착력 N_mag : 벽에서 마찰을 만드는 수직력'
-        '%  (2) 중력 f_g = [-m g; 0; 0] 추가    : 벽면 좌표 p1 = 위'
+        '%  (2) 중력 f_g = [0; -m g; 0] 추가    : 벽면 y = 위'
         '%  (3) 회전 저항 Mr 는 회전을 막는 쪽으로 (l^2/4 - u^2). 6WP 식 (u^2 - l^2/4) 은'
         '%      u = 0 근처에서 회전을 돕는 부호가 되어 헤딩 떨림(stick-slip)을 만든다'
         '%  (4) sign() -> tanh(./eps) : 정지 근처 수치 떨림 방지'
@@ -856,7 +857,7 @@ function addRobotPlant(m, P)
         'Fy = 2 * tanh(omega/0.01) * mu_t * u * (N / l);'
         'Mr = tanh(omega/0.01) * mu_t * (N / l) * (l^2/4 - u^2);'
         'f2_vec = [Fy*sin(theta); -Fy*cos(theta); Mr/L];'
-        'f_g = [-m*g; 0; 0];'
+        'f_g = [0; -m*g; 0];'
         'S_mat = [cos(theta), (u/L)*sin(theta); sin(theta), -(u/L)*cos(theta); 0, 1];'
         'S_dot = [-omega*sin(theta), (u_dot/L)*sin(theta) + (u*omega/L)*cos(theta);'
         '          omega*cos(theta), -(u_dot/L)*cos(theta) + (u*omega/L)*sin(theta); 0, 0];'
@@ -876,13 +877,13 @@ function addRobotPlant(m, P)
         '% 출력 / Output : q_dot [3x1: m/s, m/s, rad/s]'
         '% 6WP_sim Kinematics: q_dot = S_mat * [v; L*omega]  (여기서는 q(3) = psi 로 정리)'
         '% 벽면 외란 (실기 영상·ZeroKey 로그에서 본 현상, [실측 필요]):'
-        '%   자석 궤도 크리프 : 이동 속도의 slip_k 배만큼 중력 방향(-p1) 으로 밀린다'
+        '%   자석 궤도 크리프 : 이동 속도의 slip_k 배만큼 중력 방향(-y) 으로 밀린다'
         '%   궤도 요철        : heading 이 두 주파수로 조금씩 흔들린다'
         'theta = q(3);  v = V_act(1);  omega = V_act(2);'
         'slip_k = dist_p(1);  A = dist_p(2);  f = dist_p(3);'
         'wob = A*2*pi*f*cos(2*pi*f*t) + 0.5*A*2*pi*(2.3*f)*cos(2*pi*(2.3*f)*t + 1.0);'
-        'q_dot = [v*cos(theta) + u*omega*sin(theta) - slip_k*abs(v);'
-        '         v*sin(theta) - u*omega*cos(theta);'
+        'q_dot = [v*cos(theta) + u*omega*sin(theta);'
+        '         v*sin(theta) - u*omega*cos(theta) - slip_k*abs(v);'
         '         omega + wob];'}, ...
         {'from:V_act','from:q_act','from:u','clock','const:dist_p'}, {'tag:q_dot'}, 3050, 60);
     %  9) 적분 상태 = 로봇 중심 c (6WP_sim 과 같음). 출력 q_true = ZeroKey 태그 점
@@ -907,27 +908,28 @@ function addSensors(m, P)
                     {'zk_meas','zk_vel_meas',imu,'zk_quat_meas'}, gnc_colour('env'));
     fan_inports(ss);
     fcn_box(ss, 'ZkWorld', {
-        'function zk = ZkWorld(q_true, zk_ywall, noise)'
+        'function zk = ZkWorld(q_true, zk_ywall, noise, zk_xsign)'
         '% ZkWorld : 가상 ZeroKey 위치 / virtual ZeroKey position'
         '% 입력 / Inputs : q_true [m, m, rad] 참 태그 자세 / true tag pose;  zk_ywall [m] 벽 법선 오프셋 / wall-normal offset'
         '%                 noise [3x1, m] 백색 잡음 (sigma 1 mm) / white noise'
         '% 출력 / Output : zk [3x1, m] 월드 [x; y; z] -> 지연 50 ms -> 20 Hz -> /zerokey/position'
-        '% 벽면 (p1, p2) -> ZeroKey 월드 좌표 (x = p2, y = 벽 법선 오프셋, z = p1) + 측정 잡음'
-        'zk = [q_true(2); zk_ywall; q_true(1)] + noise(:);'}, ...
-        {'from:i_q_true','const:zk_ywall','rand:ZkNoise:zk_sigma^2:zk_Ts:[11 12 13]'}, {'tag:zk_raw'}, 330, 60);
+        '% 벽면 (x, y) -> ZeroKey 월드 좌표 (x = zk_xsign * 벽면 x, y = 벽 법선 오프셋, z = 벽면 y) + 측정 잡음'
+        '% Wall (x, y) -> ZeroKey world (x = zk_xsign * wall x, y = wall-normal offset, z = wall y) + noise'
+        'zk = [zk_xsign * q_true(1); zk_ywall; q_true(2)] + noise(:);'}, ...
+        {'from:i_q_true','const:zk_ywall','rand:ZkNoise:zk_sigma^2:zk_Ts:[11 12 13]','const:zk_xsign'}, {'tag:zk_raw'}, 330, 60);
     blk_box(ss, 'simulink/Continuous/Transport Delay', 'ZkDelay', ...
-        {'DelayTime','zk_delay','InitialOutput','[q0(2); zk_ywall; q0(1)]'}, {'from:zk_raw'}, {'tag:zk_del'}, 900, 60, 70, 40);
+        {'DelayTime','zk_delay','InitialOutput','[zk_xsign*q0(1); zk_ywall; q0(2)]'}, {'from:zk_raw'}, {'tag:zk_del'}, 900, 60, 70, 40);
     blk_box(ss, 'simulink/Discrete/Zero-Order Hold', 'ZkHold', {'SampleTime','zk_Ts'}, ...
         {'from:zk_del'}, {'zk_meas'}, 1250, 60, 40, 40);
     fcn_box(ss, 'ZkVel', {
-        'function zkv = ZkVel(q_true, V_true, r_tag)'
+        'function zkv = ZkVel(q_true, V_true, r_tag, zk_xsign)'
         '% ZkVel : 입력 q_true [m, m, rad], V_true [m/s, rad/s], r_tag [m] -> 출력 zkv [3x1, m/s] -> /zerokey/vel'
         '% ZkVel : inputs q_true, V_true, r_tag -> output zkv [3x1, m/s] world velocity -> /zerokey/vel'
-        '% ZeroKey 속도 (월드): x = p2 방향, z = p1 방향. 태그 속도 = 중심 속도 + omega J R r_tag'
-        '% ZeroKey velocity (world): x = p2, z = p1. Tag velocity = centre velocity + omega J R r_tag'
+        '% ZeroKey 속도 (월드): x = zk_xsign * 벽면 x, z = 벽면 y. 태그 속도 = 중심 속도 + omega J R r_tag'
+        '% ZeroKey velocity (world): x = zk_xsign * wall x, z = wall y. Tag velocity = centre velocity + omega J R r_tag'
         'psi = q_true(3);  R = [cos(psi) -sin(psi); sin(psi) cos(psi)];'
         'pd = V_true(1) * [cos(psi); sin(psi)] + V_true(2) * [0 -1; 1 0] * R * r_tag;'
-        'zkv = [pd(2); 0; pd(1)];'}, {'from:i_q_true','from:i_V_true','const:r_tag'}, {'tag:zkv_raw'}, 330, 360);
+        'zkv = [zk_xsign * pd(1); 0; pd(2)];'}, {'from:i_q_true','from:i_V_true','const:r_tag','const:zk_xsign'}, {'tag:zkv_raw'}, 330, 360);
     blk_box(ss, 'simulink/Discrete/Zero-Order Hold', 'ZkVHold', {'SampleTime','zk_Ts'}, ...
         {'from:zkv_raw'}, {'zk_vel_meas'}, 1250, 360, 40, 40);
     if ver2()
@@ -949,10 +951,10 @@ function addSensors(m, P)
             '% IMU 요각 = 참 heading + 드리프트 + 잡음 -> 쿼터니언 (6WP_sim Euler2Quat 와 같은 식)'
             'psi = q_true(3) + imu_drift * t + noise;'
             'quat = [cos(psi/2); 0; 0; sin(psi/2)];'}, ...
-            {'from:i_q_true','clock','const:imu_drift','rand:ImuNoise:imu_sigma^2:imu_Ts:21'}, {'tag:imu_raw'}, 330, 600);
+            {'from:i_q_true','clock','const:imu_drift','rand:ImuNoise:imu_sigma^2:imu_Ts:21'}, {'tag:imu_raw'}, 330, 640);
     end
     blk_box(ss, 'simulink/Discrete/Zero-Order Hold', 'ImuHold', {'SampleTime','imu_Ts'}, ...
-        {'from:imu_raw'}, {imu}, 1250, 600, 40, 40);
+        {'from:imu_raw'}, {imu}, 1250, 600 + 40*~ver2(), 40, 40);   % 1 판: ZkVel (입력 4 개) 이름표를 피해 40 px 아래
     %  ZeroKey INS 자세 (/zerokey/orientation) — 실기 모델 Tracked_UGV_ZeroKey_* 가 구독한다.
     %  이 시뮬레이션의 제어기는 IMU 요각을 쓰지만, 실기 모델을 그대로 붙여도 돌도록 같이 발행한다
     fcn_box(ss, 'ZkQuat', {
@@ -1015,7 +1017,7 @@ function addStagePlant(m, P)
         '%   스테퍼는 궤적을 단단한 스프링처럼 따라간다 -> 높은 대역의 위치 루프로 나타낸다'
         '%   낼 수 있는 힘은 속도에 따라 줄어든다 (데이터시트 Thrust-Speed, B 형 24 V 곡선 Fv_v -> Fv_F)'
         '%   X 축은 Y 축 스테이지 전체 + 펜 홀더를 민다 (m_sx > m_sy)'
-        '%   벽면 중력 [-g; 0] 을 바디 좌표로 돌려 각 축에 m g 성분을 건다'
+        '%   벽면 중력 [0; -g] 를 바디 좌표로 돌려 각 축에 m g 성분을 건다'
         'm  = stg_p(1:2);  c = stg_p(3);'
         'Kp = stg_p(4:5);  Kd = stg_p(6:7);  Ki = stg_p(8:9);  g = stg_p(10);'
         's = x_s(1:2);  v = x_s(3:4);  ie = x_s(5:6);'
@@ -1024,7 +1026,7 @@ function addStagePlant(m, P)
         'F_av = interp1(Fv_v, Fv_F, min(abs(v)*1000, Fv_v(end)));   % 지금 속도에서 낼 수 있는 추력 [N]'
         'F = min(max(Kp.*e + Ki.*ie + Kd.*(v_t - v), -F_av), F_av);'
         'psi = q_true(3);'
-        'g_b = [cos(psi) sin(psi); -sin(psi) cos(psi)] * [-g; 0];'
+        'g_b = [cos(psi) sin(psi); -sin(psi) cos(psi)] * [0; -g];'
         'a = (F + m.*g_b - c*v) ./ m;'
         'x_dot = [v; a; e];'}, ...
         {'from:x_t','from:x_s','from:i_q_true','const:stg_p','const:stage_Fv_v','const:stage_Fv_F'}, {'tag:x_s_dot'}, 1500, 60);
@@ -1062,7 +1064,7 @@ function addPenTrace(m, P)
         '% 입력 / Inputs : q_true [m, m, rad] 참 태그 자세;  stage_pos [2x1, mm] 엔코더;  lineAB [4x1, m];'
         '%                 pen_d [2x1, m];  stage_c [mm]'
         '% 출력 / Outputs: pen_true, pen_nocomp [2x1, m];  e_pen, e_nocomp [m]'
-        '% pen_true   : 스테이지가 실제로 움직인 결과의 펜 위치 [p1; p2]'
+        '% pen_true   : 스테이지가 실제로 움직인 결과의 펜 위치 [x; y] (벽면)'
         '% pen_nocomp : 스테이지를 중앙에 고정했을 때 펜 위치 (보상 없음 비교)'
         '% e_*        : 직선에 대한 부호 있는 횡오차 [m] (직선 진행방향의 왼쪽 +)'
         'A = lineAB(1:2);  B = lineAB(3:4);'

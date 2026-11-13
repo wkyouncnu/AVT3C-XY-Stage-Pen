@@ -7,11 +7,16 @@
 %                        제어기는 그 토픽만 구독한다 (2_시뮬레이션_simulink/6WP_sim 과 같은 방식)
 %     XY_2_pen_ros2.slx  실기: 같은 제어기 상자만 남긴 모델. 실제 로봇·스테이지 토픽에 붙는다
 %
-%   좌표 규약 (실기 모델 plane_project 와 같다)
-%     p1 = world z : 높이, 천장 +
-%     p2 = world x : 수평, 벽을 정면에서 볼 때 왼쪽 +
-%     psi          : p1 축에서 p2 축으로 도는 각 (천장 0, 왼쪽 +90 deg)
-%     바디 좌표     : x_B 전진, y_B 좌측.  R(psi) = [c -s; s c] 가 바디 -> 벽면
+%   좌표 규약 (ROS REP-103 형, 2026-11-13 변경)
+%     벽면 x : 수평, 벽을 정면에서 볼 때 오른쪽 +
+%     벽면 y : 높이, 천장 +
+%     벽면 z : 벽 바깥 (로봇 z_B 와 같은 방향) -> 오른손 좌표계
+%     psi    : x 축에서 y 축으로 도는 각 (오른쪽 0, 천장 +90 deg, 반시계 +)
+%     바디   : x_B 전진, y_B 좌측, z_B 벽 바깥.  R(psi) = [c -s; s c] 가 바디 -> 벽면
+%     ZeroKey 월드 -> 벽면: x = zk_xsign * zk.x,  y = zk.z  (zk.y 는 벽 법선, 버림)
+%   Coordinates (ROS REP-103 style): wall x right, wall y up, z out of the wall,
+%   psi from x toward y (0 = right, +90 deg = up). Body x_B forward, y_B left.
+%   Earlier versions used p1 = up, p2 = left (real plane_project): x = -p2, y = p1, psi = psi_old + 90 deg.
 %
 %   단위: 위치 m, 각도 rad, 스테이지 위치 mm (토픽 /stage/* 와 같음)
 %   [실측 필요] 가 붙은 값은 가정값이다. 실측하면 이 파일만 고친다.
@@ -32,14 +37,14 @@ Ts_plant = 0.0005;       % 운동모델 적분 고정 스텝 (ode4). 5 ms 는 �
 T_run    = 70;           % 최대 시간 [s] (미션이 끝나면 자동 정지)
 T_run_ros = 300;         % 실기 모델 최대 시간 [s]
 
-%% 2. 그릴 직선 (펜 기준, 벽면 좌표 [p1; p2] m)
-pen_A = [0.30;  0.70];   % 시작점
-pen_B = [0.30; -0.50];   % 끝점 (1.2 m 수평선)
+%% 2. 그릴 직선 (펜 기준, 벽면 좌표 [x; y] m)
+pen_A = [-0.70; 0.30];   % 시작점
+pen_B = [ 0.50; 0.30];   % 끝점 (높이 0.30 m 에서 오른쪽으로 1.2 m)
 line_pre  = 0.06;        % 펜이 A 에 닿기 전 로봇이 미리 직진할 거리 [m]
 line_post = 0.04;        % B 를 지나 더 갈 거리 [m]
 
 %% 3. 로봇 초기 자세 (태그 위치)
-q0 = [0.10; 0.85; 0.0];  % [p1; p2; psi]  천장 방향을 보고 출발
+q0 = [-0.85; 0.10; pi/2];  % [x; y; psi]  천장 방향 (psi = 90 deg) 을 보고 출발
 
 %% 4. 로봇 주행 제어 게인 — 6WP_sim / 실기 모델의 모드 함수와 같은 식
 K_dist   = 1.0;   K_yaw = 2.0;          % Goto_Start / Turning (6WP 값)
@@ -129,10 +134,12 @@ zk_Ts     = 0.05;             % ZeroKey 갱신 주기 [s] (INSMODE 2 ~20 Hz)
 zk_delay  = 0.05;             % ZeroKey 지연 [s]       [실측 필요]
 zk_sigma  = 0.0010;           % 위치 잡음 1 sigma [m]
 zk_ywall  = 0.02;             % 벽 법선 오프셋 world y [m] (진단용)
+zk_xsign  = -1;               % ZeroKey world x 의 방향: -1 = 벽 정면에서 왼쪽 + (실기 plane_project 가정), +1 = 오른쪽 +  [현장 확인 필요]
+                              % ZeroKey world x direction: -1 = left positive (as assumed by plane_project), +1 = right positive
 imu_Ts    = 0.01;             % /imu/data 주기 [s]
 imu_sigma = deg2rad(0.3);     % heading 잡음 1 sigma
 imu_drift = deg2rad(0.02);    % heading 드리프트 [rad/s] (철판 벽, 자력계 없음)
-psi0      = 0;                % 출발 heading (천장 방향)
+psi0      = pi/2;             % 출발 heading [rad] (천장 방향 = 90 deg). IMU 첫 요각을 이 값으로 맞춘다
 tau_pred  = 0;                % ZeroKey 지연 보상 시간 [s] (Nav, 0 이면 끔 — 비교: XY_compare)
 
 %% 9. 애니메이션

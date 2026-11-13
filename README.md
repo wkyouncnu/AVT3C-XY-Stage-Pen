@@ -40,7 +40,7 @@
 
 | 항목 | 값 | 근거 |
 |---|---|---|
-| 그릴 직선 | A = (0.30, 0.70) m → B = (0.30, −0.50) m, 수평 1.2 m | `XY_setup.m` 2 절 |
+| 그릴 직선 | A = (−0.70, 0.30) m → B = (0.50, 0.30) m, 수평 1.2 m (벽면 x 오른쪽, y 위) | `XY_setup.m` 2 절 |
 | 로봇 | AVT-3C 궤도형, 외형 420 × 343 × 100 mm | CAD STL |
 | 스테이지 | Zaber X-LSM100B-E03 × 2 (X 아래 축, Y 위 축), 배치 3안 (펜 = 로봇 중심) | 데이터시트, CAD |
 | 스테이지 행정 · 최고속도 | 101.6 mm · 104 mm/s | 데이터시트 |
@@ -48,7 +48,7 @@
 | heading 센서 | Xsens IMU `/imu/data` (상대 요각, 철판이라 자력계 사용 불가) | 실기 구성 |
 | 제어기 주기 · 운동모델 적분 스텝 | 0.01 s (100 Hz) · 0.5 ms | 실기 Simulink 와 같음 · 4.3 절 |
 | 직선 구간 속도 | 30 mm/s (펜 다운 약 39.3 s) | `v_ref` |
-| 결과 (기준 조건) | 펜 횡오차 RMS 1.18–1.20 mm, 최대 3.9 mm | 10 장 |
+| 결과 (기준 조건) | 펜 횡오차 RMS 1.17–1.20 mm, 최대 3.9 mm | 10 장 |
 | 스테이지 없이 로봇만 | 펜 횡오차 RMS 14.84 mm, 최대 19.6 mm | 10 장 |
 
 ### 1.3 외부 인터페이스
@@ -95,7 +95,7 @@
 
 | 토픽 | 형식 | 발행 → 구독 | 주기 | 내용 |
 |---|---|---|---|---|
-| `/zerokey/position` | geometry_msgs/PointStamped | 센서 → 제어기 | 20 Hz | 태그 월드 좌표 [m]. x = 벽 수평(왼쪽 +), z = 높이 |
+| `/zerokey/position` | geometry_msgs/PointStamped | 센서 → 제어기 | 20 Hz | 태그 월드 좌표 [m]. x = 벽 수평 (방향은 `zk_xsign`), y = 벽 법선, z = 높이 |
 | `/zerokey/vel` | geometry_msgs/TwistStamped | 센서 → 제어기 | 20 Hz | 태그 속도 [m/s] (linear.x, linear.z 사용) |
 | `/zerokey/orientation` | geometry_msgs/QuaternionStamped | 센서 → (실기 모델) | 20 Hz | ZeroKey INS 자세. 이 제어기는 사용하지 않음, 실기 모델 호환용 |
 | `/imu/data` | sensor_msgs/Imu | 센서 → 제어기 | 100 Hz | orientation 쿼터니언 → 요각 |
@@ -108,7 +108,7 @@
 
 | 토픽 · 필드 | Simulink 신호 (상자) | 크기 · 단위 | 제어기 안에서의 의미 |
 |---|---|---|---|
-| `/zerokey/position` `point.x, y, z` | `zerokey_position` (RosIn) | 3, m | Nav 에서 $\hat p = [z;\ x]$ = [높이; 수평] 로 바꿈. `y` (벽 법선) 는 쓰지 않음 |
+| `/zerokey/position` `point.x, y, z` | `zerokey_position` (RosIn) | 3, m | Nav 에서 벽면 $\hat p = [\pm x;\ z]$ = [수평 (오른쪽 +); 높이] 로 바꿈 (부호 `zk_xsign`). `y` (벽 법선) 는 쓰지 않음 |
 | `/zerokey/vel` `twist.linear.x, y, z` | `zerokey_vel` (RosIn) | 3, m/s | 지연 보상 (`tau_pred` > 0) 과 2 판 $u_B$ 에만 사용 |
 | `/imu/data` `orientation.w, x, y, z` | `imu_quat` (1 판), `imu_data(1:4)` (2 판) | 4, – | 요각 $\mathrm{atan2}(2(q_wq_z + q_xq_y),\ 1 - 2(q_y^2 + q_z^2))$, 첫 샘플 기준 상대값 + $\psi_0$ |
 | `/imu/data` `angular_velocity.z` | `imu_data(5)` (2 판만) | 1, rad/s | 2 판 요 각속도 PI 되먹임 $r$ |
@@ -124,13 +124,16 @@
 
 | 기호 | 정의 |
 |---|---|
-| p₁ | world z, 높이 (천장 +) |
-| p₂ | world x, 수평 (벽 정면에서 왼쪽 +) |
-| ψ | p₁ 축에서 p₂ 축으로 도는 각 (천장 방향 0, 왼쪽 +90°) |
-| 바디 | x_B 전진, y_B 좌측. R(ψ) = [cos ψ −sin ψ; sin ψ cos ψ] 가 바디 → 벽면 |
+| x | 벽면 수평, 벽 정면에서 오른쪽 + (= `zk_xsign` × ZeroKey x) |
+| y | 벽면 높이, 천장 + (= ZeroKey z) |
+| z | 벽 바깥 (로봇 z_B 와 같은 방향). x × y = z 인 오른손 좌표계 |
+| ψ | x 축에서 y 축으로 도는 각 (오른쪽 0, 천장 +90°, 반시계 +) |
+| 바디 | x_B 전진, y_B 좌측, z_B 벽 바깥. R(ψ) = [cos ψ −sin ψ; sin ψ cos ψ] 가 바디 → 벽면 |
 | 스테이지 | 축 1 = x_B, 축 2 = y_B, 단위 mm, 중앙 s_c = 50.8 mm |
 
-- 실기 Simulink 의 `plane_project` 와 같은 규약
+- ROS REP-103 형식: 바디 x 전진·y 왼쪽·z 위 (벽면에서는 벽 바깥), 월드는 z 가 로봇 z 와 같은 쪽인 오른손 좌표계. 벽을 바닥처럼 눕혀 본 지도와 같음
+- 이전 판 (실기 Simulink `plane_project`: p₁ 위, p₂ 왼쪽, 천장 방향 ψ = 0) 과의 관계: x = −p₂, y = p₁, ψ = ψ_이전 + 90°. 제어 식은 바뀌지 않고 숫자만 바뀜 (2026-11-13 변경)
+- ZeroKey world x 의 방향은 `zk_xsign` 으로 맞춤. 기본 −1 (벽 정면에서 왼쪽 +, `plane_project` 의 가정). 현장 보정에서 x 를 오른쪽으로 잡으면 +1 [현장 확인 필요]
 
 ---
 
@@ -156,7 +159,7 @@
 
 | 단 | 블록 | 입력 | 출력 | 주기 |
 |---|---|---|---|---|
-| 0 측정 | RosIn → Nav | ZeroKey 위치·속도, IMU 쿼터니언 | `pose` = [p₁; p₂; ψ] | 0.01 s |
+| 0 측정 | RosIn → Nav | ZeroKey 위치·속도, IMU 쿼터니언 | `pose` = [x; y; ψ] (벽면) | 0.01 s |
 | 1 미션 | Guards → ModeChart → Waypoints | `pose` | `mode`, `WP_prev`, `WP_target`, `t_line`, `lineAB` | 0.01 s |
 | 2 macro | RobotCtrl → PwmMap → RosOut | `WP_*`, `mode`, `t_line`, `pose`, `stage_pos_meas` | `v_cmd`, `w_cmd` → `/motor_pwm` | 연속 / 0.01 s 발행 |
 | 2 micro | PenCtrl → RosOut | `lineAB`, `mode`, `pose` | `stage_target_pos` → `/stage/target_pos`, `pen_on` | 연속 / 0.01 s 발행 |
@@ -166,7 +169,7 @@
 
 | 이름 | 크기 | 단위 | 위치 | 의미 |
 |---|---|---|---|---|
-| `pose` | 3 | m, m, rad | Nav 출력 | 측정 태그 위치 [p₁; p₂] + heading ψ |
+| `pose` | 3 | m, m, rad | Nav 출력 | 측정 태그 위치 [x; y] (벽면) + heading ψ |
 | `mode` | 1 | – | ModeChart | 1 출발점 이동, 2 회전, 3 직선 추종, 4 정지, 5 종료 |
 | `WP_prev`, `WP_target` | 2, 2 | m | Waypoints | 로봇(태그)이 따라갈 선분의 시작·끝 |
 | `lineAB` | 4 | m | Waypoints | 펜이 그릴 직선 [A; B] |
@@ -217,9 +220,9 @@
 
 | 그림에서 | 의미 |
 |---|---|
-| 왼쪽 아래 축 | 벽면 좌표계 $\mathcal{W}$. 벽을 정면에서 본 그림이므로 $p_1$ 은 위, $p_2$ 는 왼쪽, $z_W$ 는 종이에서 나오는 방향 (⊙) |
-| 가로축 방향 | 그림의 오른쪽은 $-p_2$. 직선 $A \to B$ 는 $p_2$ 가 줄어드는 방향, 즉 오른쪽으로 진행 |
-| 회색 사각형, $x_B$, $y_B$ | 로봇 차체와 바디 축. 이 그림의 로봇은 $\psi \approx -96^{\circ}$ (오른쪽을 보고 코가 약간 아래) |
+| 왼쪽 아래 축 | 벽면 좌표계 $\mathcal{W}$. 벽을 정면에서 본 그림이므로 $x$ 는 오른쪽, $y$ 는 위, $z_W$ 는 종이에서 나오는 방향 (⊙) |
+| 가로축 방향 | 그림의 오른쪽이 $+x$. 직선 $A \to B$ 는 $+x$ 방향으로 진행 |
+| 회색 사각형, $x_B$, $y_B$ | 로봇 차체와 바디 축. 이 그림의 로봇은 $\psi \approx -6^{\circ}$ (오른쪽을 보고 코가 약간 아래) |
 | 검은 사각형 $p$ | ZeroKey 태그. 측정되는 점은 로봇 중심이 아니라 이 점 |
 | 보라 화살표 $R(\psi)\,d$ | 태그에서 "스테이지가 중앙일 때의 펜" $c_0$ (흰 원) 까지의 레버암을 벽면 좌표로 쓴 것 |
 | 초록 점선 사각형 | 스테이지 행정 ($c_0$ 를 중심으로 바디 축에 정렬) |
@@ -235,7 +238,7 @@
 
 | 좌표계 | 원점 | 축 (오른손 좌표계) | 단위 | 쓰는 곳 |
 |---|---|---|---|---|
-| 벽면 $\mathcal{W}$ | ZeroKey 원점 (벽 위 고정점) | $p_1$ 위 (천장), $p_2$ 왼쪽 (벽 정면에서 볼 때), $z_W$ 벽 밖 (보는 사람 쪽) | m | 태그 위치 $p$, 직선 $A$·$B$, 펜 $P$ |
+| 벽면 $\mathcal{W}$ | ZeroKey 원점 (벽 위 고정점) | $x$ 오른쪽 (벽 정면에서 볼 때), $y$ 위 (천장), $z_W$ 벽 밖 (보는 사람 쪽) | m | 태그 위치 $p$, 직선 $A$·$B$, 펜 $P$ |
 | 바디 $\mathcal{B}$ | 로봇 중심 $c$ | $x_B$ 전진, $y_B$ 왼쪽 (로봇 기준), $z_B$ 벽 밖 | m | 태그 $r_{tag}$, 펜 $r_{pen,0}$, 레버암 $d$ |
 | 스테이지 $\mathcal{S}$ | 행정의 모서리 ($s = (0,0)$) | $X_s \parallel x_B$, $Y_s \parallel y_B$ | mm | 스테이지 명령 $s$, 중앙 $s_c = (50.8, 50.8)$ |
 
@@ -243,29 +246,29 @@
 
 *그림 6. (a) 벽면 좌표계와 heading 의 부호, (b) 바디·스테이지 좌표계 (축척대로)*
 
-- 오른손 규칙: 화면 오른쪽·위·화면 밖을 $(x, y, z)$ 로 두면 $p_1 = (0,1,0)$, $p_2 = (-1,0,0)$ 이고 $p_1 \times p_2 = (0,0,1) = z_W$ (벽 밖). 바디도 $x_B \times y_B = z_B$ (벽 밖)
-- 따라서 $(p_1, p_2)$ 는 "가로 $x$ 오른쪽, 세로 $y$ 위" 인 교과서 평면과 축 이름만 다르고 같은 오른손 평면. 회전행렬도 교과서 형태 그대로 씀 (4.1.2 절)
-- 그림에 그릴 때만 화면 좌표 = $(-p_2,\ p_1)$ 로 바꿈 (`XY_plot`, `XY_live`)
+- 오른손 규칙: $x \times y = z_W$ (벽 밖). 바디도 $x_B \times y_B = z_B$ (벽 밖). 로봇이 벽에 붙어 있으면 $z_B = z_W$ 이므로 IMU 요각과 $\psi$ 의 회전 방향이 같음
+- 가로 $x$ 오른쪽, 세로 $y$ 위인 교과서 평면 그대로이므로 회전행렬도 교과서 형태 (4.1.2 절), 그림의 화면 좌표도 벽면 좌표 그대로 (`XY_plot`, `XY_animate`)
+- ROS REP-103 의 규약 (바디 x 앞·y 왼쪽·z 위, 월드는 같은 쪽 z 의 오른손 좌표계) 과 같은 꼴
 - 스테이지 축은 바디 축과 평행이고 원점만 다름: $\Delta s = (s - s_c)/1000$ 은 바디 좌표의 벡터 [m]
 
 #### 4.1.1 heading $\psi$
 
-- 정의: $p_1$ 축에서 $x_B$ 축까지 $z_W$ 둘레로 잰 각. 벽 정면에서 볼 때 반시계 방향이 $+$
+- 정의: $x$ 축에서 $x_B$ 축까지 $z_W$ 둘레로 잰 각. 벽 정면에서 볼 때 반시계 방향이 $+$
 - 범위: $(-\pi, \pi]$, 각 차이는 항상 $\mathrm{wrap}(\cdot)$ 으로 이 범위에 넣음
 
 | $\psi$ | $x_B$ (로봇 앞) 이 향하는 곳 | $y_B$ (로봇 왼쪽) 이 향하는 곳 | 이 과제에서 |
 |---|---|---|---|
-| $0^{\circ}$ | 위 (천장) | 왼쪽 | – |
-| $+90^{\circ}$ | 왼쪽 | 아래 | – |
-| $-90^{\circ}$ | 오른쪽 | 위 | 직선 추종 (모드 3) 중 heading |
-| $\pm 180^{\circ}$ | 아래 | 오른쪽 | – |
+| $0^{\circ}$ | 오른쪽 | 위 | 직선 추종 (모드 3) 중 heading |
+| $+90^{\circ}$ | 위 (천장) | 왼쪽 | 출발 자세 ($\psi_0$) |
+| $-90^{\circ}$ | 아래 | 오른쪽 | – |
+| $\pm 180^{\circ}$ | 왼쪽 | 아래 | – |
 
-- 그릴 직선 $A = (0.30,\ 0.70) \to B = (0.30,\ -0.50)$: $u = (B - A)/\lVert B - A\rVert = [0,\ -1]^{\top}$ (오른쪽), 직선 각 $\theta_l = \mathrm{atan2}(u_2, u_1) = -90^{\circ}$, 법선 $n = Ju = [1,\ 0]^{\top}$ (위)
+- 그릴 직선 $A = (-0.70,\ 0.30) \to B = (0.50,\ 0.30)$: $u = (B - A)/\lVert B - A\rVert = [1,\ 0]^{\top}$ (오른쪽), 직선 각 $\theta_l = \mathrm{atan2}(u_2, u_1) = 0^{\circ}$, 법선 $n = Ju = [0,\ 1]^{\top}$ (위)
 - 따라서 직선 추종 중 로봇의 왼쪽 ($y_B$) 이 천장을 향하고, 스테이지 $Y_s$ 가 늘면 펜이 위로 감
 
 #### 4.1.2 회전행렬 유도
 
-$x_B$ 는 $p_1$ 축을 $\psi$ 만큼 반시계로 돌린 단위벡터이고, $y_B$ 는 $x_B$ 를 다시 $+90^{\circ}$ 돌린 벡터.
+$x_B$ 는 $x$ 축을 $\psi$ 만큼 반시계로 돌린 단위벡터이고, $y_B$ 는 $x_B$ 를 다시 $+90^{\circ}$ 돌린 벡터.
 
 $$
 x_B^{\mathcal{W}} = \begin{bmatrix} \cos\psi \\ \sin\psi \end{bmatrix}, \qquad
@@ -294,23 +297,24 @@ $$
 | 미분 | $\dot R = \dot\psi\,\partial R/\partial\psi = \omega\,J R$ | 오차 전파 (식 (20)) |
 | $+90^{\circ}$ 회전 | $J v$ = $v$ 를 왼쪽으로 돌린 벡터, $J^{\top}J = I$, $J^2 = -I$ | 직선의 왼쪽 법선 $n = Ju$ |
 
-검산 ($\psi = -90^{\circ}$, 직선 추종 중)
+검산 ($\psi = 0^{\circ}$, 직선 추종 중 / $\psi = 90^{\circ}$, 출발 자세)
 
 $$
-R(-90^{\circ}) = \begin{bmatrix} 0 & 1 \\ -1 & 0 \end{bmatrix}:\quad
-R\begin{bmatrix} 1 \\ 0 \end{bmatrix} = \begin{bmatrix} 0 \\ -1 \end{bmatrix}\ (\text{앞} = \text{오른쪽}), \qquad
-R\begin{bmatrix} 0 \\ 1 \end{bmatrix} = \begin{bmatrix} 1 \\ 0 \end{bmatrix}\ (\text{왼쪽} = \text{위})
+R(0^{\circ}) = I:\quad
+R\begin{bmatrix} 1 \\ 0 \end{bmatrix} = \begin{bmatrix} 1 \\ 0 \end{bmatrix}\ (\text{앞} = \text{오른쪽}), \qquad
+R(90^{\circ}) = \begin{bmatrix} 0 & -1 \\ 1 & 0 \end{bmatrix}:\quad
+R\begin{bmatrix} 1 \\ 0 \end{bmatrix} = \begin{bmatrix} 0 \\ 1 \end{bmatrix}\ (\text{앞} = \text{위})
 $$
 
-- 바디 왼쪽 1 mm 의 캐리지 이동 ($\Delta s_Y = +0.001$) 은 벽에서 펜을 위 ($+p_1$) 로 1 mm 옮김
-- 거꾸로 벽에서 위로 1 mm ($[0.001,\ 0]^{\top}$) 는 $R^{\top}$ 을 곱해 바디 $[0,\ 0.001]^{\top}$, 즉 $Y_s$ +1 mm
+- 직선 추종 중 바디 왼쪽 1 mm 의 캐리지 이동 ($\Delta s_Y = +0.001$) 은 벽에서 펜을 위 ($+y$) 로 1 mm 옮김
+- 바디 축과 벽면 축이 거의 나란하므로 직선 추종 중 $R \approx I$ 이고, $R$ 은 heading 오차 수 도만큼의 기울기만 바로잡음
 
 #### 4.1.3 기호
 
 | 기호 | 읽는 법 | 정의 | 단위 |
 |---|---|---|---|
-| $p_1,\ p_2$ | 피 원, 피 투 | 벽면 좌표. $p_1$ = 높이 (천장 +), $p_2$ = 수평 (벽 정면에서 왼쪽 +) | m |
-| $\psi$ | 프사이 | heading. $p_1$ 축에서 $x_B$ 축까지의 각 (천장 방향 0, 반시계 +) | rad |
+| $x,\ y$ | 엑스, 와이 | 벽면 좌표. $x$ = 수평 (벽 정면에서 오른쪽 +), $y$ = 높이 (천장 +) | m |
+| $\psi$ | 프사이 | heading. $x$ 축에서 $x_B$ 축까지의 각 (오른쪽 0, 반시계 +) | rad |
 | $R(\psi)$ | 알 프사이 | 바디 → 벽면 회전행렬 (식 (1)). $\dot R = \omega J R$ | – |
 | $c$ | 씨 | 로봇 중심 위치 | m |
 | $p$ | 피 | ZeroKey 태그 위치 $p = c + R(\psi)\,r_{tag}$ (식 (2a)) | m |
@@ -364,8 +368,8 @@ $$
 
 - 펜 보상 (식 (13)–(15)) 은 측정 $\hat p,\ \hat\psi$ 와 $d$ 만 쓰므로 이 수정과 무관함
 - 수정 직후 펜 오차가 RMS 3.46 mm, 최대 25.9 mm 로 커짐. 모드 1 이 태그를 출발점에 맞춘 뒤 모드 2 에서 약 70° 돌면 태그가 직선에서 약 11 cm 벗어나고, 모드 3 이 이를 고치는 동안 heading 이 −115° 까지 흔들린 채 펜이 내려갔기 때문. 실기에서도 같은 현상이 생김
-- 대책: 모드 1 이 태그 대신 로봇 중심 추정 $\hat c = \hat p - R(\hat\psi)\,r_{tag}$ 을 출발 중심 $c_A = r_A - R(\theta_l)\,r_{tag}$ 로 보냄 (4.5 절). 회전 뒤 태그가 정확히 출발점 $r_A$ 에 옴 → 모드 3 시작 시 태그 $p_1$ = 0.343 m (목표 0.360 m). 남은 17 mm 는 회전 중 크리프로 미끄러진 양이며, 수정 전 약 110 mm 에서 줄어듦
-- 대책 후 결과는 10.3 절 (펜 RMS 1.18–1.20 mm)
+- 대책: 모드 1 이 태그 대신 로봇 중심 추정 $\hat c = \hat p - R(\hat\psi)\,r_{tag}$ 을 출발 중심 $c_A = r_A - R(\theta_l)\,r_{tag}$ 로 보냄 (4.5 절). 회전 뒤 태그가 정확히 출발점 $r_A$ 에 옴 → 모드 3 시작 시 태그 높이 $y$ = 0.343 m (목표 0.360 m). 남은 17 mm 는 회전 중 크리프로 미끄러진 양이며, 수정 전 약 110 mm 에서 줄어듦
+- 대책 후 결과는 10.3 절 (펜 RMS 1.17–1.20 mm)
 
 ### 4.3 동역학 (벽면판)
 
@@ -386,7 +390,7 @@ $$
 $$
 f_1 = \mu_l N \begin{bmatrix} \cos\psi \\ \sin\psi \\ 0 \end{bmatrix} \tanh\!\frac{v}{\varepsilon_v}, \qquad
 f_2 = \begin{bmatrix} F_y \sin\psi \\ -F_y\cos\psi \\ M_r / L \end{bmatrix}, \qquad
-f_g = \begin{bmatrix} -m g \\ 0 \\ 0 \end{bmatrix} \tag{6}
+f_g = \begin{bmatrix} 0 \\ -m g \\ 0 \end{bmatrix} \tag{6}
 $$
 
 $$
@@ -559,7 +563,7 @@ $$
 
 #### 4.6.2 수치 예
 
-직선 추종 중 한 시점. 측정 $\hat p = (0.345,\ 0.200)$ m, $\hat\psi = -87^{\circ}$ (직선 각 $-90^{\circ}$ 보다 코가 $3^{\circ}$ 위).
+직선 추종 중 한 시점. 측정 $\hat p = (-0.200,\ 0.345)$ m, $\hat\psi = 3^{\circ}$ (직선 각 $0^{\circ}$ 보다 코가 $3^{\circ}$ 위).
 
 ![펜 보상 수치 예](docs/img/fig_pen_example.png)
 
@@ -567,25 +571,25 @@ $$
 
 | 양 | 계산 | 값 |
 |---|---|---|
-| $R(\hat\psi)$ | $\cos(-87^{\circ}) = 0.0523$, $\sin(-87^{\circ}) = -0.9986$ | $\begin{bmatrix} 0.0523 & 0.9986 \\ -0.9986 & 0.0523 \end{bmatrix}$ |
-| $R\,d$ | $d = (0.08,\ -0.06)$ | $(-0.0557,\ -0.0830)$ m |
-| $c_0$ | $\hat p + R d$ | $(0.2893,\ 0.1170)$ m |
-| $\sigma$ | $u^{\top}(c_0 - A) = -(0.1170 - 0.70)$ | 0.5830 m (펜 다운 구간 $0 \le \sigma \le 1.2$ 안) |
+| $R(\hat\psi)$ | $\cos 3^{\circ} = 0.9986$, $\sin 3^{\circ} = 0.0523$ | $\begin{bmatrix} 0.9986 & -0.0523 \\ 0.0523 & 0.9986 \end{bmatrix}$ |
+| $R\,d$ | $d = (0.08,\ -0.06)$ | $(0.0830,\ -0.0557)$ m |
+| $c_0$ | $\hat p + R d$ | $(-0.1170,\ 0.2893)$ m |
+| $\sigma$ | $u^{\top}(c_0 - A) = -0.1170 - (-0.70)$ | 0.5830 m (펜 다운 구간 $0 \le \sigma \le 1.2$ 안) |
 | $e_0$ | $n^{\top}(c_0 - A) = 0.2893 - 0.30$ | $-0.0107$ m (펜이 직선보다 10.7 mm 아래) |
-| $p^{\star}$ | $A + \sigma u$ | $(0.3000,\ 0.1170)$ m |
-| $p^{\star} - \hat p$ | – | $(-0.0450,\ -0.0830)$ m |
+| $p^{\star}$ | $A + \sigma u$ | $(-0.1170,\ 0.3000)$ m |
+| $p^{\star} - \hat p$ | – | $(0.0830,\ -0.0450)$ m |
 | $R^{\top}(p^{\star} - \hat p)$ | – | $(0.0806,\ -0.0493)$ m |
 | $\Delta s$ | $(0.0806 - 0.08,\ -0.0493 + 0.06)$ | $(0.0006,\ 0.0107)$ m |
 | 식 (15) 검산 | $-e_0\,[\sin 3^{\circ},\ \cos 3^{\circ}]$ | $(0.00056,\ 0.01069)$ m, 일치 |
 | $s^{\star}$ | $50.8 + 1000\,\Delta s$ | $(51.36,\ 61.52)$ mm |
-| $P$ | $\hat p + R(d + \Delta s)$ | $(0.3000,\ 0.1170)$ m $= p^{\star}$ |
+| $P$ | $\hat p + R(d + \Delta s)$ | $(-0.1170,\ 0.3000)$ m $= p^{\star}$ |
 
 - 스테이지는 Y 로 10.7 mm (바디 왼쪽 = 벽 위쪽) 움직여 펜을 직선으로 올림. X 는 0.56 mm 만 움직임 ($3^{\circ}$ 기울기 성분)
-- 가상 실험의 스테이지 사용 범위 (X 51.0–53.8 mm, Y 61.4–72.2 mm) 와 같은 크기와 방향
+- 가상 실험의 스테이지 사용 범위 (X 51.0–53.8 mm, Y 61.3–72.2 mm) 와 같은 크기와 방향
 
 #### 4.6.3 부호 점검
 
-$\theta_l = -90^{\circ}$ (직선이 오른쪽) 기준. $\Delta s = -e_0\,[\sin(\psi - \theta_l),\ \cos(\psi - \theta_l)]^{\top}$.
+$\theta_l = 0^{\circ}$ (직선이 오른쪽) 기준. $\Delta s = -e_0\,[\sin(\psi - \theta_l),\ \cos(\psi - \theta_l)]^{\top}$.
 
 | 상황 | $\psi - \theta_l$ | $e_0$ | $\Delta s_X$ | $\Delta s_Y$ | 벽에서 펜이 움직이는 방향 | 판정 |
 |---|---|---|---|---|---|---|
@@ -610,7 +614,7 @@ $\theta_l = -90^{\circ}$ (직선이 오른쪽) 기준. $\Delta s = -e_0\,[\sin(\
 | pen_on (식 (16)) | `pen_on = double(sigma >= 0 && sigma <= L);` |
 | 모드 3 이외 | `s_cmd = [stage_c; stage_c]` (스테이지 중앙, 펜 올림) |
 
-- `pose` = $[\hat p_1;\ \hat p_2;\ \hat\psi]$ (Nav 출력), `pen_d` = $d$, `stage_c` = $s_c$ (`XY_setup.m`)
+- `pose` = $[\hat x;\ \hat y;\ \hat\psi]$ (Nav 출력, 벽면), `pen_d` = $d$, `stage_c` = $s_c$ (`XY_setup.m`)
 - 식 (16) 의 포화·속도 제한은 PenComp 출력 뒤 `PenCtrl/Travel` (Saturation, 0–`stage_travel`) 과 `PenCtrl/CmdRate` (Rate Limiter, ±`stage_vcmd`) 블록
 
 #### 4.6.5 heading 오차의 영향
@@ -634,7 +638,7 @@ $$
 
 $$
 K_{P,i} = m_i\,\omega_{n,s}^2, \quad K_{D,i} = 2\zeta_s m_i\,\omega_{n,s}, \quad K_{I,i} = K_{P,i}\,\omega_{n,s}/5, \quad
-g_B(\psi) = R^{\top}(\psi)\begin{bmatrix} -g \\ 0 \end{bmatrix} \tag{18}
+g_B(\psi) = R^{\top}(\psi)\begin{bmatrix} 0 \\ -g \end{bmatrix} \tag{18}
 $$
 
 | 기호 | 정의 | 값 |
@@ -682,7 +686,7 @@ $$
 $$
 
 - $T$ = 39.3 s (펜 다운 시간). 드리프트 항은 0 에서 $\dot b_\psi T$ 까지 선형 증가하는 오차의 RMS
-- 시뮬레이션 RMS 1.18–1.20 mm (현재 판, 이전 판 1.17–1.61 mm) 와 같은 크기. 각 항을 하나씩 0 으로 둔 시뮬레이션 결과는 10.5 절 표
+- 시뮬레이션 RMS 1.17–1.20 mm (현재 판, 이전 판 1.17–1.61 mm) 와 같은 크기. 각 항을 하나씩 0 으로 둔 시뮬레이션 결과는 10.5 절 표
 
 ### 4.10 선택 기능 (기본 꺼짐)
 
@@ -727,7 +731,7 @@ $$
 | Dynamics 의 $\tilde M,\ \tilde C,\ S,\ \dot S$ 와 $V$ 미분식 | 식 (4)–(5) 형태 | 같은 식 | 같음 |
 | 차량 크기 (Table 1) | $m$ 3700 kg, $l$ 5.0 m, $b$ 1.1 m | 12 kg, 0.30 m, 0.28 m | 다름 (AVT-3C) |
 | 마찰 수직력 | $W = mg$ (지면) | 자석 흡착력 $N$ = 400 N | 다름 (벽면) |
-| 중력 항 | 없음 | $f_g = [-mg,\ 0,\ 0]^{\top}$ | 추가 |
+| 중력 항 | 없음 | $f_g = [0,\ -mg,\ 0]^{\top}$ | 추가 |
 | 회전 저항 $M_r$ | $\mathrm{sgn}(\omega)(u^2 - l^2/4)$ | $\tanh(\omega/\varepsilon)(l^2/4 - u^2)$ | 부호 수정 (4.3 절 표 3 번) |
 | $\mathrm{sgn}(\cdot)$ | 그대로 | $\tanh(\cdot/\varepsilon)$ | 수치 떨림 방지 |
 | 속도 PID | P 150000, I 0, D 0 (P 제어) | P 1500, I 15000 (PI) | 다름 (질량 1/300, 정상 편차 제거) |
@@ -785,7 +789,7 @@ $$
 | 제어기 식 | 같음 (같은 빌더 함수) | 바깥 루프·펜 보상 같음. `PwmMap` 입력이 속도 명령 (1 판) 인지 PI 출력 (2 판) 인지만 다름 |
 | 추가 입력 | – | `/imu/data` 의 `angular_velocity.z`, Nav 출력 $V_{meas} = [u_B;\ r]$ |
 | 실행 시간 | `_sim` 은 미션이 끝나면 정지 (`T_run` 70 s) | 같음 |
-| 결과 (가상 실험) | – | 펜 RMS 1 판 1.18–1.20 mm, 2 판 1.22–1.23 mm |
+| 결과 (가상 실험) | – | 펜 RMS 1 판 1.17–1.20 mm, 2 판 1.21–1.24 mm |
 
 - 모든 계산 코드는 모델 안의 MATLAB Function 블록에 있음 (외부 .m 함수 없음)
 - 왼쪽 → 오른쪽 배치: 항법 (RosIn, Nav) → 미션 → 제어 → 배분 → ROS 경계·플랜트 → 측정
@@ -811,7 +815,7 @@ MATLAB Function 블록별 입출력 (각 블록 코드 머리에 한·영 같은
 
 | 블록 (상자) | 입력 (단위) | 출력 (단위) | 식 | 근거 |
 |---|---|---|---|---|
-| NavFcn (Nav) | ZeroKey 위치 [m], 속도 [m/s], IMU 쿼터니언, $\psi_0$ [rad], $\tau_{pred}$ [s] | `pose` = $[\hat p_1;\ \hat p_2;\ \hat\psi]$ [m, m, rad] (2 판: + $V_{meas}$ [m/s, rad/s]) | $\hat p = [z;\ x]$, $\hat\psi = \mathrm{yaw} - \mathrm{yaw}_0 + \psi_0$ | 실기 `plane_project` |
+| NavFcn (Nav) | ZeroKey 위치 [m], 속도 [m/s], IMU 쿼터니언, $\psi_0$ [rad], $\tau_{pred}$ [s], `zk_xsign` | `pose` = $[\hat x;\ \hat y;\ \hat\psi]$ [m, m, rad] (2 판: + $V_{meas}$ [m/s, rad/s]) | $\hat p = [\pm x_{zk};\ z_{zk}]$, $\hat\psi = \mathrm{yaw} - \mathrm{yaw}_0 + \psi_0$ | 실기 `plane_project` 를 REP-103 형으로 |
 | Guards (Mission) | `pose`, $A,\ B,\ d$, `line_pre`, `line_post`, $r_{tag}$ [m] | `dist_start` [m], `th_err` [rad], `along_rem` [m] | $\lVert c_A - \hat c\rVert$, $\mathrm{wrap}(\theta_l - \hat\psi)$, $u^{\top}(r_B - \hat p)$ | 실기 Chart |
 | ModeChart (Mission) | 위 셋, 시각 $t$ [s] | `mode`, `t_line` [s] | 그림 4 | 6WP_sim Chart |
 | Waypoints (Mission) | `mode`, 직선 기하 [m] | `WP_prev`, `WP_target`, `lineAB` [m] | $r_A = A - R(\theta_l)d - u\,\ell_{pre}$, $c_A = r_A - R(\theta_l) r_{tag}$ | 4.5 절 |
@@ -903,8 +907,8 @@ Run 버튼으로 실행할 때의 동작
 | 절 | 이름 | 값 | 비고 |
 |---|---|---|---|
 | 1 | `Ts_ctrl`, `Ts_plant` | 0.01, 0.0005 s | 제어 주기, 적분 스텝 (4.3 절) |
-| 2 | `pen_A`, `pen_B` | (0.30, 0.70), (0.30, −0.50) m | 그릴 직선 (1.2 m) |
-| 3 | `q0` | (0.10, 0.85, 0) | 출발 자세 |
+| 2 | `pen_A`, `pen_B` | (−0.70, 0.30), (0.50, 0.30) m | 그릴 직선 (1.2 m) |
+| 3 | `q0` | (−0.85, 0.10, 90°) | 출발 자세 (천장을 봄). `psi0` = 90° |
 | 4 | `K_dist`, `K_yaw` | 1.0, 2.0 | 모드 1, 2 |
 | 4 | `v_ref`, `K_px`, `K_py`, `K_ptheta` | 0.03 m/s, 0.3, 5.0, 1.4 | 모드 3 (실기 ZeroKey 모델 값, 속도만 낮춤) |
 | 4 | `K_c`, `K_ci` | 0, 0 | 스테이지 중앙 유지 (선택) |
@@ -966,10 +970,10 @@ Run 버튼으로 실행할 때의 동작
 
 | 항목 | 값 |
 |---|---|
-| 직선 | A (0.30, 0.70) → B (0.30, −0.50) m, 1.2 m, 30 mm/s |
+| 직선 | A (−0.70, 0.30) → B (0.50, 0.30) m, 1.2 m, 30 mm/s |
 | 모드 전이 | 2 → 1.5 s, 3 → 4.1 s, 4 → 45.4 s, 종료 47.4 s |
 | 펜 다운 시간 | 39.1 s |
-| 펜 횡오차 (스테이지 보상) | RMS 1.18–1.20 mm, 최대 3.9 mm (4 회 실행) |
+| 펜 횡오차 (스테이지 보상) | RMS 1.17–1.20 mm, 최대 3.9 mm (4 회 실행) |
 | 펜 횡오차 (보상 없음, 같은 주행) | RMS 14.84 mm, 최대 19.6 mm |
 | 로봇 기준점 횡오차 `e_cross` (모드 3) | RMS 23.6 mm |
 | 스테이지 사용 범위 | X 51.0–53.8 mm, Y 61.4–72.2 mm (행정 0–101.6) |
@@ -1060,7 +1064,7 @@ Run 버튼으로 실행할 때의 동작
 
 실행마다 다른 수치
 
-- 현재 판에서는 같은 조건 3 회 반복의 펜 RMS 차이가 0.02 mm 이하 (기준 1.18–1.20 mm)
+- 현재 판에서는 같은 조건 3 회 반복의 펜 RMS 차이가 0.02 mm 이하 (기준 1.17–1.20 mm)
 - 이전 판 (태그 적분 플랜트) 에서는 1.17–1.61 mm 로 크게 변했음. 태그 기준 모드 1 과 회전 응답이 ROS 2 수신 시점에 민감했던 것으로 보임 (원인 확인하지 않음)
 
 ---
@@ -1177,7 +1181,7 @@ Run 버튼으로 실행할 때의 동작
 | 상자 | 2 판 내용 |
 |---|---|
 | RosIn | `/imu/data` 에서 `angular_velocity.z` 도 읽음 → `imu_data` = [쿼터니언; 자이로 z] |
-| Nav | `V_meas` = [$u_B$; $r$] 를 더 냄. $u_B = \dot p_1\cos\psi + \dot p_2\sin\psi$ (ZeroKey 속도, 실기 `transform_state` 와 같은 식), $r$ = 자이로 z |
+| Nav | `V_meas` = [$u_B$; $r$] 를 더 냄. $u_B = \dot x\cos\psi + \dot y\sin\psi$ (ZeroKey 속도, 실기 `transform_state` 와 같은 식), $r$ = 자이로 z |
 | InnerPI (새 상자) | 아래 식 (23) |
 | PwmMap | PI 출력 $\bar V, \bar W$ 를 실기 `calc_pwm` 에 그대로 넣음 (식 (8) 의 속도 정규화 없음) |
 | Sensors · PlantRosOut | IMU 메시지 하나에 자세와 자이로 z (참 각속도 + 잡음 0.1°/s) 를 같이 실어 발행 |
@@ -1199,8 +1203,8 @@ $$
 
 | 경우 | 펜 RMS [mm] | 펜 최대 [mm] | 로봇 RMS [mm] | 스테이지 Y [mm] | 속도 명령 / 실제 [m/s] | ω 추종 오차 RMS [deg/s] |
 |---|---|---|---|---|---|---|
-| 1 판 (내부 PI 없음) | 1.18–1.20 | 3.9 | 23.6 | 61.3–72.2 | 0.0228 / 0.0308 | 1.4 |
-| 2 판 기본 ($g_\omega$ = 1, 리셋) | 1.22–1.23 | 3.7 | 22.6 | 63.5–70.9 | 0.0312 / 0.0312 | 1.7 |
+| 1 판 (내부 PI 없음) | 1.17–1.20 | 3.9 | 23.6 | 61.3–72.2 | 0.0228 / 0.0308 | 1.4 |
+| 2 판 기본 ($g_\omega$ = 1, 리셋) | 1.21–1.24 | 3.7 | 22.6 | 63.5–70.9 | 0.0312 / 0.0312 | 1.7 |
 | 2 판, $g_\omega$ = 0.1443 (실기 값), 리셋 | 1.41–1.44 | 4.7–5.0 | 22.3 | 62.9–70.5 | 0.0310 / 0.0309 | 5.4 |
 | 2 판, $g_\omega$ = 1, 리셋 없음 (실기와 같음) | 1.22 | 3.7 | 20.6 | 33.0–70.8 | 0.0312 / 0.0306 | 1.6 |
 | 2 판, $g_\omega$ = 0.1443, 리셋 없음 | 1.43 | 4.6–4.7 | 20.1 | 52.1–70.6 | 0.0308 / 0.0305 | 5.4 |
@@ -1237,7 +1241,7 @@ $$
 | 실기 스테이지 명령이 밀림 | 100 Hz `move abs` 가 시리얼 115200 bps 를 포화 | 노드에서 마지막 목표만 25 Hz 로 전송 |
 | 시뮬레이션 `/motor_pwm` 이 실제 로봇을 움직일 위험 | 같은 도메인 | 가상 실험 도메인 77 분리 |
 | VideoWriter 권한 오류 | 이전 VideoReader 가 파일을 잡고 있음 | `clear` 후 재실행 |
-| 실행마다 수치가 다름 | ROS 2 수신 시점 | 정상. 현재 판에서는 반복 차이 0.02 mm 이하 (펜 RMS 1.18–1.20 mm) |
+| 실행마다 수치가 다름 | ROS 2 수신 시점 | 정상. 현재 판에서는 반복 차이 0.02 mm 이하 (펜 RMS 1.17–1.20 mm) |
 | 대시보드 실행이 매우 느림 (48 s 에 113 s) | Animate 의 MATLAB Function 입력이 연속이라 0.5 ms 스텝마다 그림 함수 호출 | 입력마다 Zero-Order Hold (`anim_Ts` 0.2 s) |
 | ω 가 크게 떨림 (추종 오차 6 deg/s) | 회전 저항 tanh 에 비해 적분 스텝 5 ms 가 큼 | `Ts_plant` 0.5 ms (4.3 절) |
 | `XY_compare` 중 변수 오류 | base 작업공간에 남은 `r`, `s` 가 스크립트 변수와 충돌 | `XY_setup` 뒤 `clear r s` |
@@ -1251,6 +1255,7 @@ $$
 |---|---|---|
 | 태그·펜 위치 `r_tag`, `r_pen0` | (−0.08, 0.06), (0, 0) m | 레이저 트래커 실측 |
 | 스테이지 축 부호·장착 각도 | 축 1 = x_B, 축 2 = y_B, 0° | 실기 조립 확인 |
+| ZeroKey world x 방향 `zk_xsign` | −1 (벽 정면에서 왼쪽 +, 실기 `plane_project` 가정) | 로봇을 손으로 오른쪽으로 옮기며 `/zerokey/position` x 의 증감 확인. 증가하면 +1 |
 | 스테이지 가감속 | 500 mm/s² | `get accel` |
 | 스테이지 위치 루프 대역 · 명령 지연 | 20 Hz · 10 ms | 계단 명령 응답 측정 |
 | 로봇 질량 · 흡착력 · 마찰 | 12 kg · 400 N · μ_l 0.05, μ_t 0.5 | 실측 |

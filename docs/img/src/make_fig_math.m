@@ -19,29 +19,29 @@ function frames(f)
 %  Three frames: wall W with the heading convention, body B and stage S (body panel to scale, m).
 fig = figure('Color','w', 'Position',[50 50 1500 700], 'Visible','off');
 navy = [0.12 0.23 0.37];  gry = [0.45 0.45 0.45];  red = [0.80 0.10 0.10];  grn = [0.20 0.55 0.25];  pur = [0.55 0.25 0.65];
-%  (a) 벽면 좌표계 — 화면 좌표 = (-p2, p1)
+%  (a) 벽면 좌표계 — 화면 좌표 = 벽면 (x 오른쪽, y 위) / wall frame, screen = (x right, y up)
 ax = axes(fig, 'Position',[0.01 0.03 0.45 0.94]);  hold(ax,'on');  axis(ax,'equal');  axis(ax,'off');
 T = @(x,y,s,varargin) text(ax, x, y, s, 'Interpreter','latex', 'FontSize',16, varargin{:});
-arw(ax, [0 0], [0 0.95], 'k', 1.6);   T(0.03, 0.97, '$p_1$ (up, ceiling)');
-arw(ax, [0 0], [-0.95 0], 'k', 1.6);  T(-1.18, 0.07, '$p_2$ (left)');
+arw(ax, [0 0], [0 0.95], 'k', 1.6);   T(0.03, 0.97, '$y$ (up, ceiling)');
+arw(ax, [0 0], [0.95 0], 'k', 1.6);   T(0.80, 0.07, '$x$ (right)');
 plot(ax, 0, 0, 'o', 'MarkerSize',14, 'MarkerEdgeColor','k', 'LineWidth',1.3);  plot(ax, 0, 0, 'k.', 'MarkerSize',13);
 T(0.05, -0.07, '$z_W$ out of the wall (towards the viewer)', 'FontSize',13);
 tt = linspace(0, 2*pi, 200);  plot(ax, 0.62*cos(tt), 0.62*sin(tt), ':', 'Color',gry);
-H = [0 0.62; -0.62 0; 0 -0.62; 0.62 0];
+H = [0.62 0; 0 0.62; -0.62 0; 0 -0.62];
 L = {'$\psi = 0^{\circ}$', '$\psi = +90^{\circ}$', '$\psi = \pm 180^{\circ}$', '$\psi = -90^{\circ}$'};
-O = [0.04 0.05; -0.38 -0.07; 0.04 -0.08; 0.02 0.07];
+O = [-0.10 0.07; 0.04 -0.05; -0.30 0.07; 0.04 0.02];
 for k = 1:4
     arw(ax, [0 0], H(k,:), navy, 1.4);  T(H(k,1)+O(k,1), H(k,2)+O(k,2), L{k}, 'Color',navy, 'FontSize',14);
 end
-ta = linspace(pi/2+0.25, pi-0.25, 30);  plot(ax, 0.40*cos(ta), 0.40*sin(ta), '-', 'Color',red, 'LineWidth',1.6);
+ta = linspace(0.25, pi/2-0.25, 30);  plot(ax, 0.40*cos(ta), 0.40*sin(ta), '-', 'Color',red, 'LineWidth',1.6);
 arw(ax, 0.40*[cos(ta(end-1)) sin(ta(end-1))], 0.40*[cos(ta(end)) sin(ta(end))], red, 1.6);
-T(-0.40, 0.42, '$+\psi$', 'Color',red);
+T(0.32, 0.36, '$+\psi$', 'Color',red);
 plot(ax, [-0.70 0.50], [-0.85 -0.85], '-', 'Color',[0.60 0.74 0.96], 'LineWidth',5);
 arw(ax, [-0.10 -0.85], [0.20 -0.85], navy, 1.6);
-T(-0.80, -0.95, 'line $A \to B$ points right: $u = [0,\,-1]^{\top}$, $\theta_l = -90^{\circ}$', 'FontSize',13);
-arw(ax, [0.85 0.80], [0.85 0.45], gry, 1.8);  T(0.88, 0.62, '$g$', 'Color',gry);
-T(-1.15, 1.12, '(a) wall frame $\mathcal{W}$ and heading $\psi$', 'FontSize',15);
-xlim(ax, [-1.25 1.05]);  ylim(ax, [-1.05 1.18]);
+T(-0.80, -0.95, 'line $A \to B$ points right: $u = [1,\,0]^{\top}$, $\theta_l = 0^{\circ}$', 'FontSize',13);
+arw(ax, [-0.85 0.80], [-0.85 0.45], gry, 1.8);  T(-0.82, 0.62, '$g$', 'Color',gry);
+T(-1.0, 1.12, '(a) wall frame $\mathcal{W}$ and heading $\psi$', 'FontSize',15);
+xlim(ax, [-1.05 1.30]);  ylim(ax, [-1.05 1.18]);
 %  (b) 바디·스테이지 좌표계 — 실제 치수 [m], x_B 오른쪽, y_B 위
 ax = axes(fig, 'Position',[0.50 0.03 0.49 0.94]);  hold(ax,'on');  axis(ax,'equal');  axis(ax,'off');
 T = @(x,y,s,varargin) text(ax, x, y, s, 'Interpreter','latex', 'FontSize',15, varargin{:});
@@ -72,34 +72,34 @@ end
 
 % =====================================================================
 function rotation(f)
-%  회전행렬의 열 = 바디 단위벡터를 벽면 좌표로 쓴 것. psi = 30 deg 예시, 화면 좌표 = (-p2, p1)
+%  회전행렬의 열 = 바디 단위벡터를 벽면 좌표로 쓴 것. psi = 30 deg 예시, 화면 좌표 = 벽면 (x, y)
 %  Columns of R(psi) are the body unit vectors written in wall coordinates (psi = 30 deg example).
 fig = figure('Color','w', 'Position',[50 50 1450 720], 'Visible','off');
 ax = axes(fig, 'Position',[0.01 0.02 0.98 0.96]);  hold(ax,'on');  axis(ax,'equal');  axis(ax,'off');
 T = @(x,y,s,varargin) text(ax, x, y, s, 'Interpreter','latex', 'FontSize',17, varargin{:});
 navy = [0.12 0.23 0.37];  red = [0.80 0.10 0.10];  blu = [0.10 0.35 0.75];  gry = [0.5 0.5 0.5];
-S = @(w) [-w(2), w(1)];
+S = @(w) [w(1), w(2)];
 ps = deg2rad(30);  xw = [cos(ps) sin(ps)];  yw = [-sin(ps) cos(ps)];
-arw(ax, [0 0], S([1.15 0]), 'k', 1.4);  T(0.03, 1.18, '$p_1$');
-arw(ax, [0 0], S([0 1.15]), 'k', 1.4);  T(-1.25, 0.06, '$p_2$');
+arw(ax, [0 0], S([1.15 0]), 'k', 1.4);  T(1.18, 0.0, '$x$');
+arw(ax, [0 0], S([0 1.15]), 'k', 1.4);  T(0.03, 1.18, '$y$');
 arw(ax, [0 0], S([0 -0.6]), gry, 0.8);  arw(ax, [0 0], S([-0.6 0]), gry, 0.8);
 arw(ax, [0 0], S(xw), red, 2.2);  arw(ax, [0 0], S(yw), blu, 2.2);
-T(S(xw)*[1;0]-0.10, S(xw)*[0;1]+0.07, '$x_B$', 'Color',red);
-T(S(yw)*[1;0]-0.13, S(yw)*[0;1]-0.02, '$y_B$', 'Color',blu);
+T(S(xw)*[1;0]+0.03, S(xw)*[0;1]+0.06, '$x_B$', 'Color',red);
+T(S(yw)*[1;0]-0.13, S(yw)*[0;1]+0.06, '$y_B$', 'Color',blu);
 X = S(xw);  plot(ax, [X(1) 0], [X(2) X(2)], ':', 'Color',red);  plot(ax, [X(1) X(1)], [X(2) 0], ':', 'Color',red);
-T(0.03, X(2), '$\cos\psi$', 'Color',red, 'FontSize',15);  T(X(1)-0.07, -0.07, '$\sin\psi$', 'Color',red, 'FontSize',15);
+T(X(1)-0.08, -0.07, '$\cos\psi$', 'Color',red, 'FontSize',15);  T(0.03, X(2)+0.04, '$\sin\psi$', 'Color',red, 'FontSize',15);
 Y = S(yw);  plot(ax, [Y(1) 0], [Y(2) Y(2)], ':', 'Color',blu);  plot(ax, [Y(1) Y(1)], [Y(2) 0], ':', 'Color',blu);
-T(0.03, Y(2), '$-\sin\psi$', 'Color',blu, 'FontSize',15);  T(Y(1)-0.08, 0.07, '$\cos\psi$', 'Color',blu, 'FontSize',15);
-ta = linspace(pi/2, pi/2 + ps, 30);  plot(ax, 0.35*cos(ta), 0.35*sin(ta), 'k-', 'LineWidth',1.2);
-T(0.03, 0.30, '$\psi = 30^{\circ}$', 'FontSize',15);
-T(-1.25, -0.95, 'wall frame seen from the front: $p_1$ up, $p_2$ left; $\psi$ counter-clockwise from $p_1$', 'FontSize',13);
+T(Y(1)-0.12, -0.07, '$-\sin\psi$', 'Color',blu, 'FontSize',15);  T(0.03, Y(2), '$\cos\psi$', 'Color',blu, 'FontSize',15);
+ta = linspace(0, ps, 30);  plot(ax, 0.35*cos(ta), 0.35*sin(ta), 'k-', 'LineWidth',1.2);
+T(0.37, 0.09, '$\psi = 30^{\circ}$', 'FontSize',15);
+T(-1.25, -0.95, 'wall frame seen from the front: $x$ right, $y$ up, $z$ out of the wall; $\psi$ counter-clockwise from $x$', 'FontSize',13);
 x0 = 1.55;
 T(x0, 1.05, '$x_B$ in $\mathcal{W}$: $\;\left[\begin{array}{c}\cos\psi\\ \sin\psi\end{array}\right]$, $\quad y_B$ in $\mathcal{W}$: $\;\left[\begin{array}{c}-\sin\psi\\ \cos\psi\end{array}\right]$');
 T(x0, 0.70, '$R(\psi) = \big[\; x_B \;\; y_B \;\big] = \left[\begin{array}{cc}\cos\psi & -\sin\psi\\ \sin\psi & \cos\psi\end{array}\right]$');
 T(x0, 0.38, 'body $\to$ wall: $\;v^{\mathcal{W}} = R(\psi)\, v^{\mathcal{B}} = a\, x_B + b\, y_B, \;\; v^{\mathcal{B}} = [a,\, b]^{\top}$', 'FontSize',15);
 T(x0, 0.16, 'wall $\to$ body: $\;v^{\mathcal{B}} = R^{\top}(\psi)\, v^{\mathcal{W}} \quad (R^{\top}R = I)$', 'FontSize',15);
-T(x0, -0.12, 'check, $\psi = -90^{\circ}$ (driving right along $A \to B$):', 'FontSize',15);
-T(x0, -0.40, '$R = \left[\begin{array}{cc}0 & 1\\ -1 & 0\end{array}\right]$: $\;x_B \mapsto [0,\,-1]^{\top}$ (right), $\;y_B \mapsto [1,\,0]^{\top}$ (up)', 'FontSize',15);
+T(x0, -0.12, 'check, $\psi = 0^{\circ}$ (driving right along $A \to B$):', 'FontSize',15);
+T(x0, -0.40, '$R = \left[\begin{array}{cc}1 & 0\\ 0 & 1\end{array}\right]$: $\;x_B \mapsto [1,\,0]^{\top}$ (right), $\;y_B \mapsto [0,\,1]^{\top}$ (up)', 'FontSize',15);
 T(x0, -0.68, 'so a stage move $+\Delta s_Y$ (body left) moves the pen up the wall', 'FontSize',15);
 xlim(ax, [-1.35 4.10]);  ylim(ax, [-1.05 1.30]);
 exportgraphics(fig, f, 'Resolution',200);  close(fig);
@@ -109,13 +109,13 @@ end
 function pen_example(f)
 %  펜 보상 수치 예제 (README 4.6). A, B, d 는 XY_setup 값, 자세는 직선 주행 중 대표값
 %  Worked pen-compensation example with the XY_setup values of A, B and d.
-A = [0.30; 0.70];  B = [0.30; -0.50];  d = [0.08; -0.06];  rtag = [-0.08; 0.06];  sc = 50.8;
-p = [0.345; 0.200];  ps = deg2rad(-87);
+A = [-0.70; 0.30];  B = [0.50; 0.30];  d = [0.08; -0.06];  rtag = [-0.08; 0.06];  sc = 50.8;
+p = [-0.200; 0.345];  ps = deg2rad(3);
 R = [cos(ps) -sin(ps); sin(ps) cos(ps)];
 u = (B - A)/norm(B - A);  n = [-u(2); u(1)];
 c0 = p + R*d;  sg = u'*(c0 - A);  e0 = n'*(c0 - A);  pst = A + sg*u;
 ds = R'*(pst - p) - d;  s = sc + 1000*ds;  c = p - R*rtag;
-S = @(w) [-w(2), w(1)];
+S = @(w) [w(1), w(2)];          % 화면 = 벽면 (x 오른쪽, y 위) / screen = wall
 fig = figure('Color','w', 'Position',[50 50 1600 760], 'Visible','off');
 navy = [0.12 0.23 0.37];  gry = [0.45 0.45 0.45];  red = [0.80 0.10 0.10];  grn = [0.20 0.55 0.25];
 pur = [0.55 0.25 0.65];  org = [0.85 0.45 0.05];
@@ -127,7 +127,7 @@ K = [c + Lr/2*ex + Wr/2*ey, c + Lr/2*ex - Wr/2*ey, c - Lr/2*ex - Wr/2*ey, c - Lr
 Ks = [S(K(:,1)); S(K(:,2)); S(K(:,3)); S(K(:,4))];
 patch(ax, Ks(:,1), Ks(:,2), [0.96 0.96 0.97], 'EdgeColor',gry, 'LineWidth',1.2);
 plot(ax, [-0.36 0.02], [0.30 0.30], '-', 'Color',[0.60 0.74 0.96], 'LineWidth',5);
-T(-0.355, 0.292, 'line $p_1 = 0.30$ m ($A \to B$ runs to the right)', 'Color',navy, 'FontSize',13);
+T(-0.355, 0.292, 'line $y = 0.30$ m ($A \to B$ runs to the right)', 'Color',navy, 'FontSize',13);
 q = S(p);  q0 = S(c0);  qs = S(pst);
 plot(ax, q(1), q(2), 's', 'MarkerSize',12, 'MarkerFaceColor',[0.2 0.2 0.2], 'MarkerEdgeColor','k');
 T(q(1)-0.075, q(2)+0.010, sprintf('tag $\\hat p = (%.3f,\\ %.3f)$', p));
@@ -190,11 +190,11 @@ pur = [0.55 0.25 0.65];  org = [0.85 0.45 0.05];
 T = @(x,y,s,varargin) text(ax, x, y, s, 'Interpreter','latex', 'FontSize',17, varargin{:});
 
 %  벽면 프레임과 중력 / wall frame and gravity
-%  p1 = 위, p2 = 왼쪽 (벽을 정면에서 볼 때), z_W = 벽 밖 (보는 사람 쪽) -> 화면 좌표 (-p2, p1)
+%  x = 오른쪽, y = 위 (벽을 정면에서 볼 때), z_W = 벽 밖 (보는 사람 쪽) -> 화면 좌표 = (x, y)
 o = [0.20 -0.16];
-arw(ax, o, o + [0 0.17], 'k', 1.4);  arw(ax, o, o + [-0.17 0], 'k', 1.4);
-T(o(1)-0.005, o(2)+0.20, '$p_1$ (up)', 'FontSize',15);
-T(o(1)-0.23, o(2)+0.035, '$p_2$ (left)', 'FontSize',15);
+arw(ax, o, o + [0 0.17], 'k', 1.4);  arw(ax, o, o + [0.17 0], 'k', 1.4);
+T(o(1)-0.005, o(2)+0.20, '$y$ (up)', 'FontSize',15);
+T(o(1)+0.19, o(2)+0.012, '$x$ (right)', 'FontSize',15);
 plot(ax, o(1), o(2), 'o', 'MarkerSize',13, 'MarkerEdgeColor','k', 'LineWidth',1.2);
 plot(ax, o(1), o(2), 'k.', 'MarkerSize',12);
 T(o(1)+0.02, o(2)-0.035, '$z_W$ (out of wall)', 'FontSize',13);
@@ -219,10 +219,10 @@ T(c(1)-0.26, c(2)+0.27, 'AVT-3C (magnetic tracks)', 'FontSize',13, 'Color',gry);
 xb = c + 0.20*ex;  yb = c + 0.17*ey;
 arw(ax, c, xb, 'k', 1.6);  arw(ax, c, yb, 'k', 1.6);
 T(xb(1)+0.01, xb(2)-0.005, '$x_B$');  T(yb(1)-0.055, yb(2)+0.01, '$y_B$');
-plot(ax, [c(1) c(1)], [c(2) c(2)+0.20], 'k:', 'LineWidth',1);
-tt = linspace(pi/2, a, 40);  plot(ax, c(1)+0.12*cos(tt), c(2)+0.12*sin(tt), 'k-', 'LineWidth',1);
-T(c(1)+0.09, c(2)+0.10, '$\psi$');
-T(c(1)-0.26, c(2)+0.34, '$\psi \approx -96^{\circ}$ in this sketch (clockwise from $p_1$ is negative)', 'FontSize',13);
+plot(ax, [c(1) c(1)+0.25], [c(2) c(2)], 'k:', 'LineWidth',1);
+tt = linspace(0, a, 40);  plot(ax, c(1)+0.15*cos(tt), c(2)+0.15*sin(tt), 'k-', 'LineWidth',1);
+T(c(1)+0.165, c(2)+0.025, '$\psi$');
+T(c(1)-0.26, c(2)+0.34, '$\psi \approx -6^{\circ}$ in this sketch (clockwise from $x$ is negative)', 'FontSize',13);
 
 %  태그 p, 레버암 R(psi)d, 스테이지 중앙의 펜 c0
 pT = c - 0.19*ex + 0.12*ey;

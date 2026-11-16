@@ -1,6 +1,6 @@
 # 1_simulation — Mô hình Simulink và script
 
-[한국어](README.md) · [English](README_EN.md) · Tài liệu đầy đủ: [../README_VI.md](../README_VI.md) (Chương 13–17)
+[한국어](README_KO.md) · [English](README.md) · Tài liệu đầy đủ: [../README_VI.md](../README_VI.md) (Chương 13–17)
 
 ## Tệp
 

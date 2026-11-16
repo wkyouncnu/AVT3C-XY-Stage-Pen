@@ -1,6 +1,6 @@
 # _tools — Công cụ tạo, sắp xếp và kiểm tra mô hình Simulink
 
-[한국어](README.md) · [English](README_EN.md)
+[한국어](README_KO.md) · [English](README.md)
 
 Tập hàm MATLAB được `1_simulation/build_xy_models.m` gọi khi dựng mô hình. Đây là cùng bộ công cụ dùng trong các môn Simulink của phòng thí nghiệm (capstone và cao học); phần trợ giúp của từng tệp (`help tên_hàm`) viết bằng tiếng Hàn và tiếng Anh. Hiếm khi cần gọi trực tiếp.
 

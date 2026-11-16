@@ -8,7 +8,7 @@
 - Bản trích bù động học bút (PDF, tiếng Hàn): [2_docs/manual/AVT3C_XY_Stage_Pen_Control.pdf](2_docs/manual/AVT3C_XY_Stage_Pen_Control.pdf) (Chương 3, Mục 4.1, Chương 6, Mục 8.6, Mục 14.6. Được tạo bởi `2_docs/make_pen_excerpt.py`)
 - Bản trích bù động học bút (PDF, tiếng Anh): [2_docs/manual/AVT3C_XY_Stage_Pen_Control_EN.pdf](2_docs/manual/AVT3C_XY_Stage_Pen_Control_EN.pdf)
 - Bản trích bù động học bút (PDF, tiếng Việt): [2_docs/manual/AVT3C_XY_Stage_Pen_Control_VI.pdf](2_docs/manual/AVT3C_XY_Stage_Pen_Control_VI.pdf)
-- Tài liệu bàn trượt (Zaber): [5_references/manuals/X-LSM-E-Manual.pdf](5_references/manuals/X-LSM-E-Manual.pdf), bảng thông số [5_references/manuals/X-LSM-E-Datasheet.pdf](5_references/manuals/X-LSM-E-Datasheet.pdf). Bài báo tham khảo: [5_references/README.md](5_references/README.md)
+- Tài liệu bàn trượt (Zaber): [5_references/manuals/X-LSM-E-Manual.pdf](5_references/manuals/X-LSM-E-Manual.pdf), bảng thông số [5_references/manuals/X-LSM-E-Datasheet.pdf](5_references/manuals/X-LSM-E-Datasheet.pdf). Bài báo tham khảo: [5_references/README_VI.md](5_references/README_VI.md)
 
 ![Cấu hình hệ thống](2_docs/img/diagram_overview_en.svg)
 
@@ -1143,11 +1143,11 @@ $$
 
 ### 9.4 Bố cục kho mã
 
-- Mỗi thư mục có hướng dẫn bằng tiếng Hàn, tiếng Anh và tiếng Việt (`README.md`, `README_EN.md`, `README_VI.md`).
+- Mỗi thư mục có hướng dẫn bằng tiếng Hàn, tiếng Anh và tiếng Việt (`README_KO.md`, `README.md`, `README_VI.md`).
 
 ```
-├── README.md                 Bản gốc tiếng Hàn
-├── README_EN.md              Bản tiếng Anh (cùng số chương, số phương trình và số hình)
+├── README_KO.md              Bản gốc tiếng Hàn
+├── README.md                 Bản tiếng Anh (cùng số chương, số phương trình và số hình)
 ├── README_VI.md              Tài liệu này (bản tiếng Việt, cùng số; dùng sơ đồ tiếng Anh)
 ├── 1_simulation/             Mô hình Simulink và script cho thí nghiệm ảo và robot thật (chú thích tiếng Hàn và tiếng Anh)
 │   ├── XY_setup.m            Tham số (chạy trước tiên)
@@ -1164,13 +1164,13 @@ $$
 │   └── video/                Video kết quả
 ├── 2_docs/
 │   ├── img/                  SVG sơ đồ (bản tiếng Anh: *_en.svg), PNG hình phương trình (src/make_fig_math.m, hình bù bút src/make_fig_pen.m)
-│   ├── manual/               PDF tạo từ README, README_EN và README_VI (tài liệu đầy đủ và bản trích điều khiển bút, mỗi loại có bản tiếng Hàn, tiếng Anh và tiếng Việt)
+│   ├── manual/               PDF tạo từ README_KO, README và README_VI (tài liệu đầy đủ và bản trích điều khiển bút, mỗi loại có bản tiếng Hàn, tiếng Anh và tiếng Việt)
 │   └── make_pen_excerpt.py   Tạo trích đoạn điều khiển bút
 ├── 3_robot_code/zaber_stage_node.py   Node bàn trượt chạy trên NUC (RS-232)
-├── 4_CAD/                    Ghi chú về STL robot (tệp STL là thiết kế bảo mật, không tải lên)
+├── 4_CAD/AVT-3C.stl          STL hình dạng ngoài robot (420 × 343 × 100 mm, dùng cho hoạt ảnh)
 ├── 5_references/
 │   ├── manuals/              Hướng dẫn sử dụng và datasheet Zaber X-LSM-E (PDF)
-│   └── README.md             Bài báo tham khảo (DOI). PDF bài báo không có trong kho mã vì lý do bản quyền
+│   └── README_VI.md          Bài báo tham khảo (DOI). PDF bài báo không có trong kho mã vì lý do bản quyền
 └── _tools/                   Công cụ sắp xếp và kiểm tra Simulink (paint_roles, check_lines, check_flow, check_tags …)
 ```
 
@@ -1516,7 +1516,7 @@ Từ tư thế thật của thẻ định vị và vị trí encoder, vị trí 
 | MATLAB / Simulink | R2025a trở lên |
 | Toolbox | ROS Toolbox, Stateflow |
 | NUC của robot thật | Ubuntu 24.04, ROS 2 Jazzy, Python 3, `zaber-motion` |
-| Hoạt hình (tùy chọn) | `4_CAD/AVT-3C.stl` (không có trong kho mã) |
+| Hoạt hình (tùy chọn) | `4_CAD/AVT-3C.stl` (có trong kho mã; nếu thiếu sẽ vẽ bằng hộp) |
 
 ### 15.2 Quy trình
 

@@ -1,12 +1,12 @@
 # 2_docs — Tài liệu PDF và hình
 
-[한국어](README.md) · [English](README_EN.md)
+[한국어](README_KO.md) · [English](README.md)
 
 ## Cấu trúc
 
 | Đường dẫn | Nội dung |
 |---|---|
-| `manual/AVT3C_XY_Stage_Pen.pdf` · `_EN.pdf` · `_VI.pdf` | Tài liệu đầy đủ (tiếng Hàn · tiếng Anh · tiếng Việt). Bản gốc là `README.md` · `README_EN.md` · `README_VI.md` ở thư mục gốc kho mã |
+| `manual/AVT3C_XY_Stage_Pen.pdf` · `_EN.pdf` · `_VI.pdf` | Tài liệu đầy đủ (tiếng Hàn · tiếng Anh · tiếng Việt). Bản gốc là `README_KO.md` · `README.md` · `README_VI.md` ở thư mục gốc kho mã |
 | `manual/AVT3C_XY_Stage_Pen_Control.pdf` · `_EN` · `_VI` | Bản trích bù động học bút (Chương 3, Mục 4.1, Chương 6, Mục 8.6, Mục 14.6) |
 | `img/diagram_*.svg` | Sơ đồ (tiếng Hàn). `diagram_*_en.svg` là bản tiếng Anh, bản tiếng Việt cũng dùng bản này |
 | `img/fig_*.png` | Hình hệ tọa độ và phương trình bù động học bút |

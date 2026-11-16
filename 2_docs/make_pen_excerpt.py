@@ -1,5 +1,5 @@
-"""README.md(또는 README_EN.md) 에서 펜 제어 부분만 뽑아 PenControl(_EN).md 를 만든다 (PDF 는 md2pdf.sh 로).
-Extract the pen-control part of README.md (or README_EN.md) into PenControl(_EN).md (convert to PDF with md2pdf.sh).
+"""README_KO.md(또는 README.md) 에서 펜 제어 부분만 뽑아 PenControl(_EN).md 를 만든다 (PDF 는 md2pdf.sh 로).
+Extract the pen-control part of README_KO.md (or README.md) into PenControl(_EN).md (convert to PDF with md2pdf.sh).
 
     py 2_docs/make_pen_excerpt.py              # 한글 / Korean   (저장소 맨 위에서 실행 / run from the repository root)
     bash ../../_tools/md2pdf.sh PenControl.md
@@ -21,7 +21,7 @@ import io, re, sys
 LANG = sys.argv[sys.argv.index('--lang') + 1] if '--lang' in sys.argv else 'ko'   # ko / en / vi
 EN = LANG == 'en'
 VI = LANG == 'vi'
-src = io.open({'en': 'README_EN.md', 'vi': 'README_VI.md'}.get(LANG, 'README.md'), encoding='utf-8').read()
+src = io.open({'en': 'README.md', 'vi': 'README_VI.md'}.get(LANG, 'README_KO.md'), encoding='utf-8').read()
 
 def block(start, stop):
     """start 줄부터 stop 줄 앞까지 / from the start heading up to the stop heading."""

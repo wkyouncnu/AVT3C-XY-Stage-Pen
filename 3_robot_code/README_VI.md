@@ -1,6 +1,6 @@
 # 3_robot_code — Mã chạy trên máy tính robot (NUC)
 
-[한국어](README.md) · [English](README_EN.md) · Tài liệu đầy đủ: [../README_VI.md](../README_VI.md) (Chương 10, Chương 21–22)
+[한국어](README_KO.md) · [English](README.md) · Tài liệu đầy đủ: [../README_VI.md](../README_VI.md) (Chương 10, Chương 21–22)
 
 ## zaber_stage_node.py
 

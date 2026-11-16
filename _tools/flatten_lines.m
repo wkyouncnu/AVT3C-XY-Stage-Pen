@@ -1,7 +1,8 @@
 function n = flatten_lines(mdl)
 %FLATTEN_LINES  포트 높이가 같아진 선을 다시 곧게 긋는다. 꺾임만 줄인다.
+%   Redraws as straight lines the lines whose port heights became equal. Only reduces turns.
 %
-%   n = flatten_lines('W06_4_stop')      % 최상위와 모든 서브시스템
+%   n = flatten_lines('W06_4_stop')      % 최상위와 모든 서브시스템 / top level and all subsystems
 %
 %   왜 생기나 / where the stale detours come from
 %       `lay_chain` 은 블록을 놓고 **그 자리에서** 선을 긋는다. 그 다음 차례인
@@ -10,26 +11,44 @@ function n = flatten_lines(mdl)
 %       둔다. 그래서 두 포트가 같은 높이에 서 있는데도 선은 내려갔다 올라오는
 %       옛 길을 붙들고 있다 — 2026-10-14 W06_4_stop 에서 측정, Guidance 출력이
 %       넷에서 다섯으로 늘어 straighten_chain 이 26 px 를 옮긴 뒤
+%       `lay_chain` places blocks and draws lines in place. When the next step,
+%       `straighten_chain`, moves a preceding block up or down to match port heights,
+%       Simulink pulls only the line end points to the new ports and leaves the middle
+%       points. So although both ports are at the same height, the line keeps its old path
+%       going down and back up. Measured on 2026-10-14 in W06_4_stop, after the Guidance
+%       outputs grew from four to five and straighten_chain moved 26 px:
 %
 %           Guidance -> OuterLoop : [235 65; 235 115; 389 115; 389 65; 525 65]
 %
 %       꺾임 3회 2건에 겹침 1건이 여기서 나왔다. `lay_links` 는 이 선을 집어내되
 %       갈래(태그로 가는 가지)까지 한꺼번에 풀 길을 못 찾아 그대로 두었다.
+%       Two three-turn findings and one overlap came from this. `lay_links` picked out the
+%       line but found no way to also resolve its branches (to tags), so it left it.
 %
 %   무엇을 하는가 / what it does
 %       끝이 하나인 가지마다 **출발 포트와 도착 포트의 높이가 같은지** 본다.
 %       같고, 앞으로 가는 선이고, 그 높이의 직선 통로에 다른 블록도 그 이름표도
 %       없으면 — 가지를 지우고 두 점짜리 직선으로 다시 긋는다. 꺾임이 줄기만
 %       하므로 되돌릴 일이 없다. 하나라도 걸리면 손대지 않는다.
+%       For each branch with one end, checks whether source and destination ports are at
+%       the same height. If so, the line goes forward, and no other block or its name label
+%       lies on the straight path at that height, the branch is deleted and redrawn as a
+%       two-point straight line. Turns only decrease, so nothing needs reverting. If any
+%       condition fails, the line is left alone.
 %
 %       갈래의 다른 가지는 건드리지 않는다. 같은 출발 포트에서 다시 그으면
 %       Simulink 가 줄기를 알아서 함께 쓴다.
+%       Other branches are not touched. Redrawn from the same source port, Simulink shares
+%       the trunk automatically.
 %
 %   무엇을 건드리지 않는가 / what does not change
 %       블록은 한 px 도 움직이지 않는다. 연결도 그대로다. 신호에 붙은 기록
 %       표시는 선과 함께 지워지므로 `keep_signals` 로 챙겼다 되돌린다.
+%       Blocks do not move by a single px, and connections stay the same. Logging marks on
+%       signals are deleted with the lines, so they are saved and restored with `keep_signals`.
 %
 %   돌려주는 값 n 은 다시 그은 가지의 수다.
+%   The return value n is the number of branches redrawn.
 
 opened = false;
 if ~bdIsLoaded(mdl), load_system(mdl); opened = true; end
@@ -39,6 +58,7 @@ n = 0;
 sys = [{mdl}; find_system(mdl, 'LookUnderMasks','all', 'BlockType','SubSystem')];
 for s = 1:numel(sys)
     %  Stateflow 차트·MATLAB Function 의 안은 Simulink 선이 아니다
+    %  The inside of Stateflow charts and MATLAB Functions is not Simulink lines
     try
         if ~strcmp(get_param(sys{s},'Type'), 'block_diagram') && ...
            ~strcmp(get_param(sys{s},'SFBlockType'), 'NONE'), continue, end
@@ -54,6 +74,7 @@ end
 % ---------------------------------------------------------------------
 function n = flatten_one_system(sys)
 %  한 서브시스템 안의 가지를 훑는다. 장애물 표는 한 번만 만든다.
+%  Scans the branches in one subsystem. The obstacle table is built only once.
 n = 0;
 blks = find_system(sys, 'SearchDepth',1, 'Type','Block');
 blks = blks(~strcmp(blks, sys));
@@ -72,16 +93,16 @@ for i = 1:numel(L)
     if ~ishandle(h), continue, end
     try
         dp = get_param(h, 'DstPortHandle');
-        if numel(dp) ~= 1 || dp < 0, continue, end     % 끝이 하나인 가지만
+        if numel(dp) ~= 1 || dp < 0, continue, end     % 끝이 하나인 가지만 / single-ended branches only
         if ~isempty(get_param(h, 'LineChildren')), continue, end
         q = get_param(h, 'Points');
-        if size(q,1) <= 2, continue, end               % 이미 직선이다
+        if size(q,1) <= 2, continue, end               % 이미 직선이다 / already straight
         sp = src_port(h);
         if sp < 0, continue, end
         a = get_param(sp, 'Position');
         b = get_param(dp, 'Position');
-        if abs(a(2) - b(2)) > 0.5, continue, end       % 높이가 다르면 둘 일이 아니다
-        if b(1) < a(1) + 15, continue, end             % 되돌아가는 선은 직선이 못 된다
+        if abs(a(2) - b(2)) > 0.5, continue, end       % 높이가 다르면 둘 일이 아니다 / different heights: not this tool's job
+        if b(1) < a(1) + 15, continue, end             % 되돌아가는 선은 직선이 못 된다 / a backward line cannot be straight
 
         own = [get_param(get_param(sp,'Parent'), 'Handle'); ...
                get_param(get_param(dp,'Parent'), 'Handle')];
@@ -92,6 +113,9 @@ for i = 1:numel(L)
         %  점이 아니라 **포트 손잡이**로 긋는다. 좌표로 그으면 몇 px 만 어긋나도
         %  붙지 않고 한쪽이 매달린다 — 2026-10-14 W06_4_stop 에서 x_ref·y_ref 두
         %  가닥이 그렇게 떨어졌다 (check_lines 의 (4) 매달림 2건)
+        %  Draw with port handles, not points. Drawn by coordinates, a few px off means the
+        %  line does not attach and one end dangles; on 2026-10-14 in W06_4_stop the x_ref and
+        %  y_ref lines came off that way (2 dangling findings, check_lines item (4))
         add_line(sys, sp, dp);
         n = n + 1;
     catch
@@ -102,6 +126,7 @@ end
 % ---------------------------------------------------------------------
 function p = src_port(h)
 %SRC_PORT  가지에서 줄기로 올라가 출발 포트를 찾는다.
+%   Climbs from a branch to the trunk to find the source port.
 p = get_param(h, 'SrcPortHandle');
 for depth = 1:16
     if p > 0, return, end
@@ -117,6 +142,9 @@ function tf = blocked(box, nbx, a, b)
 %BLOCKED  a 에서 b 로 가는 가로 직선이 남의 블록이나 이름표를 지나는가.
 %   이름표를 함께 보는 것은 이름이 블록 **밖**에 쓰이기 때문이다 — 사각형만
 %   피한 직선은 이름 글자를 그어 버린다 (check_lines 의 (7) 이름표 위 선).
+%   Does the horizontal line from a to b pass over another block or name label?
+%   Labels are included because names are drawn outside the block; a line that avoids only
+%   rectangles strikes out the name text (check_lines item (7), line over name label).
 tf = false;
 x1 = min(a(1), b(1));  x2 = max(a(1), b(1));  y = a(2);
 r = [box; nbx(~any(isnan(nbx),2), :)];

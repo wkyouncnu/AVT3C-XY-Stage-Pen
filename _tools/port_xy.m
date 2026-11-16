@@ -23,6 +23,8 @@ function p = port_xy(sys, blk, kind, k)
 %
 %       pitch = (height - 40) / (number of ports - 1)
 %
+%   블록은 간격이 52 px 이상이 되도록 크기를 정한다. 30 px 블록과 그 아래
+%   이름표가 차지하는 높이가 그만큼이다.
 %   Blocks are sized so that pitch is at least 52 px, which is what a 30 px
 %   block plus its name underneath needs.
 

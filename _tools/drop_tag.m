@@ -1,17 +1,25 @@
 function blk = drop_tag(sys, src, sk, name, dy)
 %DROP_TAG  Goto 태그를 **출발 포트 바로 옆**에 놓고 잇는다. 꺾임 0회, 관통 0.
+%          Places a Goto tag **right beside the source port** and wires it. 0 bends, 0 crossings.
 %
-%   drop_tag(m, 'MotorLag', 1, 'X')          % 포트 옆 — 선은 수평 직선
-%   drop_tag(m, 'MotorLag', 1, 'X', 110)     % 옆자리가 차 있으면 110 px 아래로
-%   drop_tag(m, 'PID_lib',  1, 'u_lib', -90) % 음수면 위로 비킨다
+%   drop_tag(m, 'MotorLag', 1, 'X')          % 포트 옆 — 선은 수평 직선 / beside the port — straight horizontal line
+%   drop_tag(m, 'MotorLag', 1, 'X', 110)     % 옆자리가 차 있으면 110 px 아래로 / 110 px down if the spot is taken
+%   drop_tag(m, 'PID_lib',  1, 'u_lib', -90) % 음수면 위로 비킨다 / negative moves it up
 %
 %   태그는 신호 바로 옆에 둔다 / a tag belongs beside its signal
 %       2026-10-01 교수 지시 — "Goto 부분은 실제 신호에 최대한 가까이 모아 주고,
 %       선들도 꺾이는 부분을 최소화해서 해 줄 것."
+%       Instructor's instruction 2026-10-01 — "Gather the Goto parts as close to the
+%       actual signal as possible, and keep line bends to a minimum."
 %
 %       출발 포트와 **같은 높이**, 한 칸(30 px) 오른쪽에 놓으면 잇는 선이 수평
 %       한 토막이 되어 꺾임이 **0회**다. 멀리 두면 선이 길어지고 꺾인다.
+%       Placed at the **same height** as the source port, one step (30 px) to the right,
+%       the joining line is one horizontal segment with **0** bends. Placed far away,
+%       the line gets longer and bends.
 %
+%           (그림: 왼쪽 좋음, 오른쪽 나쁨 / figure: left good, right bad; 신호 = signal)
+%           (나쁨 = bad: bends once going down, and the distance is longer)
 %           좋음                              나쁨
 %           신호 ──▶┌────────┐                신호 ────┐
 %                   │  Go_X  │                         │
@@ -21,17 +29,25 @@ function blk = drop_tag(sys, src, sk, name, dy)
 %
 %       DY 는 **비켜 둘 방향**일 뿐이다. 포트 옆이 이미 차 있을 때만 쓴다.
 %       그 자리가 다음 단계로 가는 본선 위이면 spot_free 가 막아 준다.
+%       DY is only the **direction to step aside**. It is used only when the spot beside
+%       the port is already taken. If that spot lies on the main line to the next stage,
+%       spot_free blocks it.
 %
 %   왜 태그를 통로의 오른쪽에 두는가 / why the tag sits right of the lane
 %       Goto 의 **입력 포트는 왼쪽 테두리**에 있다. 통로 x 를 블록의 x 범위 안에
 %       두면 선이 블록 위로 내려온 뒤 왼쪽으로 빠져나가며, 도면에서는 선이 태그를
 %       관통한 것으로 보인다. 2026-09-16 에 사용자가 지적한 바로 그 그림이다.
+%       The Goto's **input port is on its left border**. With the lane x inside the
+%       block's x range, the line comes down over the block and exits to the left, and
+%       in the diagram the line appears to pierce the tag. This is exactly the picture
+%       the user pointed out on 2026-09-16.
 %
-%   SYS   부모 시스템 (모델 또는 서브시스템 경로)
-%   SRC   출발 블록 이름
-%   SK    출발 블록의 출력 포트 번호
-%   NAME  태그 이름. 블록 이름은 'Go_<NAME>' 이 된다
+%   SYS   부모 시스템 (모델 또는 서브시스템 경로) / parent system (model or subsystem path)
+%   SRC   출발 블록 이름 / source block name
+%   SK    출발 블록의 출력 포트 번호 / output port number of the source block
+%   NAME  태그 이름. 블록 이름은 'Go_<NAME>' 이 된다 / tag name. The block name becomes 'Go_<NAME>'
 %   DY    옆자리가 찼을 때 비켜 갈 세로 거리 [px]. 생략하면 아래로 90. 음수면 위로
+%         vertical step-aside distance [px] when the spot is taken. 90 down if omitted; negative = up
 
 if nargin < 5 || isempty(dy), dy = 90; end
 
@@ -41,6 +57,8 @@ a  = port_xy(sys, src, 'Outport', sk);
 
 %  1) 먼저 **포트와 같은 높이**를 본다. 한 칸씩 오른쪽으로 물려 가며 빈자리를 찾는다.
 %     여기서 잡히면 선은 수평 직선 한 토막이고 꺾임이 0 회다.
+%     First try **the port's own height**, stepping right one slot at a time to find a free spot.
+%     If found here, the line is one straight horizontal segment with 0 bends.
 x1 = round(a(1) + GAP);  y = round(a(2));  ok = false;
 for g = GAP + [0 40 90 150 220]
     x1 = round(a(1) + g);
@@ -50,6 +68,8 @@ end
 
 %  2) 옆이 전부 차 있으면 DY 쪽으로 10 px 씩 비킨다. 그때는 꺾임이 한 번 생긴다.
 %     포개진 태그는 선 검사를 모두 통과하지만 도면에서 읽을 수 없다 (spot_free.m).
+%     If all spots beside are taken, step 10 px at a time toward DY. One bend then appears.
+%     Stacked tags pass every line check but cannot be read in the diagram (spot_free.m).
 if ~ok
     sg = sign(dy);  if sg == 0, sg = 1; end
     x1 = round(a(1) + GAP);
@@ -58,7 +78,7 @@ if ~ok
         if spot_free(sys, [x1, y-H/2, x1+W, y+H/2], ['Go_' name], ...
                      [a; a(1) y; x1 y], {src}), ok = true; break, end
     end
-    if ~ok                                     % 빈자리가 없다 (검사가 보고한다)
+    if ~ok                                     % 빈자리가 없다 (검사가 보고한다) / no free spot (the checks report it)
         x1 = round(a(1) + GAP);  y = round(a(2) + dy);
     end
 end
@@ -69,6 +89,7 @@ add_block('simulink/Signal Routing/Goto', blk, ...
           'GotoTag', name, 'TagVisibility', 'global');
 
 %  같은 높이면 직선 한 토막. 비켜 놓았으면 세로로 간 뒤 오른쪽으로 들어간다.
+%  Same height: one straight segment. Stepped aside: goes vertically, then enters from the left heading right.
 if abs(y - a(2)) < 0.5
     pts = [a; x1 y];
 else
@@ -78,6 +99,9 @@ end
 %  포트로 먼저 잇는다. 점만 주면 끝점이 태그의 입력 포트에 붙지 않고 매달릴 수
 %  있다 — 특히 그 출력에 이미 다른 선이 있어 **가지**가 되는 경우가 그렇다
 %  (2026-09-17 W02_2 의 IntegDly. 도면은 멀쩡한데 모델이 컴파일되지 않았다).
+%  Connect by ports first. With points only, the end may dangle instead of attaching to the
+%  tag's input port — especially when that output already has a line and this becomes a **branch**
+%  (IntegDly of W02_2, 2026-09-17: the diagram looked fine but the model did not compile).
 ps = get_param([sys '/' src], 'PortHandles');
 pg = get_param(blk, 'PortHandles');
 draw_line(sys, ps.Outport(sk), pg.Inport(1), pts);

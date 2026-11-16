@@ -1,14 +1,14 @@
 # 내부 문서·대용량·생성물
 CLAUDE.md
-0_계획/
+0_plan/
 4_CAD/
 pycheck/
-1_시뮬레이션/_old/
-1_시뮬레이션/logs/
-1_시뮬레이션/slprj/
-1_시뮬레이션/+bus_conv_fcns/
-1_시뮬레이션/img/XY_1_pen_offline*
-1_시뮬레이션/video/XY_1_pen_offline.mp4
+1_simulation/_old/
+1_simulation/logs/
+1_simulation/slprj/
+1_simulation/+bus_conv_fcns/
+1_simulation/img/XY_1_pen_offline*
+1_simulation/video/XY_1_pen_offline.mp4
 *.slxc
 *.bak
 *.autosave
@@ -16,3 +16,5 @@ pycheck/
 *~
 .md2pdf_*.html
 .chk.html
+5_references/papers/
+__pycache__/

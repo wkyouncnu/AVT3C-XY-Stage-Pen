@@ -1,5 +1,6 @@
 function moved = lay_sinks(sys, varargin)
 %LAY_SINKS  선이 지저분해진 종착 블록만 아래 한 열로 내리고, 갈래마다 제 통로를 준다.
+%           Moves only the sinks with messy lines down into one column and gives each branch its own lane.
 %
 %   lay_sinks('W10_1_sensor_rates')
 %   n = lay_sinks(m, 'Band', 120, 'Row', 45, 'Lane', 26)
@@ -9,38 +10,63 @@ function moved = lay_sinks(sys, varargin)
 %       Terminator, 그리고 입력만 받는 서브시스템. Outport 는 뺀다. 종착처럼
 %       보이지만 바깥 사슬로 신호를 **내보내는** 자리라, 서브시스템 오른쪽
 %       테두리에 포트 순서대로 있어야 한다.
+%       A block with inputs and no outputs — Display, To Workspace, Scope, Terminator,
+%       and subsystems that only take inputs. Outport is excluded: it looks like a sink
+%       but **sends** the signal out to the outer chain, so it must sit on the subsystem's
+%       right border in port order.
 %
 %       **Goto 도 뺀다.** 출력이 없어 종착처럼 보이지만, Goto 는 블록이 아니라
 %       신호에 붙인 **이름표**다. 도면 아래 종착 구역으로 쓸어 내리면 제 신호에서
 %       수백 px 떨어져 앉고, 잇는 선이 길게 꺾여 내려간다 (2026-10-01 교수 지적 —
 %       `Go_N` 이 Alloc 입력에서 1000 px 아래에 있었다). 태그는 `snug_tags` 가
 %       **출발 포트 옆**으로 끌어온다.
+%       **Goto is excluded too.** It has no output and looks like a sink, but a Goto is a
+%       **label** on a signal, not a block. Swept down into the sink area it lands hundreds
+%       of px from its signal and the joining line bends a long way down (instructor's
+%       remark 2026-10-01 — `Go_N` was 1000 px below the Alloc input). `snug_tags` pulls
+%       tags **beside the source port**.
 %
 %   무엇을 고치는가 / what it fixes
 %       한 출력이 Display 와 Goto 둘로 갈라지면 배치기는 둘을 **같은 줄에**
 %       나란히 놓는다. 그러면 뒤쪽으로 가는 가지가 앞쪽 블록을 가로지르고,
 %       도면은 "Display 를 지난 신호가 Goto 로 간다" 고 거짓말을 한다.
+%       When one output splits to a Display and a Goto, the layout engine puts both
+%       **on the same row**. The branch to the rear block then crosses the front block,
+%       and the diagram falsely says "the signal passes the Display into the Goto".
 %
 %           나쁨                              좋음
 %           Sel ──┬──▶[log_x]──▶[Disp_x]      Sel ──────▶[log_x]
 %                 └──▶ (관통)                       └──────▶[Disp_x]
+%           (나쁨 bad, 관통 crossing, 좋음 good)
 %
 %   무엇을 건드리지 않는가 / what it leaves alone
 %       **이미 깨끗한 선은 손대지 않는다.** 깨끗하다는 것은 두 포트의 높이가
 %       같아 직선 한 토막이고, 그 토막이 어떤 블록도 지나지 않는다는 뜻이다.
 %       1:1 로 곧게 이어진 선까지 아래로 내리면 내려간 선들이 통로에 몰려
 %       서로 겹친다 (2026-09-17 에 W10 Logging 에서 15건 재현).
+%       **Lines already clean are not touched.** Clean means both ports are at the same
+%       height, the line is one straight segment, and it passes no block. Moving even
+%       straight 1:1 lines down crowds the lanes and they overlap (reproduced 15 times
+%       in W10 Logging on 2026-09-17).
 %
 %       사슬 블록과 사슬 선은 그대로 두므로
 %       Simulink.BlockDiagram.arrangeSystem 뒤에 이어서 부를 수 있다.
+%       Chain blocks and chain lines stay as they are, so this can be called right
+%       after Simulink.BlockDiagram.arrangeSystem.
 %
 %   통로는 모두 다른 x 를 쓴다 / every lane gets its own x
 %       내려간 선은 전부 같은 구역으로 모이므로, 두 통로가 x 를 나눠 쓰면
 %       어딘가에서 반드시 겹친다. 그래서 통로 x 는 시스템 전체에서 유일하다.
 %       블록 사각형뿐 아니라 **이름표**(name_box)도 피한다. 이름은 블록 밖에 쓰여
 %       사각형만 피한 통로가 이름 글자를 긋는다 — check_lines 의 (7) 이름표 위 선.
+%       All moved lines gather in the same area, so two lanes sharing an x are bound to
+%       overlap somewhere. Lane x is therefore unique within the whole system. Lanes avoid
+%       not only block rectangles but also **name labels** (name_box): names are written
+%       outside the block, and a lane avoiding only rectangles strikes through the name —
+%       item (7) line over name label in check_lines.
 %
 %   돌려주는 값은 자리를 옮긴 블록의 수다.
+%   The return value is the number of blocks moved.
 
 p = inputParser;
 p.addParameter('Band', 100);
@@ -69,6 +95,7 @@ end
 if ~any(sink), return, end
 
 % --- 1) 종착 블록으로 가는 연결을 모은다 --------------------------------
+% --- 1) Collect connections going to sinks ---------------------------------
 conn = struct('src',{},'sp',{},'dst',{},'dp',{},'h',{});
 L = find_system(sys, 'FindAll','on', 'SearchDepth',1, 'Type','line');
 for i = 1:numel(L)
@@ -88,12 +115,14 @@ if isempty(conn), return, end
 
 %  팬아웃은 부모선과 가지선이 같은 (출발, 도착) 을 두 번 보고한다. 그대로 두면
 %  같은 자리에 선을 두 번 그어 길이 0 인 토막이 남는다 — lay_chain 과 같은 문제.
+%  With fan-out, the parent line and branch lines report the same (source, destination) twice.
+%  Left as is, the line is drawn twice in place and a zero-length segment remains — same issue as lay_chain.
 key = arrayfun(@(c) sprintf('%s|%d|%s|%d', c.src, c.sp, c.dst, c.dp), ...
                conn, 'UniformOutput', false);
 [~, ia] = unique(key, 'stable');
 conn    = conn(ia);
 
-% --- 2) 이미 깨끗한 선인가 ----------------------------------------------
+% --- 2) 이미 깨끗한 선인가 / is the line already clean? ------------------
 dirty = false(numel(conn),1);
 for i = 1:numel(conn)
     a = port_xy(sys, conn(i).src, 'Outport', conn(i).sp);
@@ -105,22 +134,30 @@ end
 % --- 3) 한 선이라도 지저분하면 그 종착 블록을 통째로 내린다 --------------
 %  입력이 여럿인 종착 블록(Record 등)은 선 하나만 다시 그으면 나머지 선이
 %  옛 자리를 가리킨 채 남는다. 그래서 블록 단위로 정한다.
+% --- 3) If even one line is messy, move that whole sink down ---------------
+%  For a sink with several inputs (Record, etc.), redrawing one line leaves the others pointing
+%  to the old position. So the decision is made per block.
 down = unique({conn(dirty).dst});
 if isempty(down), return, end
 mv   = find(ismember({conn.dst}, down));
 
 %  가지 하나만 끊는다. 뿌리 선을 지우면 같은 신호의 다른 가지까지 사라진다
+%  Cut only one branch. Deleting the root line also removes other branches of the same signal
 for i = mv
     pd = get_param([sys '/' conn(i).dst], 'PortHandles');
     cut_line(sys, pd.Inport(conn(i).dp));
 end
 
 % --- 4) 남는 블록들 아래에 종착 구역을 연다 ------------------------------
+% --- 4) Open the sink area below the remaining blocks -----------------------
 stay  = ~ismember(name, down);
 occ   = box(stay,:);
 %  통로는 사각형뿐 아니라 **이름표**도 피해야 한다. 이름은 블록 밖에 쓰이므로,
 %  사각형만 보고 고른 통로가 이름 글자 위를 지나 이름을 읽을 수 없게 만든다
 %  (2026-09-21 W02_1 의 SelVel · W04_4 의 psi_ref_deg · W04_3 의 log_FL).
+%  Lanes must avoid **name labels** as well as rectangles. Names are written outside the block,
+%  so a lane chosen from rectangles alone crosses the name text and makes it unreadable
+%  (2026-09-21: SelVel in W02_1, psi_ref_deg in W04_4, log_FL in W04_3).
 nbx  = nan(numel(blks), 4);
 nbNm = name;
 for q = find(stay)'
@@ -133,6 +170,13 @@ end
 %  한 칸씩 더 내려간다. tidy_model 은 한 모델에 네 바퀴까지 돈다 — 2026-09-30
 %  W04_4_inner_loop 에서 종착 구역이 y = 1190 에 있어야 할 것이 2834 까지
 %  밀려 도면 높이가 4131 이 되었고, PNG 가 2000 px 을 넘겼다.
+%  It must also be below the remaining lines. If lay_feedback routed feedback through a lane
+%  below the blocks, a sink area sitting on that lane would be crossed by the line.
+%  But lines **about to be redrawn** are not counted. Lines going down to the sink area placed
+%  last time are there, and using them as the reference pushes the area one step lower on every
+%  pass. tidy_model makes up to four passes per model — on 2026-09-30 in W04_4_inner_loop the
+%  sink area that belonged at y = 1190 was pushed to 2834, the diagram height became 4131,
+%  and the PNG exceeded 2000 px.
 redraw = [conn(mv).h];
 yLine = -inf;
 for i = 1:numel(L)
@@ -143,8 +187,11 @@ end
 yBand = max(max(occ(:,4)), yLine) + o.Band;
 
 % --- 5) 통로 x 를 시스템 전체에서 유일하게 준다 --------------------------
+% --- 5) Give each lane an x unique within the whole system ------------------
 %  내려간 선은 모두 같은 구역으로 모인다. 두 통로가 x 를 나눠 쓰면 반드시
 %  어딘가에서 겹치므로, 이미 쓴 x 와 블록을 뚫는 x 를 모두 피한다.
+%  All moved lines gather in the same area. Two lanes sharing an x are bound to overlap
+%  somewhere, so both x values already used and x values that pierce blocks are avoided.
 lane  = zeros(numel(conn),1);
 taken = [];
 for i = mv
@@ -152,6 +199,7 @@ for i = mv
     r = get_param([sys '/' conn(i).src], 'Position');
 
     %  자기 이름표는 뺀다. 제 블록의 이름 위를 지나는 것은 지적이 아니다
+    %  Exclude its own label. Passing over its own block's name is not a finding
     mine = strcmp(nbNm, conn(i).src);
     nb   = nbx(stay & ~mine, :);
     occN = [occ; nb(~any(isnan(nb),2), :)];
@@ -160,6 +208,10 @@ for i = mv
     %  그 너머로는 아무리 밀어도 가로 토막이 그 블록을 뚫는다. 한계를 모르고
     %  계속 밀면 통로가 도면 밖까지 나가 그림이 두세 배로 넓어진다
     %  (2026-09-17 W03_1 이 2823 px -> 5890 px 로 벌어졌다).
+    %  Limit for running horizontally — up to the first block met at this port height. Beyond
+    %  it, however far pushed, the horizontal segment pierces that block. Pushing on without the
+    %  limit sends the lane off the diagram and widens the figure two or three times
+    %  (2026-09-17: W03_1 grew from 2823 px to 5890 px).
     xmax = inf;
     for q = 1:size(occN,1)
         if occN(q,2)+2 < a(2) && a(2) < occN(q,4)-2 && occN(q,1) > a(1)
@@ -178,6 +230,9 @@ for i = mv
         %  한계 안에 깨끗한 자리가 없다. 그래도 **유일하기는** 해야 한다.
         %  겹친 통로는 인쇄물에서 한 선이 되지만, 블록을 스치는 통로는
         %  뒤에 오는 lay_links 가 다시 그어 준다 (2026-09-17 W04_5 에서 재현).
+        %  No clean spot within the limit. The lane must still be **unique**. Overlapping lanes
+        %  print as one line, whereas a lane brushing a block is redrawn by the later lay_links
+        %  (reproduced in W04_5 on 2026-09-17).
         got = r(3);
         while any(taken == got), got = got + o.Lane; end
     end
@@ -192,20 +247,25 @@ end
 %  줄 간격은 **블록 키 + 이름표** 이상이어야 한다. 고정 간격(Row)만 쓰면 키 큰
 %  Scope(60 px) 밑으로 다음 블록이 파고들어 사각형과 이름표가 포개진다
 %  (2026-09-19 SB13 의 Scope 와 log_mode — check_lines 의 (6) 블록겹침).
+% --- 6) Stack the sinks in one column right of the lanes ----------------------
+%  One per row only, so the last horizontal segment from the lane into a block meets nothing
+%  but its own block. Row spacing must be at least **block height + name label**. With a fixed
+%  spacing (Row) alone, the next block slides under a tall Scope (60 px) and rectangles and
+%  labels overlap (2026-09-19 Scope and log_mode in SB13 — item (6) block overlap in check_lines).
 x0   = max(lane(mv)) + o.Out;
 y    = yBand;
 done = containers.Map('KeyType','char','ValueType','logical');
 for i = mv
-    if isKey(done, conn(i).dst), continue, end     % 입력이 여럿인 블록 — 이미 놓았다
+    if isKey(done, conn(i).dst), continue, end     % 입력이 여럿인 블록 — 이미 놓았다 / block with several inputs — already placed
     done(conn(i).dst) = true;
     b = get_param([sys '/' conn(i).dst], 'Position');
     w = b(3)-b(1);  h = b(4)-b(2);
     set_param([sys '/' conn(i).dst], 'Position', round([x0 y x0+w y+h]));
-    y     = y + max(o.Row, h + 18);                % 이름표 14 px + 여백 4 px
+    y     = y + max(o.Row, h + 18);                % 이름표 14 px + 여백 4 px / name label 14 px + margin 4 px
     moved = moved + 1;
 end
 
-% --- 7) 선을 다시 긋는다 -------------------------------------------------
+% --- 7) 선을 다시 긋는다 / redraw the lines -------------------------------
 for i = mv
     a = port_xy(sys, conn(i).src, 'Outport', conn(i).sp);
     b = port_xy(sys, conn(i).dst, 'Inport',  conn(i).dp);
@@ -213,11 +273,12 @@ for i = mv
     if abs(a(2)-b(2)) < 0.5
         pts = [a; b];
     elseif abs(x - a(1)) < 0.5
-        pts = [a; x b(2); b];                   % 포트 바로 아래로 — 꺾임 1회
+        pts = [a; x b(2); b];                   % 포트 바로 아래로 — 꺾임 1회 / straight down from the port — 1 bend
     else
-        pts = [a; x a(2); x b(2); b];           % 꺾임 2회
+        pts = [a; x a(2); x b(2); b];           % 꺾임 2회 / 2 bends
     end
     %  포트로 먼저 잇는다. 점만 주면 끝점이 포트에 붙지 않고 매달릴 수 있다
+    %  Connect by ports first. With points only, the end may dangle instead of attaching to the port
     ps = get_param([sys '/' conn(i).src], 'PortHandles');
     pd = get_param([sys '/' conn(i).dst], 'PortHandles');
     draw_line(sys, ps.Outport(conn(i).sp), pd.Inport(conn(i).dp), pts);
@@ -227,6 +288,7 @@ end
 % -------------------------------------------------------------------------
 function tf = hits_any(occ, a, b)
 %HITS_ANY  구간 a-b 가 사각형 하나라도 안쪽으로 지나는가. check_lines 와 같은 판정.
+%          Does segment a-b pass inside any rectangle? Same test as check_lines.
 M  = 2;
 tf = false;
 d  = b - a;

@@ -22,11 +22,17 @@ function row_feed(sys, dst, srcs)
 %       overlap. Solving the problem by placement is better than solving it by
 %       routing.
 %
+%   공급 블록마다 출력 포트가 정확히 하나여야 한다. Constant · Inport · Gain ·
+%   Selector 는 모두 그렇다. 공급 블록은 위아래로만 옮기고, x 는 빌더가 놓은
+%   자리 그대로 둔다. SRCS 의 빈 칸은 그 포트를 건드리지 않는다 — 다른 곳에서
+%   먹이는 포트에 쓴다.
 %   Each source must have exactly one output port, which is true of Constants,
 %   Inports, Gains and Selectors. Sources are moved vertically only; their x
 %   stays where the builder put it. An empty entry in SRCS leaves that port
 %   alone, for a port fed from somewhere else.
 %
+%   도착 블록이 포트 수에 비해 너무 낮으면 경고를 낸다. 이 함수가 고칠 수 없는
+%   단 하나이기 때문이다 — 빌더에서 블록을 더 높게 만들어야 한다.
 %   A warning is issued when the destination block is too short for the number
 %   of ports it carries, because that is the one thing this function cannot
 %   fix: the block must be made taller in the builder.

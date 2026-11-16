@@ -1,28 +1,39 @@
 function role = gnc_roles(mdl)
 %GNC_ROLES  모델별 최상위 블록의 역할표. 온 과목의 표가 여기 하나뿐이다.
+%           Role table of top-level blocks per model. This is the only table for the whole course.
 %
 %   role = gnc_roles('W03_4_teleop')
-%   paint_roles('W03_4_teleop')            % 인자를 비우면 이 함수를 부른다
+%   paint_roles('W03_4_teleop')            % 인자를 비우면 이 함수를 부른다 / with no argument it calls this function
 %
 %   돌려주는 것  N×2 cell — {블록이름, gnc_colour 의 단계 이름}
+%                Returns: N×2 cell — {block name, stage name of gnc_colour}
 %   모르는 모델  빈 표. 그래도 paint_roles 가 물려받기와 회색 칠하기는 한다
+%                Unknown model: empty table. paint_roles still does inheritance and grey painting
 %
-%   WHY ONE TABLE AND NOT ONE PER BUILDER
+%   왜 빌더마다가 아니라 표 하나인가 / WHY ONE TABLE AND NOT ONE PER BUILDER
 %
 %   전에는 빌더마다 같은 루프를 들고 있었다. W05~W09 만 들고 있었고 W02·W03·
 %   W10·W04 은 빠져 있었다 — 2026-09-17 감사에서 48개 모델 전부가 걸렸다.
 %   표가 하나면 새 모델을 만들 때 어디에 적어야 할지 헷갈릴 일이 없고,
 %   "3주차 Nav 는 무슨 색인가" 를 한 파일에서 답할 수 있다.
+%   Previously every builder carried the same loop. Only W05~W09 had it; W02, W03, W10
+%   and W04 lacked it — the 2026-09-17 audit flagged all 48 models. With one table there
+%   is no doubt where to write a new model, and "what colour is Nav in week 3" is
+%   answered in one file.
 %
 %   적는 것은 최상위 블록뿐이다. 안쪽 서브시스템은 부모 색을 물려받고,
 %   Scope·Display·Goto·From 류는 언제나 회색이다 (paint_roles.m 참조).
+%   Only top-level blocks are listed. Inner subsystems inherit the parent colour, and
+%   Scope, Display, Goto and From blocks are always grey (see paint_roles.m).
 %
 %   이름이 겹쳐도 된다 — 모델에 없는 이름은 조용히 넘어간다. 그래서 같은 주차의
 %   offline · vrx 두 모델이 표 하나를 나눠 쓴다.
+%   Names may overlap — names not in the model are silently skipped. So the offline
+%   and vrx models of the same week share one table.
 
 [~, m] = fileparts(char(mdl));
 
-%  주차별로 공통인 사슬. 5~8주차가 같은 이름을 쓴다
+%  주차별로 공통인 사슬. 5~8주차가 같은 이름을 쓴다 / chain common to the weeks; weeks 5~8 use the same names
 GNC = {'Guidance','guidance'; 'Mission','mission'; 'InnerLoop','control'; ...
        'Thrusters','thruster'; 'MotionModel','plant'; ...
        'CmdPublisher','ros'; 'PoseSubscriber','ros'; ...
@@ -32,17 +43,23 @@ GNC = {'Guidance','guidance'; 'Mission','mission'; 'InnerLoop','control'; ...
 %   LogBus · log  로깅 신호를 버스 하나로 묶어 To Workspace **한 개**로 보내는 자리
 %   MuxAnim       실시간 화면용 여덟 신호를 묶어 태그 `anim` 하나로 보내는 자리
 %   셋 다 계산하지 않고 내보내기만 하므로 Scope·Goto 와 같은 회색이다 (2026-10-01)
+%   LogBus · log  bundle the logging signals into one bus sent to **one** To Workspace
+%   MuxAnim       bundles eight signals for the live display and sends them as one tag `anim`
+%   All three only export, without computing, so they are grey like Scope and Goto (2026-10-01)
 
 switch m
 % ---- AVT-3C 벽면 마킹 로봇 + XY 스테이지 (MC_Handover/5_XY스테이지) ----------
+% ---- AVT-3C wall marking robot + XY stage (MC_Handover/5_XY스테이지) ---------
 %   윗줄 로봇 사슬, 아랫줄 스테이지 사슬. Sensors 는 잡음·지연을 넣는 자리라 분홍(env)
+%   Upper row robot chain, lower row stage chain. Sensors adds noise and delay, so pink (env)
 case {'XY_1_pen_sim','XY_2_pen_ros2','XY_1_pen_offline','XY_1_pen_sim_v2','XY_2_pen_ros2_v2'}
     role = [GNC; {'Nav','reference'; 'Mission','mission'; 'RobotCtrl','control'; ...
                   'PenCtrl','control'; 'InnerPI','control'; 'PwmMap','allocation'; 'RobotPlant','plant'; ...
                   'StagePlant','plant'; 'Sensors','env'; 'PenTrace','measurement'; ...
                   'RosIn','reference'; 'RosOut','ros'; 'PlantRosIn','ros'; 'PlantRosOut','ros'}];
 %   RosIn · Nav 는 항법 (N) — 유도 (Mission) 앞, 맨 왼쪽. 색은 ros 와 같은 연보라 (reference)
-% ---- 2주차 · turtlesim -------------------------------------------------
+%   RosIn and Nav are navigation (N) — before guidance (Mission), far left. Light purple like ros (reference)
+% ---- 2주차 · turtlesim / week 2 · turtlesim -------------------------------
 case 'W02_1_pose_sub'
     role = {'PoseSub','ros'; 'VelSub','ros'; 'Sel','ros'; 'SelVel','ros'; ...
             'Rad2Deg','ros'};
@@ -51,9 +68,11 @@ case 'W02_2_goto_offline'
 case 'W02_3_goto_turtlesim'
     role = [GNC; {'Control','control'}];
 
-% ---- 3주차 · 좌표계 ----------------------------------------------------
+% ---- 3주차 · 좌표계 / week 3 · coordinate frames ---------------------------
 %   Nav·FrameConv 는 '신호처리' 여서 ROS 와 같은 연보라다. ENU 를 NED 로
 %   바꾸는 것은 계산이지 제어가 아니다
+%   Nav and FrameConv are 'signal processing', so light purple like ROS. Converting
+%   ENU to NED is computation, not control
 case 'W03_1_frame_check'
     role = [GNC; {'FrameConv','ros'; 'Rad2DegPsi','ros'; 'Rad2DegYaw','ros'}];
 case {'W03_2_vrx_nav','W03_3_vrx_drive'}
@@ -61,20 +80,25 @@ case {'W03_2_vrx_nav','W03_3_vrx_drive'}
 case {'W03_0_offline','W03_4_teleop'}
     %   TeleopPad 가 파랑인 이유 — 유도 자리에 사람이 들어간다. 5주차에서
     %   LOS 가 대신하게 될 그 자리다
+    %   Why TeleopPad is blue — a human takes the guidance slot, the very slot that
+    %   LOS takes over in week 5
     role = [GNC; {'TeleopPad','guidance'; 'OdomNav','ros'}];
 
-% ---- 10주차 · 토픽 조사 -------------------------------------------------
+% ---- 10주차 · 토픽 조사 / week 10 · topic survey ----------------------------
 case 'W10_0_offline'
     %   SensorModel 은 1단계 SensorSubscriber 자리를 대신한다 — 같은 연보라
+    %   SensorModel replaces the stage-1 SensorSubscriber — same light purple
     role = [GNC; {'Command','guidance'; 'SensorModel','ros'; 'RateMeter','ros'}];
 case 'W10_1_sensor_rates'
     role = [GNC; {'SensorSubscriber','ros'; 'RateMeter','ros'}];
 case 'W10_2_qos_test'
     role = [GNC; {'QosSubscribers','ros'; 'RxCount','ros'}];
 
-% ---- 4주차 · ROS2 연동과 첫 제어기 -------------------------------------
+% ---- 4주차 · ROS2 연동과 첫 제어기 / week 4 · ROS2 link and first controller ---
 %   OdomTap · AnimTap 은 실시간 화면이 쓸 값을 뽑아 태그에 거는 자리다.
 %   제어에 끼지 않고 내보내기만 하므로 Scope·Goto 와 같은 회색이다 (2026-09-24)
+%   OdomTap and AnimTap pick values for the live display and put them on tags.
+%   They only export, without taking part in control, so grey like Scope and Goto (2026-09-24)
 case {'W04_1_straight','W04_2_turn'}
     role = [GNC; {'PubL','ros'; 'PubR','ros'; 'BlankL','ros'; 'BlankR','ros'; ...
                   'AsgL','ros'; 'AsgR','ros'; 'Scenario','guidance'; ...
@@ -92,9 +116,13 @@ case {'W04_3_heading','W04_4_inner_loop','W04_3_heading_offline', ...
                   'deg2rad','command'; 'SumRef','command'}];
     %   deg2rad · SumRef 는 지령을 만드는 자리다. 색은 흰색이라 칠할 것이 없지만
     %   check_flow 가 "이 블록은 몇 번째 단계인가" 를 이 표에 묻는다 (2026-09-30)
+    %   deg2rad and SumRef build the command. Their colour is white, so nothing to paint,
+    %   but check_flow asks this table "which stage is this block" (2026-09-30)
 case 'W04_5_offline'
     %   MuxF 는 FL·FR 을 F = [FL; FR] 로 묶어 MotorLag 에 넣는 자리다.
     %   추진기 단계이지 운동모델이 아니다 — 초록에서 노랑으로 (2026-09-30)
+    %   MuxF bundles FL and FR into F = [FL; FR] for MotorLag.
+    %   It is the thruster stage, not the plant model — green changed to yellow (2026-09-30)
     role = [GNC; {'Scenario','guidance'; 'HeadingCtrl','control'; ...
                   'Alloc','allocation'; 'MotorLag','thruster'; ...
                   'EOM','plant'; 'States','plant'; 'Integ','plant'; 'MuxF','thruster'; ...
@@ -104,13 +132,16 @@ case 'W04_7_ssa_test'
     %   Sweep · Point 는 제어기의 오차 블록(HeadingErr)을 떼어 시험대에 올린 것이다.
     %   제어기 단계의 색(주황)을 그대로 쓴다 — 학생이 "이것이 제어기 안의 그 상자"
     %   임을 색으로 알아보게 하려는 것이다 (2026-10-01)
+    %   Sweep and Point are the controller's error block (HeadingErr) taken out onto a test bench.
+    %   They keep the controller stage colour (orange) — so students recognise by colour that
+    %   "this is that box inside the controller" (2026-10-01)
     role = [GNC; {'Sweep','control'; 'Point','control'; ...
                   'Clock','command'; 'd_deg','command'; 'psi_zero','command'; ...
                   'psi_ref_pt','command'; 'psi_pt','command'; ...
                   'deg2rad_sweep','command'; 'deg2rad_ref','command'; ...
                   'deg2rad_psi','command'}];
 
-% ---- 4주차 · PID 연습 --------------------------------------------------
+% ---- 4주차 · PID 연습 / week 4 · PID exercises ----------------------------
 case {'W04_P0_plant','W04_P0_second_order','W04_P1_pid_step', ...
       'W04_P2_pid_byhand','W04_P3_boat_speed','W04_P4_lowpass'}
     role = [GNC; {'PID','control'; 'PID_lib','control'; 'PID_byhand','control'; ...
@@ -124,10 +155,13 @@ case {'W04_P0_plant','W04_P0_second_order','W04_P1_pid_step', ...
                   'Boat','plant'; 'SensorNoise','env'; ...
                   'SumY_hand','env'; 'SumY_lib','env'; 'Dcompare','measurement'}];
 
-% ---- 부록 A1 · SB 드릴 ----------------------------------------------
+% ---- 부록 A1 · SB 드릴 / appendix A1 · SB drills ----------------------------
 %   SB 는 GNC 사슬이 아니라 Simulink 블록 자체를 가르친다. 그래서 단계 색을
 %   억지로 입히지 않는다. 뜻이 분명한 것만 — 전달함수는 초록, 제어기는 주황,
 %   계산용 서브시스템은 연보라(신호처리) — 칠하고 나머지는 흰색으로 둔다
+%   SB teaches Simulink blocks themselves, not the GNC chain, so stage colours are not
+%   forced. Only clear cases are painted — transfer functions green, controllers orange,
+%   computing subsystems light purple (signal processing) — and the rest stay white
 case {'SB2_mfcn_done','SB2_mfcn_todo'}
     role = {'Scale','ros'; 'SumDiff','ros'; 'WrapPi','ros'};
 case {'SB3_subsys_done','SB3_subsys_todo'}
@@ -143,12 +177,15 @@ case {'SB13_stateflow_done','SB13_stateflow_todo'}
     role = {'Mission','mission'; 'Dist','plant'};
 
 % ---- 5주차 실습 F · 웨이포인트 번호를 어디에 기억할 것인가 --------------
+% ---- week 5 lab F · where to remember the waypoint index ---------------------
 case 'W05_2_idx_memory'
     %   둘 다 번호를 세는 자리다 — 유도(파랑)다. 다른 것은 상태를 코드 안에
     %   두는가(persistent) 도면에 두는가(Unit Delay) 뿐이다 (2026-10-15)
+    %   Both count the index — guidance (blue). The only difference is whether the state
+    %   lives in code (persistent) or in the diagram (Unit Delay) (2026-10-15)
     role = [GNC; {'IdxPersistent','guidance'; 'IdxStep','guidance'}];
 
-% ---- 5~9주차 · 유도·제어 사슬 ------------------------------------------
+% ---- 5~9주차 · 유도·제어 사슬 / weeks 5~9 · guidance-control chain -----------
 case {'W05_0_offline','W05_1_vrx','W07_0_offline','W07_1_vrx', ...
       'W08_0_offline','W08_1_vrx'}
     role = GNC;
@@ -156,19 +193,27 @@ case {'W06_1_point','W06_2_sway','W06_3_thrust','W06_4_stop', ...
       'W06_5_dock','W06_6_vrx','W06_7_front','W06_8_ned'}
     %   6주차는 위치 고리가 하나 더 있다 — OuterLoop 이 위치 오차를 속도 지령으로
     %   바꾸는 자리이므로 제어(주황)다. 공통 표에는 없으므로 여기서 더한다
+    %   Week 6 has one more position loop — OuterLoop turns position error into a speed
+    %   command, so it is control (orange). It is not in the common table, so it is added here
     role = [GNC; {'OuterLoop','control'}];
 case {'W08_2_dock','W08_3_dock_vrx'}
     %   8주차 실습 E 는 6주차의 위치 고리를 마지막 단계로 가져온다 — OuterLoop 이
     %   위치 오차를 속도 지령으로 바꾸는 자리이므로 제어(주황)다 (2026-11-01)
+    %   Week 8 lab E brings the week-6 position loop to the final stage — OuterLoop turns
+    %   position error into a speed command, so it is control (orange) (2026-11-01)
     role = [GNC; {'OuterLoop','control'}];
 case 'W09_1_vrx'
     %   AvoidSeam 은 **유도(파랑)** 다. 하는 일이 "어느 헤딩 명령을 쓸 것인가" 의
     %   판단이지 제어가 아니다 — 5주차 Guidance 가 내는 psi_ref 와 파이썬이 내는
     %   psi_oa 중 하나를 고르는 자리다. 그래서 Guidance 와 같은 색으로 둔다.
     %   GoalPublisher 는 내보내기만 하므로 CmdPublisher 와 같은 연보라다 (2026-10-27)
+    %   AvoidSeam is **guidance (blue)**. Its job is deciding "which heading command to use",
+    %   not control — it picks between psi_ref from the week-5 Guidance and psi_oa from
+    %   Python. So it has the same colour as Guidance.
+    %   GoalPublisher only exports, so light purple like CmdPublisher (2026-10-27)
     role = [GNC; {'AvoidSeam','guidance'; 'GoalPublisher','ros'}];
 
 otherwise
-    role = GNC;     % 이름이 관례를 따르면 그대로 맞는다
+    role = GNC;     % 이름이 관례를 따르면 그대로 맞는다 / names that follow the convention match as is
 end
 end

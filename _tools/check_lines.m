@@ -1,23 +1,37 @@
 function [n, v, n2] = check_lines(mdl, verbose)
 %CHECK_LINES  도면을 읽을 수 없게 만드는 일곱 가지를 찾아 보고한다.
+%   Finds and reports the seven defects that make a diagram unreadable.
 %
 %   n = check_lines('W04_P3_boat_speed')
-%   check_lines('W04_P3_boat_speed', true)      % 건건이 나열한다
+%   check_lines('W04_P3_boat_speed', true)      % 건건이 나열한다 / lists each finding
 %   [n, v] = check_lines(m)
 %       v = [겹침 블록관통 꺾임3회+ 매달림 사선 블록겹침 이름표위선]
+%       v = [overlap blockCrossing turns3+ dangling diagonal blockClash lineOverName]
 %   [n, v, n2] = check_lines(m)
 %       n2 = 꺾임 2회인 선의 수. 합격선은 아니지만 **모델별로 세어 줄여 나간다**.
+%       n2 = number of lines with two turns. Not a pass threshold, but counted per model and reduced.
 %       0·1 회가 목표다 (2026-10-01 교수 지시 — 태그를 신호 옆에 모아 꺾임을 없앨 것)
+%       The target is 0 or 1 turn (instructor's instruction 2026-10-01: gather tags next to
+%       the signal to remove turns).
 %
 %   일곱 가지 / the seven findings
 %     1) 겹친 선      — 같은 직선 위를 나누어 쓰는 두 선. 인쇄하면 한 선이다
+%        overlapping lines — two lines sharing the same straight segment; printed they look like one line
 %     2) 블록 관통    — 자기와 무관한 블록의 사각형을 가로지르는 선
+%        block crossing — a line crossing the rectangle of a block it is not connected to
 %     3) 꺾임 3회 이상 — 눈이 선을 놓친다. 2회는 따로 세어 보여 준다
+%        three or more turns — the eye loses the line; two turns are counted and shown separately
 %     4) 매달린 선    — 한쪽 끝이 포트에 붙지 않은 선. 이어져 **보이는데** 끊겨 있다
+%        dangling line — one end is not attached to a port; it looks connected but is broken
 %     5) 사선         — 가로도 세로도 아닌 구간. 포트 높이가 몇 px 어긋난 흔적이다
+%        diagonal — a segment neither horizontal nor vertical; a trace of port heights off by a few px
 %     6) 블록겹침     — 블록 사각형끼리, 블록 이름표(블록 아래 글자 줄)가 다른 블록에,
 %                      주석(Note)이 블록이나 이름표에 겹친 것. 한 서브시스템 안에서만 본다
+%        block clash — block rectangles overlapping each other, a block name label (text line
+%                      below the block) over another block, or a note over a block or label.
+%                      Checked within one subsystem only
 %     7) 이름표 위 선 — 자기와 무관한 선이 블록 이름표 위를 지나 이름을 그어 버린 것
+%        line over name label — an unrelated line passing over a block name label, striking it out
 %
 %   왜 이 셋인가 / why these three
 %       읽는 사람은 선을 **눈으로 따라간다.** 겹친 선은 따라갈 수 없고, 블록을
@@ -30,6 +44,7 @@ function [n, v, n2] = check_lines(mdl, verbose)
 %       make the diagram claim a connection that does not exist.
 %
 %   합격선은 일곱 가지 **모두 0** 이다. 꺾임 2회만 따로 세어 보여 주고 최소로 줄인다.
+%   The pass threshold is zero for all seven. Only two-turn lines are counted separately and minimised.
 %
 %   블록겹침을 왜 세는가 / why block clashes are counted
 %       선 검사는 블록이 **어디에 있는지**를 묻지 않는다. 종착 블록을 한 열에 쌓거나
@@ -40,11 +55,25 @@ function [n, v, n2] = check_lines(mdl, verbose)
 %       x 줄 수 x 14 px. ShowName 이 off 인 블록은 이름표가 없다.
 %       같은 계산이 _tools/name_box.m 에 있다. 배치 도구는 그것으로 이름표를 피한다.
 %
+%       The line checks do not ask where blocks are. Stacking sink blocks in one column or
+%       hanging tags below ports makes them overlap neighbours, and when the port spacing is
+%       smaller than the text height a name label is hidden by the block below (2026-09-19:
+%       orgN of PoseSubscriber hidden by orgE). All lines are clean, yet block names are unreadable.
+%       The label size is an estimate: the larger of text width (ASCII 6.5 px, Hangul 12 px)
+%       and block width, x number of lines x 14 px. Blocks with ShowName off have no label.
+%       The same calculation is in _tools/name_box.m; layout tools use it to avoid labels.
+%
 %   이름표 위 선을 왜 세는가 / why lines over name labels are counted
 %       블록 이름은 블록 **밖**에 쓰인다. 그래서 사각형만 피해 고른 통로가 이름
 %       글자 위를 그대로 지나가고, 인쇄하면 이름이 선에 지워져 읽히지 않는다.
 %       블록은 멀쩡한데 그 블록이 무엇인지 알 수 없는 도면이 된다.
 %       2026-09-21 에 참고값에서 **합격선**으로 올렸다 — 전 모델 11건을 배치로 풀고서다.
+%
+%       A block name is drawn outside the block. A lane chosen only to avoid rectangles can
+%       pass right over the name text, and in print the name is struck out and unreadable.
+%       The block is intact, but the diagram no longer says what the block is.
+%       Promoted from a reference value to a pass threshold on 2026-09-21, after the
+%       11 cases in all models were fixed by layout.
 %
 %
 %   매달린 선을 왜 세는가 / why dangling lines are counted
@@ -54,18 +83,35 @@ function [n, v, n2] = check_lines(mdl, verbose)
 %       컴파일되지 않는다 (2026-09-17 W02_2 의 TurtlePlant). 배선 규칙을 지켰는지
 %       재는 도구가 **신호가 이어져 있는지**부터 못 보면 소용이 없다.
 %
+%       When `add_line` is given only points, Simulink finds the ports from the end-point
+%       coordinates; if they are off by a few pixels, the line does not attach and one end
+%       dangles. Such a line neither overlaps nor crosses blocks, so it passes the other three
+%       checks. The diagram looks flawless but the model does not compile (2026-09-17,
+%       TurtlePlant in W02_2). A tool that measures wiring rules is useless if it cannot
+%       first see whether the signal is connected.
+%
 %   한 신호의 분기(팬아웃)는 겹침으로 세지 않는다. 한 줄기를 일부러 공유한다.
+%   Branches (fan-out) of one signal are not counted as overlaps; they share one trunk on purpose.
 %
 %   고치는 법 / how to fix
 %     겹침       — lane_line 의 통로 x 를 신호마다 다르게 준다
+%     overlap    — give each signal a different lane x in lane_line
 %     블록 관통  — 받는 블록을 통로의 **오른쪽**에 놓는다 (drop_tag 참조)
+%     crossing   — place the receiving block to the right of the lane (see drop_tag)
 %     꺾임      — 통로 x 를 **출발 포트의 x** 또는 **도착 포트의 x** 와 같게 한다.
 %                  그러면 길이 0 인 구간이 지워지고 꺾임이 한 번만 남는다
+%     turns     — set the lane x equal to the source port x or the destination port x.
+%                  The zero-length segment then disappears and only one turn remains
 %     블록겹침  — 배치로 푼다. 쌓는 도구가 옆 블록과 이름표 자리를 피하게 하고,
 %                  포트 간격이 좁아 이름표가 가려지면 받는 블록의 키를 키운다
+%     clash     — fix by layout: make the stacking tool avoid neighbouring blocks and label areas,
+%                  and enlarge the receiving block's height when narrow port spacing hides a label
 %     이름표위선 — 통로 x 를 옮기거나(lay_sinks·lay_links·lay_chain 은 name_box 를
 %                  사각형과 함께 피한다), 이름표가 걸리는 블록·태그를 옆으로 옮긴다.
 %                  꺾임을 늘려 돌아가지 말 것 — 선 하나 살리자고 도면을 버린다
+%     over label — move the lane x (lay_sinks, lay_links and lay_chain avoid name_box together
+%                  with rectangles), or move the block or tag whose label is hit aside.
+%                  Do not add turns to detour — that sacrifices the diagram to save one line
 
 if nargin < 2, verbose = false; end
 
@@ -101,6 +147,8 @@ blks  = find_system(sys, 'SearchDepth',1, 'Type','Block');
 
 %  서브시스템 안을 볼 때 find_system 은 **그 서브시스템 자신**도 돌려준다.
 %  자기 좌표는 바깥 캔버스의 것이라 안쪽 선이 전부 "관통"으로 잡힌다.
+%  Inside a subsystem, find_system also returns the subsystem itself. Its position is in
+%  the outer canvas, so every inner line would be reported as a "crossing".
 blks = blks(~strcmp(blks, sys));
 
 box = zeros(numel(blks), 4);
@@ -113,9 +161,11 @@ nb  = 0;  nk = 0;  n2 = 0;  nd = 0;  ns = 0;
 for i = 1:numel(lines)
     p  = get_param(lines(i), 'Points');
 
-    % --- (5) 사선 ----------------------------------------------------
+    % --- (5) 사선 / diagonal ----------------------------------------
     %  가로도 세로도 아닌 구간. 포트 높이가 몇 px 어긋나면 생긴다
     %  (2026-09-19 W04_P2 Dcompare — Scope 포트 간격을 계산으로 맞춰 세 선이 전부 사선)
+    %  A segment neither horizontal nor vertical; appears when port heights differ by a few px
+    %  (2026-09-19 W04_P2 Dcompare: Scope port spacing set by calculation made all three lines diagonal)
     for k = 1:size(p,1)-1
         dd = abs(p(k+1,:) - p(k,:));
         if dd(1) > 0.5 && dd(2) > 0.5
@@ -128,9 +178,11 @@ for i = 1:numel(lines)
         end
     end
 
-    % --- (4) 매달린 선 ------------------------------------------------
+    % --- (4) 매달린 선 / dangling line ------------------------------
     %  가지가 달린 부모 선은 도착 포트가 없는 것이 정상이다. 가지가 없는데도
     %  한쪽이 비어 있으면 그 선은 아무것도 잇고 있지 않다.
+    %  A parent line with branches normally has no destination port. If one end is empty
+    %  and there are no branches, the line connects nothing.
     kids = [];
     try, kids = get_param(lines(i), 'LineChildren'); catch, end
     noSrc = get_param(lines(i), 'SrcPortHandle') <= 0;
@@ -147,6 +199,9 @@ for i = 1:numel(lines)
     %  한 신호의 갈래(팬아웃)는 겹침이 아니다. 가지선은 SrcPortHandle 이 비어
     %  있을 수 있으므로, 부모를 따라 올라가 **뿌리 선의 핸들**을 신원으로 삼는다.
     %  같은 뿌리에서 나온 구간끼리는 비교하지 않는다.
+    %  Branches (fan-out) of one signal are not overlaps. A branch line may have an empty
+    %  SrcPortHandle, so follow the parents up and use the root line handle as the identity.
+    %  Segments from the same root are not compared with each other.
     sp  = lines(i);
     for depth = 1:16
         try, par = get_param(sp, 'LineParent'); catch, break, end
@@ -154,9 +209,11 @@ for i = 1:numel(lines)
         sp = par;
     end
 
-    % --- (3) 꺾임 수 -------------------------------------------------
+    % --- (3) 꺾임 수 / number of turns -------------------------------
     %  1회가 목표다. 2회는 배치상 불가피한 경우가 있으므로 따로 세어 보여 주고,
     %  3회 이상은 배치가 잘못된 것이므로 지적으로 센다.
+    %  One turn is the target. Two turns are sometimes unavoidable, so they are counted and
+    %  shown separately; three or more mean a bad layout and are counted as findings.
     turns = max(0, size(p,1) - 2);
     if turns == 2
         n2 = n2 + 1;
@@ -172,7 +229,7 @@ for i = 1:numel(lines)
         end
     end
 
-    % --- (2) 블록 관통 ----------------------------------------------
+    % --- (2) 블록 관통 / block crossing -----------------------------
     skip = own_blocks(lines(i));
     for k = 1:size(p,1)-1
         a = p(k,:);  b = p(k+1,:);
@@ -188,7 +245,7 @@ for i = 1:numel(lines)
             end
         end
 
-        % --- (1) 겹침용 구간 수집 -----------------------------------
+        % --- (1) 겹침용 구간 수집 / collect segments for overlap check --
         if abs(a(1)-b(1)) < 1e-6 && abs(a(2)-b(2)) > 1e-6
             seg(end+1,:) = [0 a(1) min(a(2),b(2)) max(a(2),b(2)) sp lines(i)]; %#ok<AGROW>
         elseif abs(a(2)-b(2)) < 1e-6 && abs(a(1)-b(1)) > 1e-6
@@ -202,7 +259,7 @@ for a = 1:size(seg,1)
     for b = a+1:size(seg,1)
         if seg(a,1) ~= seg(b,1),          continue, end
         if abs(seg(a,2)-seg(b,2)) > 1e-6, continue, end
-        if seg(a,5) == seg(b,5),          continue, end   % 한 신호의 분기
+        if seg(a,5) == seg(b,5),          continue, end   % 한 신호의 분기 / branch of one signal
         ov = min(seg(a,4),seg(b,4)) - max(seg(a,3),seg(b,3));
         if ov > 1
             nc = nc + 1;
@@ -220,10 +277,14 @@ end
 % -------------------------------------------------------------------------
 function h = own_blocks(ln)
 %OWN_BLOCKS  이 선이 붙어 있는 블록들. 자기 블록을 지나는 것은 관통이 아니다.
+%   Blocks this line is attached to. Passing through its own block is not a crossing.
 %
 %   재귀하지 않는다. LineParent 와 LineChildren 은 서로를 가리키므로
 %   따라가면 무한 루프에 빠진다 (2026-09-16 에 MATLAB 이 멈춤).
 %   한 단계만 본다 — 분기선과 그 부모가 같은 출발 블록을 공유하면 충분하다.
+%   Not recursive. LineParent and LineChildren point to each other, so following them
+%   loops forever (MATLAB hung on 2026-09-16). Only one level is checked; it is enough
+%   that a branch line and its parent share the same source block.
 h = [];
 try, h = [h; get_param(ln,'SrcBlockHandle')]; catch, end
 try, h = [h; get_param(ln,'DstBlockHandle')]; catch, end
@@ -247,21 +308,26 @@ end
 % -------------------------------------------------------------------------
 function tf = seg_hits_box(a, b, r)
 %SEG_HITS_BOX  축에 나란한 구간이 사각형 안쪽을 실제로 지나는가.
+%   Does an axis-aligned segment actually pass through the inside of a rectangle?
 %   테두리를 스치는 것은 세지 않는다 (포트가 테두리에 있으므로).
+%   Grazing the border is not counted (ports lie on the border).
 %  구간 대 사각형의 정식 교차 판정(slab method). 가로·세로·사선을 한 식으로 다룬다.
 %  방향별로 나누어 쓰면 길이 0 인 구간이나 사선이 엉뚱한 가지로 떨어져
 %  모든 블록을 관통한 것으로 잡힌다 (2026-09-16 에 34건 오검출).
-M  = 2;                                   % 테두리 여유 [px]. 포트는 테두리에 있다
+%  Exact segment-rectangle intersection test (slab method); handles horizontal, vertical and
+%  diagonal segments with one formula. Splitting by direction let zero-length or diagonal
+%  segments fall into the wrong branch and hit every block (34 false findings on 2026-09-16).
+M  = 2;                                   % 테두리 여유 [px]. 포트는 테두리에 있다 / border margin [px]; ports lie on the border
 lo = [r(1)+M, r(2)+M];
 hi = [r(3)-M, r(4)-M];
 if any(hi <= lo), tf = false; return, end
 
 d = b - a;
-if all(abs(d) < 1e-6), tf = false; return, end      % 길이 0
+if all(abs(d) < 1e-6), tf = false; return, end      % 길이 0 / zero length
 
 t0 = 0;  t1 = 1;
 for k = 1:2
-    if abs(d(k)) < 1e-9                              % 그 축으로는 움직이지 않는다
+    if abs(d(k)) < 1e-9                              % 그 축으로는 움직이지 않는다 / no motion along this axis
         if a(k) <= lo(k) || a(k) >= hi(k), tf = false; return, end
     else
         ta = (lo(k) - a(k)) / d(k);
@@ -290,16 +356,19 @@ end
 % -------------------------------------------------------------------------
 function [no, nl] = check_blocks(sys, verbose)
 %CHECK_BLOCKS  (6) 블록겹침. 블록끼리 · 이름표 대 블록 · 주석 대 블록/이름표.
+%   (6) Block clashes: block vs block, label vs block, note vs block/label.
 %   nl 은 (7) 이름표 위 선 — 자기와 무관한 선이 이름표 위를 지나는 수. 합격선 0.
+%   nl is (7) lines over name labels: unrelated lines passing over a label. Pass threshold 0.
 no = 0;  nl = 0;
 %  Stateflow 차트·MATLAB Function 의 안에는 보이지 않는 Simulink 블록이 있다
+%  Stateflow charts and MATLAB Functions contain hidden Simulink blocks inside
 try
     if ~strcmp(get_param(sys,'Type'),'block_diagram') && ...
        ~strcmp(get_param(sys,'SFBlockType'),'NONE'), return, end
 catch
 end
 b = find_system(sys, 'SearchDepth',1, 'Type','Block');
-b = b(~strcmp(b, sys));                 % 자기 서브시스템 경계는 뺀다
+b = b(~strcmp(b, sys));                 % 자기 서브시스템 경계는 뺀다 / exclude the subsystem's own boundary
 k = numel(b);
 R = zeros(k,4);  T = nan(k,4);  H = zeros(k,1);
 for i = 1:k
@@ -326,7 +395,7 @@ for i = 1:k
         end
     end
 end
-%  주석 (Note). 위치는 [왼 위 오른 아래]
+%  주석 (Note). 위치는 [왼 위 오른 아래] / notes; position is [left top right bottom]
 a = find_system(sys, 'FindAll','on', 'SearchDepth',1, 'Type','annotation');
 for q = 1:numel(a)
     try, r = get_param(a(q), 'Position'); catch, continue, end
@@ -338,7 +407,7 @@ for q = 1:numel(a)
         end
     end
 end
-%  (7) 이름표 위를 지나는 남의 선
+%  (7) 이름표 위를 지나는 남의 선 / unrelated lines passing over name labels
 L = find_system(sys, 'FindAll','on', 'SearchDepth',1, 'Type','line');
 for q = 1:numel(L)
     p = get_param(L(q), 'Points');
@@ -361,8 +430,11 @@ end
 
 function t = name_box(blk, r)
 %NAME_BOX  블록 이름이 차지하는 자리 (어림). 이름을 숨긴 블록은 NaN.
+%   Area occupied by a block name (estimate). NaN for blocks with hidden names.
 %   재는 도구는 스스로 서야 하므로 여기 한 벌을 둔다. 배치 도구가 쓰는
 %   _tools/name_box.m 과 **같은 계산**이다 — 고칠 때는 둘을 함께 고칠 것.
+%   A measuring tool must stand alone, so a copy is kept here. It is the same calculation
+%   as _tools/name_box.m used by the layout tools; change both together.
 t = nan(1,4);
 if strcmp(get_param(blk,'ShowName'), 'off'), return, end
 parts = strsplit(get_param(blk,'Name'), newline);
@@ -386,6 +458,7 @@ end
 
 function a = ov(p, q)
 %OV  두 사각형이 겹친 폭과 높이 중 작은 쪽 [px]. 테두리가 닿기만 하면 0.
+%   Smaller of the overlap width and height of two rectangles [px]; 0 if only borders touch.
 a = min(max(0, min(p(3),q(3)) - max(p(1),q(1))), ...
         max(0, min(p(4),q(4)) - max(p(2),q(2))));
 end

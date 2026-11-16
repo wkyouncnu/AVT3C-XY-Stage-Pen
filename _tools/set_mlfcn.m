@@ -22,12 +22,16 @@ function set_mlfcn(blk, lines, outName, outSize, sampleTime)
 %       compile time, in a message that does not say which line inside the
 %       block caused it. Fixing the size in advance removes that class of
 %       error altogether.
-%     outSize     size string, e.g. '[12 1]'
-%     sampleTime  discrete rate, e.g. 'h'. Required whenever the script keeps
+%     outSize     크기 문자열, 예: '[12 1]'
+%                 size string, e.g. '[12 1]'
+%     sampleTime  이산 주기, 예: 'h'. 스크립트가 PERSISTENT 변수를 가지면 반드시 준다
+%                 discrete rate, e.g. 'h'. Required whenever the script keeps
 %                 a PERSISTENT variable
 %
-%   WHY A BLOCK WITH MEMORY MUST DECLARE ITS RATE
+%   WHY A BLOCK WITH MEMORY MUST DECLARE ITS RATE / 기억을 가진 블록이 주기를 밝혀야 하는 이유
 %
+%   주기를 물려받게 두면 연속 운동모델에 이어진 MATLAB Function 블록은 연속 샘플
+%   타임을 받고, Simulink 는 다음과 같이 스크립트를 거부한다.
 %   Left to inherit, a MATLAB Function block wired to a continuous plant picks
 %   up a continuous sample time, and Simulink then refuses the script:
 %
@@ -35,19 +39,29 @@ function set_mlfcn(blk, lines, outName, outSize, sampleTime)
 %           continuous sample time ... writing to initialized persistent
 %           variables ...
 %
+%   거부가 옳다. 솔버가 한 스텝을 밟았다 버리고 다시 밟을 수 있으면 persistent 변수는
+%   뜻이 없다 — 시간 한 스텝에 상태가 여러 번 나아간다. 'h' 를 주면 블록은 스텝마다
+%   한 번 갱신되는 이산 알고리즘이 되며, 안의 오일러 갱신이 이미 그것을 가정하고 있었다.
 %   The refusal is right. A persistent variable has no meaning when the solver
 %   may take a step, reject it and take it again: the state would advance more
 %   than once for one step of time. Saying 'h' makes the block a discrete
 %   algorithm updated once per step, which is what the Euler update inside it
 %   already assumed.
 %
+%   주기는 블록 파라미터가 아니라 Stateflow 차트의 속성이므로
+%   set_param(blk,'SampleTime',...) 는 "SubSystem block does not have a parameter
+%   named 'SampleTime'" 으로 실패한다.
 %   The rate is a property of the Stateflow chart, not a block parameter, so
 %   set_param(blk,'SampleTime',...) fails with "SubSystem block does not have
 %   a parameter named 'SampleTime'".
 %
+%   블록의 스크립트도 블록 파라미터가 아니다. Stateflow 객체 트리에 있으므로
+%   set_param 이 아니라 sfroot() 를 거친다.
 %   The block's script is not a block parameter. It lives in the Stateflow
 %   object tree, which is why this goes through sfroot() rather than set_param.
 %
+%   블록이 extrinsic 함수를 부르면 출력 크기를 반드시 밝혀야 한다. Simulink 는 그런
+%   호출을 컴파일하지 않으므로 돌아오는 값의 폭을 추론할 수 없다.
 %   The explicit output size is needed whenever the block calls an extrinsic
 %   function. Simulink does not compile such a call, so it cannot infer the
 %   width of what comes back, and the width has to be declared.
@@ -60,6 +74,9 @@ fpos = get_param(blk, 'Position');
 n.Script = strjoin(lines, newline);
 %  포트가 생기며 블록이 멋대로 자라고, 그 포트 위치는 저장했다 다시 열면 달라진다.
 %  다시 놓아 두면 지금 읽는 포트 위치가 저장 뒤와 같다 (2026-09-19 사선 검사).
+%  Creating ports makes the block grow on its own, and those port positions change after
+%  save and reopen. Restoring the position makes the ports read now equal those after
+%  saving (2026-09-19 diagonal check).
 set_param(blk, 'Position', fpos);
 
 if nargin >= 4 && ~isempty(outName)

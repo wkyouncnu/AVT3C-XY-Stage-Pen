@@ -1,13 +1,17 @@
 function [n, rows] = check_flow(mdl, verbose)
 %CHECK_FLOW  최상위 도면이 왼쪽에서 오른쪽으로 읽히는가. 합격선은 0 이다.
+%            Does the top-level diagram read from left to right? The pass threshold is 0.
 %
 %   n = check_flow('W04_3_heading_offline')
-%   check_flow('W04_3_heading_offline', true)     % 어긋난 짝을 건건이 나열한다
+%   check_flow('W04_3_heading_offline', true)     % 어긋난 짝을 건건이 나열한다 / lists every out-of-order pair
 %   [n, rows] = check_flow(m)
 %
 %   무엇을 세는가 / what is counted
 %       최상위 블록을 GNC 여섯 단계로 나누고, **뒷 단계 블록이 앞 단계 블록보다
 %       왼쪽에 놓인 짝**의 수를 센다. 0 이면 도면이 한 방향으로 읽힌다.
+%       Top-level blocks are split into the six GNC stages, and the number of **pairs
+%       where a later-stage block sits left of an earlier-stage block** is counted.
+%       0 means the diagram reads in one direction.
 %
 %         command  <  reference  <  controller  <  allocation  <  plant  <  measurement
 %            1           2             3              4            5           6
@@ -15,30 +19,48 @@ function [n, rows] = check_flow(mdl, verbose)
 %   왜 이것을 재는가 / why this is a gate and not a preference
 %       2026-09-30 에 교수가 W04_3_heading_offline 을 열어 보고 "너무 가독성이
 %       낮다. 선들도 정신없다" 고 했다. 재어 보니 실제로 이랬다.
+%       On 2026-09-30 the instructor opened W04_3_heading_offline and said "readability
+%       is too low, and the lines are chaotic". Measured, it really was like this.
 %
 %         psi_ref_deg (지령)  x = 685        HeadingCtrl (제어기)  x = 1030
 %         Alloc (배분)        x = 600        MotionModel (운동모델) x =  800
 %         Animate (화면)      x = 126        OpenLoop (제어기)      x =  410
+%         (지령 command, 제어기 controller, 배분 allocation, 운동모델 plant model, 화면 display)
 %
 %       지령이 제어기보다 오른쪽에 있고, 운동모델이 제어기보다 왼쪽에 있고,
 %       화면이 맨 왼쪽에 있었다. 배선 검사(check_lines)는 **일곱 항목 0** 으로
 %       통과한 상태였다 — 선은 깨끗한데 읽을 수가 없었다. 선이 깨끗한 것과
 %       도면이 읽히는 것은 다른 문제이고, 그래서 검사가 따로 있어야 한다.
+%       The command was right of the controller, the plant model left of the controller,
+%       and the display at the far left. The wiring check (check_lines) had passed with
+%       **all seven items 0** — the lines were clean but the diagram was unreadable. Clean
+%       lines and a readable diagram are different problems, so a separate check is needed.
 %
 %       범인은 tidy_model 안의 Simulink.BlockDiagram.arrangeSystem 이었다.
 %       그것은 선 길이를 줄이는 데는 좋지만 **단계 순서를 모른다.**
 %       model-layout.md §8 이 이미 경고하고 있었는데, 경고만으로는 아무도
 %       어긋난 것을 알아차리지 못했다. 그래서 세는 도구를 만든다.
+%       The culprit was Simulink.BlockDiagram.arrangeSystem inside tidy_model. It is good
+%       at shortening lines but **does not know the stage order**. model-layout.md §8
+%       already warned about it, but a warning alone let nobody notice the disorder.
+%       Hence a counting tool.
 %
 %   어떻게 단계를 아는가 / where the stages come from
 %       색을 정하는 그 표, `gnc_roles.m` 하나다. 표를 두 벌 두지 않는다 —
 %       색과 순서가 같은 뜻을 나르므로 같은 표에서 나와야 한다.
 %       표에 없는 블록은 블록 종류로 짐작한다 (Constant·Step 은 지령,
 %       Scope·To Workspace 는 로깅). 그래도 모르면 **세지 않고** 따로 알린다.
+%       From the same table that sets colours, `gnc_roles.m`, and nothing else. There are
+%       not two tables — colour and order carry the same meaning, so they must come from
+%       the same table. Blocks not in the table are guessed by block type (Constant and
+%       Step are command, Scope and To Workspace are logging). If still unknown they are
+%       **not counted** but reported separately.
 %
 %   무엇을 빼는가 / what is left out
 %       Goto · From    되먹임을 푸는 도구다. 이것들이 사슬 밖에 있는 것이
 %                      곧 목적이므로 자리를 따지지 않는다
+%                      Tools to untangle feedback. Being outside the chain is their
+%                      purpose, so their position is not checked
 %       종착 블록      출력 포트가 없는 블록(To Workspace · Scope · ROS Publish)과
 %                      로깅·화면 상자는 맨 오른쪽 **또는 사슬 아래**면 통과다.
 %                      사슬 전체보다 아래로 내려간 것은 x 를 따지지 않는다
@@ -46,22 +68,34 @@ function [n, rows] = check_flow(mdl, verbose)
 %                      `lay_sinks` 가 종착 블록을 아래 한 줄로 내리는 것이
 %                      이 볼트의 배치 규칙이므로, 그것을 어김으로 세지 않는다.
 %                      사슬 **안에** 남아 있는 종착 블록은 그대로 자리를 따진다
-%       주석(Note)     블록이 아니다
+%       Sink blocks    Blocks with no output port (To Workspace, Scope, ROS Publish) and
+%                      logging/display boxes pass at the far right **or below the chain**.
+%                      Anything below the whole chain has its x ignored
+%                      (model-layout.md §1 — "at the right end or lined up below it").
+%                      Moving sinks down into one row with `lay_sinks` is the layout rule
+%                      of this vault, so it is not counted as a violation.
+%                      Sinks still **inside** the chain are checked as usual
+%       주석(Note)     블록이 아니다 / Notes are not blocks
 %
 %   어떻게 고치는가 / how to fix
 %       좌표를 손으로 고치지 않는다. 빌더에서 `gnc_chain` 으로 단계 열을 받고
 %       그 x 를 블록 생성 함수에 넘긴다. 그리고 tidy_model 을 부를 때
 %       'KeepRoot', true 를 준다 — 최상위에는 arrangeSystem 을 걸지 않는다는 뜻이다.
+%       Coordinates are not fixed by hand. In the builder, get the stage columns from
+%       `gnc_chain` and pass that x to the block-creating functions. Then call tidy_model
+%       with 'KeepRoot', true — meaning arrangeSystem is not applied to the top level.
 %
-%   돌려주는 것
-%       n     어긋난 짝의 수. 합격선 0
+%   돌려주는 것 / Returns
+%       n     어긋난 짝의 수. 합격선 0 / number of out-of-order pairs. Pass threshold 0
 %       rows  N×4 cell — {뒷단계블록, 그 단계, 앞단계블록, 그 단계}
+%             N×4 cell — {later-stage block, its stage, earlier-stage block, its stage}
 
 if nargin < 2 || isempty(verbose), verbose = false; end
 
 mdl = load_named(mdl);
 
 %  --- 단계 이름 -> 순위. gnc_colour 가 아는 이름을 전부 받는다 ----------
+%  --- stage name -> rank. Accepts every name gnc_colour knows ---------------
 RANK = { 'command',1; 'reference',2; 'guidance',2; 'mission',2; ...
          'control',3; 'controller',3; 'allocation',4; 'thruster',4; ...
          'plant',5; 'env',5; 'ros',5; 'measurement',6; 'logging',6 };
@@ -69,8 +103,12 @@ RANK = { 'command',1; 'reference',2; 'guidance',2; 'mission',2; ...
 %  ros 가 5 인 이유 — ROS 블록은 배(Gazebo)와 맞닿는 경계다. 오프라인 모델의
 %  MotionModel 이 서 있는 바로 그 자리에 Publish·Subscribe 가 선다. 오프라인과
 %  VRX 쌍둥이가 **같은 자리에서 같은 것**을 보여 주어야 하기 때문이다.
+%  Why ros is 5 — ROS blocks are the boundary with the boat (Gazebo). Publish/Subscribe stand
+%  exactly where MotionModel stands in the offline model, because the offline and VRX twins
+%  must show **the same thing in the same place**.
 
 %  --- 표에 없는 블록을 종류로 짐작한다 ----------------------------------
+%  --- Guess blocks not in the table by their type ---------------------------
 SRC  = {'Constant','Step','Ramp','Sin','SignalGenerator','DigitalClock', ...
         'Clock','FromWorkspace','FromFile','SignalBuilder','UniformRandomNumber', ...
         'RandomNumber','BandLimitedWhiteNoise','Inport'};
@@ -83,8 +121,8 @@ if isempty(role), role = cell(0,2); end
 stageOf = containers.Map('KeyType','char','ValueType','char');
 for k = 1:size(role,1)
     nm = role{k,1};
-    if any(nm == '/'), continue, end       % 경로로 적힌 예외는 안쪽 블록이다
-    stageOf(nm) = role{k,2};               % 뒤에 적힌 것이 이긴다 (paint_roles 와 같다)
+    if any(nm == '/'), continue, end       % 경로로 적힌 예외는 안쪽 블록이다 / exceptions written as paths are inner blocks
+    stageOf(nm) = role{k,2};               % 뒤에 적힌 것이 이긴다 (paint_roles 와 같다) / later entry wins (same as paint_roles)
 end
 rankOfStage = containers.Map(RANK(:,1), RANK(:,2));
 
@@ -120,6 +158,9 @@ end
 %  --- 사슬 아래로 내려간 종착 블록은 x 를 따지지 않는다 ------------------
 %  종착 = 출력 포트가 없는 블록, 또는 로깅 단계로 적힌 블록.
 %  사슬의 맨 아래보다 더 아래에 있으면 "그 아래에 나란히" 놓인 것으로 본다.
+%  --- Sinks moved below the chain have their x ignored -----------------------
+%  Sink = a block with no output port, or a block listed in the logging stage.
+%  If it lies below the bottom of the chain, it counts as "lined up below it".
 term = false(N,1);
 for i = 1:N
     if rk(i) == 6, term(i) = true; continue, end
@@ -144,14 +185,22 @@ end
 %  시작하므로 넷째 단계가 둘째 단계보다 왼쪽에 놓인다 — 도면은 줄 단위로
 %  바르게 읽히는데 x 만 보면 어긋난 것으로 잡힌다 (5~9주차가 그랬다).
 %  한 줄짜리 도면은 모든 블록의 y 구간이 겹치므로 셈이 전과 똑같다.
+%  --- Count out-of-order pairs -----------------------------------------------
+%  One finding when the left edge of a later-stage block is left of an earlier-stage block's.
+%
+%  **Only blocks in the same row are compared** (instructor's decision 2026-10-01).
+%  'Wrap' in `lay_chain` folds the chain into several rows. The second row starts again at
+%  the left, so stage four lies left of stage two — the diagram reads correctly row by row,
+%  but looking at x alone flags it (as in weeks 5~9). In a one-row diagram every block's
+%  y range overlaps, so the count is the same as before.
 rows = cell(0,4);
 ok = rk > 0 & ~exempt;
 idx = find(ok);
 for a = 1:numel(idx)
     for c = 1:numel(idx)
         i = idx(a); j = idx(c);
-        if rk(i) >= rk(j), continue, end               % i 가 앞 단계여야 한다
-        if ~same_row(pos(i,:), pos(j,:)), continue, end % 다른 줄이면 따지지 않는다
+        if rk(i) >= rk(j), continue, end               % i 가 앞 단계여야 한다 / i must be the earlier stage
+        if ~same_row(pos(i,:), pos(j,:)), continue, end % 다른 줄이면 따지지 않는다 / different rows are not compared
         if pos(j,1) < pos(i,1)
             rows(end+1,:) = {name{j}, stg{j}, name{i}, stg{i}}; %#ok<AGROW>
         end
@@ -159,7 +208,7 @@ for a = 1:numel(idx)
 end
 n = size(rows,1);
 
-%  --- 보고 -------------------------------------------------------------
+%  --- 보고 / report -----------------------------------------------------
 if verbose || n > 0
     if n == 0
         fprintf('  [흐름] %-26s 통과\n', mdl);
@@ -188,13 +237,16 @@ end
 % -------------------------------------------------------------------------
 function tf = same_row(pi_, pj)
 %SAME_ROW  두 블록이 같은 줄에 있는가 — 세로 구간이 겹치면 같은 줄로 본다.
+%          Are two blocks in the same row? Overlapping vertical ranges mean the same row.
 %   접은 사슬의 둘째 줄은 첫 줄과 y 가 겹치지 않으므로 다른 줄이 된다.
+%   The second row of a folded chain does not overlap the first in y, so it is a different row.
 tf = (min(pi_(4), pj(4)) - max(pi_(2), pj(2))) > 0;
 end
 
 % -------------------------------------------------------------------------
 function m = load_named(m)
 %  파일 경로를 받아도 동작하게 한다. find_system 은 경로가 아니라 모델 이름을 받는다.
+%  Works when given a file path too. find_system takes a model name, not a path.
 if any(m == filesep) || any(m == '/')
     load_system(m); [~, m] = fileparts(m);
 else

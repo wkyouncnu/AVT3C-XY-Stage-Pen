@@ -1,21 +1,30 @@
 function s = add_animate_box(m, tags, fcnName, code, pos, ts)
 %ADD_ANIMATE_BOX  포트 없는 Animate 서브시스템. 실시간 그림 블록을 한 상자에 넣는다.
+%                 Port-less Animate subsystem. Puts the live-plot blocks into one box.
 %
 %   add_animate_box(m, {'pn','pe','psi'}, 'W05_animate', code, [x y], 'Ts_ctrl')
 %
 %     TAGS     그릴 신호의 Goto 태그 이름들. 이 순서가 함수 인자 순서가 된다
+%              Goto tag names of the signals to plot. This order becomes the function argument order
 %     FCNNAME  실제로 그림을 그리는 MATLAB 함수 이름 (coder.extrinsic 로 부른다)
+%              name of the MATLAB function that does the drawing (called via coder.extrinsic)
 %     CODE     MATLAB Function 블록에 넣을 본문. 비우면 표준 본문을 만들어 준다
-%     POS      최상위에서 이 상자가 놓일 자리 [x y]
-%     TS       Digital Clock 의 샘플 타임
+%              body for the MATLAB Function block. If empty, a standard body is generated
+%     POS      최상위에서 이 상자가 놓일 자리 [x y] / position [x y] of this box at the top level
+%     TS       Digital Clock 의 샘플 타임 / sample time of the Digital Clock
 %
 %   함수의 인자 순서는 **TAGS, t, en** 이다. 마지막 두 개는 이 함수가 붙인다.
 %     t  = 시뮬레이션 시각      en = 켜기/끄기 (base 의 animate 변수)
+%   The function argument order is **TAGS, t, en**. The last two are added by this function.
+%     t  = simulation time      en = on/off (the animate variable in base)
 %
-%   왜 상자에 넣는가
+%   왜 상자에 넣는가 / Why it goes into a box
 %       실시간 그림은 제어 루프와 아무 상관이 없다. 최상위에 Clock·상수·From 을
 %       늘어놓으면 신호 사슬을 읽는 눈이 그쪽으로 끌려간다. 끄고 싶을 때
 %       상자 하나만 보면 되는 것도 이점이다 (animate = 0).
+%       The live plot has nothing to do with the control loop. Clock, constants and From
+%       blocks spread over the top level would pull the eye away from the signal chain.
+%       Another benefit: only one box needs attention to turn it off (animate = 0).
 
 if nargin < 6 || isempty(ts), ts = '-1'; end
 n = numel(tags);
@@ -24,6 +33,7 @@ s = add_subsys(m, 'Animate', [pos(1) pos(2) pos(1)+140 pos(2)+70], {}, {}, ...
                gnc_colour('measurement'));
 
 %  MATLAB Function 을 먼저 만들어 포트 높이를 읽는다. 포트 간격을 계산하지 않는다
+%  The MATLAB Function is created first and its port heights are read. Port spacing is not computed
 H = max(200, 52*(n+2) + 40);
 fb = [s '/AnimateFcn'];
 add_block('simulink/User-Defined Functions/MATLAB Function', fb, ...
@@ -47,9 +57,13 @@ ch.Script = code;
 %  포트가 생기며 블록이 멋대로 자라는데, 그때 읽은 포트 위치는 저장했다 다시 열면
 %  달라진다 (간격 55 -> 60 px). 한 번 다시 놓으면 지금 읽는 값이 저장 뒤와 같다.
 %  이것을 빼면 From 여섯 개가 전부 5~15 px 기운 사선이 된다 (2026-09-19 W08).
+%  The block grows on its own as ports appear, and port positions read then change after
+%  save and reopen (spacing 55 -> 60 px). Placing it once more makes the values read now equal
+%  those after saving. Without this, all six From lines tilt by 5~15 px (2026-09-19 W08).
 set_param(fb, 'Position', [340 100 500 100+H]);
 
 %  From · Clock · 상수를 각자 포트 높이에 놓는다 -> 선이 전부 수평 직선
+%  From, Clock and constant each sit at their port height -> all lines are straight horizontal
 for k = 1:n
     q = port_xy(s, 'AnimateFcn', 'Inport', k);
     b = [s '/Fr_' tags{k}];
@@ -75,7 +89,10 @@ add_line(s, 'AnimateFcn/1', 'AnimEnd/1');
 
 add_block('built-in/Note', [s '/note'], 'Position', [150 140+H], ...
     'Text', sprintf(['실시간 그림 — 이 상자는 입출력 포트가 없다.\n' ...
+        'Live plot — this box has no input/output ports.\n' ...
         '끄려면 base workspace 에서  animate = 0  으로 두고 다시 Run.\n' ...
+        'To turn it off, set  animate = 0  in the base workspace and Run again.\n' ...
         '끄면 시뮬레이션이 눈에 띄게 빨라진다.\n' ...
-        '그리는 일은 %s.m 이 한다.'], fcnName));
+        'Turning it off makes the simulation noticeably faster.\n' ...
+        '그리는 일은 %s.m 이 한다. / That file does the drawing.'], fcnName));
 end

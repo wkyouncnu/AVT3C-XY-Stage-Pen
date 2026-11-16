@@ -1,5 +1,6 @@
 function n = tag_feedback(sys, varargin)
 %TAG_FEEDBACK  아직도 세 번 이상 꺾이는 선을 Goto/From 한 쌍으로 바꾼다.
+%   Replaces lines that still turn three or more times with a Goto/From pair.
 %
 %   n = tag_feedback('W04_5_offline')
 %   tag_feedback(sys, 'MinTurns', 3, 'Dy', 90)
@@ -9,24 +10,36 @@ function n = tag_feedback(sys, varargin)
 %       넘지 않으려면 내려갔다 가로질러 올라와야 하고, Simulink 는 옆면 포트에
 %       **반드시 가로 토막을 붙이므로** 세 번 꺾인다. 배치로는 더 줄지 않는다
 %       (2026-09-17 에 여섯 모델에서 확인).
+%       A feedback line leaves a right-side output and must return to a left-side input.
+%       To avoid crossing blocks it goes down, across and up, and Simulink always attaches
+%       a horizontal stub to side ports, so it turns three times. Layout cannot reduce this
+%       further (confirmed in six models on 2026-09-17).
 %
 %           내려감 ─ 가로지름 ─ 올라옴 ─ 포트에 붙는 토막   = 세 번
+%           down ─ across ─ up ─ stub into the port          = three turns
 %
 %       W05~W09 이 쓴 방법을 그대로 쓴다. 신호에 이름을 붙여 내보내고 받는다.
 %       선이 사라지는 대신 **이름이 남는다.** 되먹임이 있다는 사실은 태그 이름으로
 %       읽히고, 도면은 앞으로만 흐른다.
+%       The method used in W05-W09 is reused: the signal is named, sent and received.
+%       The line disappears but the name remains. The existence of feedback is read from
+%       the tag name, and the diagram flows forward only.
 %
 %   무엇을 바꾸지 않는가 / what does not change
 %       Goto/From 은 선과 완전히 같다. 계산 결과는 한 자리도 달라지지 않는다.
+%       Goto/From is exactly equivalent to a line; the results do not change by a single digit.
 %
 %   먼저 lay_feedback 을 부를 것. 배치만으로 두 번에 끝나는 선까지 태그로 바꾸면
 %   그림에서 되먹임이 눈에 보이지 않게 된다.
+%   Call lay_feedback first. Converting lines that layout alone can bring to two turns
+%   would make the feedback invisible in the diagram.
 %
 %   NAME/VALUE
-%     'MinTurns'  몇 번부터 바꿀지. 기본 3
-%     'Dy'        태그를 포트에서 얼마나 아래에 둘지. 기본 90
+%     'MinTurns'  몇 번부터 바꿀지. 기본 3 / turn count from which lines are replaced; default 3
+%     'Dy'        태그를 포트에서 얼마나 아래에 둘지. 기본 90 / how far below the port the tag goes; default 90
 %
 %   돌려주는 값은 바꾼 연결의 수다.
+%   The return value is the number of connections replaced.
 
 p = inputParser;
 p.addParameter('MinTurns', 3);
@@ -44,6 +57,8 @@ for i = 1:numel(L)
     if s < 0, continue, end
     %  태그를 또 태그하지 않는다. 한 번 더 돌리면 Fr_Fr_x_1_1 같은 이름이
     %  겹겹이 쌓이고 블록만 늘어난다 (2026-09-17 W04_4 에서 재현).
+    %  Do not tag a tag again. Another run would stack names like Fr_Fr_x_1_1 and only add
+    %  blocks (reproduced in W04_4 on 2026-09-17).
     if strcmp(get_param(get_param(s,'Parent'), 'BlockType'), 'From'), continue, end
     for dd = get_param(L(i), 'DstPortHandle')'
         if dd < 0, continue, end
@@ -62,13 +77,18 @@ for k = 1:numel(job)
     c = job(k);
 
     %  ---- 태그 이름 정하기 (2026-10-01 교수 지시) ------------------------
+    %  ---- choosing the tag name (instructor's instruction 2026-10-01) -----
     %  1) 같은 출발 포트에 **이미 Goto 가 붙어 있으면 그 태그를 다시 쓴다.**
     %     한 신호에 태그 하나다. 전에는 같은 값을 내보내는 태그가 둘씩 생겼다
     %     (W04_3_heading_offline 의 psi 와 MotionModel_1 이 같은 값이었다)
+    %  1) If a Goto is already attached to the same source port, reuse its tag.
+    %     One tag per signal. Previously two tags carrying the same value were created
+    %     (psi and MotionModel_1 in W04_3_heading_offline were the same value)
     tag   = tapped_tag(sys, c.src, c.sp);
     reuse = ~isempty(tag);
 
     %  2) 없으면 **신호 이름**으로 짓는다. 블록 이름에서 따지 않는다
+    %  2) Otherwise name it after the signal name, not the block name
     if ~reuse
         tag = signal_name(sys, c);
         tag = free_tag(sys, tag);
@@ -86,6 +106,11 @@ for k = 1:numel(job)
     %  할 때 서로 포개지지 않게 한다 — 40 px 이면 위 태그의 **이름표**(상자 아래
     %  14 px)가 아래 태그 상자에 1 px 걸쳐 check_lines 의 여섯째 항목에 잡힌다
     %  (2026-09-30 W04_4_inner_loop 의 Fr_deg2rad_1_1 / Fr_Quat2Yaw_1_1_1)
+    %  drop_tag and feed_from put tags next to the port. DY is only the direction to move
+    %  aside when that spot is taken. Each tag gets a 60 px different level so that they do
+    %  not overlap when moved aside; with 40 px the upper tag's name label (14 px below the
+    %  box) overlaps the lower tag box by 1 px and is caught by item six of check_lines
+    %  (2026-09-30 W04_4_inner_loop, Fr_deg2rad_1_1 / Fr_Quat2Yaw_1_1_1)
     if ~reuse
         g = drop_tag(sys, c.src, c.sp, tag, o.Dy + 60*(k-1));
         set_param(g, 'TagVisibility', 'local');
@@ -93,6 +118,8 @@ for k = 1:numel(job)
     end
     %  블록 이름은 feed_from 이 'Fr_<태그>' 로 짓고, 중복이면 **번호만** 붙인다
     %  (from_name.m). 꼬리표를 넘기지 않는다 — 2026-10-01 교수 지시
+    %  feed_from names the block 'Fr_<tag>' and only appends a number if it is a duplicate
+    %  (from_name.m). No suffix is passed (instructor's instruction 2026-10-01)
     f = feed_from(sys, tag, c.dst, c.dp, o.Dy + 60*(k-1));
     set_param(f, 'BackgroundColor', gnc_colour('measurement'));
     n = n + 1;
@@ -102,6 +129,7 @@ end
 % =====================================================================
 function tag = tapped_tag(sys, src, sp)
 %  SRC 의 SP 번 출력이 이미 이 층의 Goto 로 가고 있으면 그 태그를 돌려준다.
+%  Returns the tag if output SP of SRC already goes to a Goto on this level.
     tag = '';
     try
         ph = get_param([sys '/' src], 'PortHandles');
@@ -123,11 +151,16 @@ end
 % =====================================================================
 function nm = signal_name(sys, c)
 %  이 선이 나르는 값의 **이름**을 찾는다. 블록 이름은 마지막 수단이다.
+%  Finds the name of the value this line carries. The block name is the last resort.
 %
 %    1) 선에 붙은 이름          빌더가 set_param(line,'Name','psi') 로 준 것
+%       line name               given by the builder with set_param(line,'Name','psi')
 %    2) 출발이 서브시스템이면   그 Outport 블록의 이름 (MotionModel -> psi)
+%       source is a subsystem   name of its Outport block (MotionModel -> psi)
 %    3) 도착이 서브시스템이면   그 Inport 블록의 이름  (HeadingCtrl 의 psi)
+%       destination subsystem   name of its Inport block (psi of HeadingCtrl)
 %    4) 그래도 없으면           <블록>_<포트> — 예전 방식 (마지막 수단)
+%       otherwise               <block>_<port>, the old way (last resort)
 
     nm = strtrim(c.nm);
     if ~isempty(nm), nm = matlab.lang.makeValidName(nm); return, end
@@ -143,6 +176,7 @@ end
 
 function nm = port_label(sys, blk, kind, k)
 %  BLK 이 서브시스템이면 그 안의 KIND 블록 K 번의 이름을 돌려준다.
+%  If BLK is a subsystem, returns the name of its KIND block number K.
     nm = '';
     b = [sys '/' blk];
     try
@@ -158,6 +192,8 @@ end
 function tag = free_tag(sys, want)
 %  같은 이름의 Goto 가 **모델 어디에도** 없어야 한다. global 태그 하나가
 %  다른 층에 있으면 From 이 어느 쪽을 받을지 정해지지 않는다.
+%  No Goto with the same name may exist anywhere in the model. If a global tag exists on
+%  another level, it is undefined which one a From receives.
     root = bdroot(sys);
     tag  = want;  j = 1;
     while ~isempty(find_system(root, 'LookUnderMasks','all', ...

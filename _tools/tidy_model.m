@@ -1,11 +1,13 @@
 function n = tidy_model(m, varargin)
 %TIDY_MODEL  모델 하나를 배치 규칙대로 정리하고 저장한다. 합격선은 지적 0건.
+%   Tidies one model according to the layout rules and saves it. Pass threshold: 0 findings.
 %
 %   tidy_model('W03_1_frame_check')
 %   n = tidy_model('SB7_signal_done', true)
 %   n = tidy_model('W04_3_heading_offline', 'KeepRoot', true)
 %
 %   'KEEPROOT' — 최상위 블록은 빌더가 놓은 자리에 그대로 둔다
+%   'KEEPROOT' — top-level blocks stay where the builder placed them
 %
 %       arrangeSystem 은 선 길이를 줄이는 데는 좋지만 **단계 순서를 모른다.**
 %       2026-09-30 에 W04_3_heading_offline 이 이렇게 나왔다 — 지령
@@ -14,45 +16,81 @@ function n = tidy_model(m, varargin)
 %       도면은 오른쪽에서 왼쪽으로 읽혔다. model-layout.md §8 이 이미 경고하던
 %       바로 그것이다.
 %
+%       arrangeSystem is good at shortening lines but does not know the stage order.
+%       On 2026-09-30 W04_3_heading_offline came out like this: command psi_ref_deg at
+%       x = 685, controller HeadingCtrl at x = 1030, plant model at x = 800, live view at
+%       x = 126. All seven wiring checks were 0, yet the diagram read from right to left,
+%       exactly what model-layout.md §8 had already warned about.
+%
 %       그래서 gnc_chain 으로 단계 열을 잡아 둔 모델은 이 옵션을 켠다. 최상위
 %       **블록**은 건드리지 않고, 선만(lay_feedback · tag_feedback · lay_links)
 %       손질한다. 안쪽 서브시스템은 그대로 arrangeSystem 을 쓴다 — 거기에는
 %       지켜야 할 단계 순서가 없다.
 %
+%       Therefore models whose stage columns were set with gnc_chain turn this option on.
+%       Top-level blocks are not touched; only lines are reworked (lay_feedback,
+%       tag_feedback, lay_links). Inner subsystems still use arrangeSystem, since they
+%       have no stage order to keep.
+%
 %       켰는지 확인하는 도구가 `check_flow` 다. 합격선은 0 이다.
+%       The tool that checks this is `check_flow`. Pass threshold is 0.
 %
 %   순서 / the order, and why
 %     1) arrangeSystem    Simulink 의 층 배치. 앞뒤 순서를 잡는 데는 이만한 것이 없다
+%                         Simulink layered layout; nothing better for setting the order
 %     2) mss_style        블록 크기를 **arrangeSystem 뒤, 선 손질 앞**에 정한다.
 %                         arrangeSystem 이 블록을 자기 기본 크기로 되돌리므로 그
 %                         앞에서 넓혀 두면 소용이 없고(게인이 다시 `-K-` 로 그려진다),
 %                         선을 다 놓은 뒤에 넓히면 선이 이웃 블록을 가로지른다.
 %                         이 자리여야 아래 lay_* 가 넓어진 크기를 보고 선을 놓는다
+%                         Sets block sizes after arrangeSystem and before line rework.
+%                         arrangeSystem resets blocks to default size, so widening before
+%                         it is useless (gains are drawn as `-K-` again), and widening after
+%                         all lines are laid makes lines cross neighbouring blocks.
+%                         Only here do the lay_* steps below see the widened sizes
 %     3) lay_feedback     되돌아가는 선을 블록 아래 통로로 돌린다
+%                         routes feedback lines through a lane below the blocks
 %     4) tag_feedback     그래도 세 번 꺾이면 Goto/From 한 쌍으로 바꾼다
+%                         replaces a line with a Goto/From pair if it still turns three times
 %     5) lay_sinks        갈라져 나온 종착 블록을 아래 한 열로 내린다
+%                         moves branched sink blocks down into one column
 %     6) snug_tags        Goto/From 을 제 포트 옆으로 끌어온다 (배치기가 끌고 갔다)
+%                         pulls Goto/From back next to their ports (the arranger moved them)
 %     7) lay_links        남은 지저분한 선만 통로 하나로 다시 긋는다
+%                         redraws only the remaining messy lines through a single lane
 %     8) snug_tags        lay_links 가 길을 내느라 옮긴 태그를 한 번 더 끌어온다
+%                         pulls back tags that lay_links moved while clearing a path
 %     9) scope_legend     Scope 범례를 켜고 들어오는 선에 신호 이름을 붙인다.
 %                         선을 다 손질한 **뒤**라야 한다 — 선을 다시 그으면
 %                         이름이 함께 지워진다 (keep_signals 와 같은 이유)
+%                         Turns on the Scope legend and names incoming lines. Must come after
+%                         all line rework; redrawing a line erases its name too (same reason
+%                         as keep_signals)
 %
 %   왜 두 번 해 보는가 / why it tries twice
 %       lay_sinks 는 "이미 깨끗한 선은 두고 본다" 와 "종착 블록은 전부 내린다"
 %       두 가지로 돌 수 있다. 어느 쪽이 나은지는 모델마다 다르다 — W02·W10 는
 %       전부 내려야 0 이 되고, W03 은 두고 봐야 0 이 된다 (2026-09-17 측정).
 %       그래서 둘 다 해 보고 지적이 적은 쪽을 저장한다.
+%       lay_sinks can run in two ways: "leave already clean lines alone" or "move all sink
+%       blocks down". Which is better depends on the model: W02 and W10 reach 0 only when all
+%       are moved, W03 only when left alone (measured 2026-09-17). So both are tried and the
+%       one with fewer findings is saved.
 %
 %   왜 몇 바퀴 도는가 / why it repeats
 %       한 가닥을 옮기면 다음 가닥이 쓸 통로가 비므로, 한 바퀴로는 끝나지 않는
 %       모델이 있다 (SB11 이 그렇다). 나빠지면 되돌리므로 더 돌아도 손해가 없다.
+%       Moving one line frees a lane for the next, so some models need more than one round
+%       (SB11 does). A worse result is reverted, so extra rounds cost nothing.
 %
 %   되돌리려면 build_wXX_models 를 다시 실행하면 된다.
+%   To undo, run build_wXX_models again.
 %
 %   돌려주는 값은 저장한 쪽의 지적 수다.
+%   The return value is the number of findings of the saved version.
 
 %  두 번째 인자가 참·거짓이면 옛 꼴 tidy_model(m, verbose) 이다
+%  A logical/numeric second argument means the old form tidy_model(m, verbose)
 verbose = false;
 if ~isempty(varargin) && (islogical(varargin{1}) || isnumeric(varargin{1}))
     verbose = logical(varargin{1});  varargin(1) = [];
@@ -64,6 +102,8 @@ keepRoot = logical(p.Results.KeepRoot);
 
 %  신호에 붙은 기록 표시를 먼저 챙긴다. 배치 도구는 선을 지웠다 다시 긋는데,
 %  표시는 선과 함께 지워지므로 그대로 두면 결과 파일에서 신호가 조용히 빠진다.
+%  Save the logging marks on signals first. Layout tools delete and redraw lines, and the
+%  marks go with the lines, so signals would silently disappear from the result file.
 sig = keep_signals(m);
 
 %  KeepRoot 이면 한 바퀴만 돈다. arrangeSystem 이 최상위를 매번 처음부터 다시
@@ -72,6 +112,11 @@ sig = keep_signals(m);
 %  연다. 2026-09-30 W04_4_inner_loop 에서 도면 높이가 한 바퀴마다 1600 px 씩
 %  늘어 5770 까지 갔다 (PNG 가 2000 px 을 넘겼다). 한 바퀴로 0 이 되지 않으면
 %  그것은 배치를 고쳐야 한다는 뜻이지 더 돌아야 한다는 뜻이 아니다.
+%  With KeepRoot only one round runs. Without arrangeSystem re-placing the top level each
+%  time, later rounds move things further below what the previous round put down: drop_tag
+%  searches for free space downward and lay_sinks opens a sink area below that. On 2026-09-30
+%  W04_4_inner_loop grew 1600 px per round up to 5770 px (the PNG exceeded 2000 px). If one
+%  round does not reach 0, the layout must be fixed; more rounds will not help.
 n = inf;
 rounds = 4;
 if keepRoot, rounds = 1; end
@@ -85,13 +130,17 @@ load_system(m);
 keep_signals(m, sig);
 
 square_lines(m);        % 크기를 바꾼 블록 옆에 남은 사선 토막을 직각으로 (꺾임 수 그대로)
-try, scope_legend(m); catch, end   % 범례는 **선을 다 놓은 뒤**에 켠다 (스킬 4-2)
+                        % squares diagonal stubs left next to resized blocks (turn count unchanged)
+try, scope_legend(m); catch, end   % 범례는 **선을 다 놓은 뒤**에 켠다 (스킬 4-2) / legend only after all lines are laid (skill 4-2)
 lay_notes(m);           % arrangeSystem 은 주석을 옮기지 않는다 — 블록에 앉은 주석을 아래로
+                        % arrangeSystem does not move notes; move notes sitting on blocks downward
 save_system(m);
 close_system(m, 0);
 
 %  되돌림이 게인 폭까지 되돌려 놓았으면 여기서 되살린다. 폭은 고르는 것이 아니라
 %  지켜야 하는 것이다 — 자세한 이유는 fit_gains 의 머리글에 적어 두었다.
+%  If a revert also restored the old gain widths, restore them here. The width is not a
+%  choice but a requirement; the reason is in the header of fit_gains.
 try, fit_gains(m); close_system(m, 0); catch, end
 
 n = check_lines(m, verbose);
@@ -103,9 +152,13 @@ function n = one_round(m, keepRoot)
 %  손대기 전 성적과 파일 사본을 챙긴다. 정리가 오히려 나쁘게 나오면 되돌린다.
 %  이미 정리된 모델에 다시 돌리면 다른 배치가 나오는데, 그것이 더 나을 이유는
 %  없다 (2026-09-17 SB11 에서 0 -> 1 로 뒷걸음질).
+%  Keep the score and a file copy before touching anything; revert if tidying makes it worse.
+%  Re-running on an already tidy model gives a different layout with no reason to be better
+%  (SB11 went backwards from 0 to 1 on 2026-09-17).
 load_system(m);
 mfile = get_param(m, 'FileName');
 %  주석은 선과 무관하다. 먼저 비켜 두어야 성적표가 배치만 견준다
+%  Notes are unrelated to lines; move them aside first so the score compares layout only
 if lay_notes(m) > 0, save_system(m); end
 [~, n0] = evalc('check_lines(m, false)');
 ok0 = compiles(m);
@@ -117,8 +170,9 @@ best = inf;  bestAll = false;
 for allSinks = [false true]
     run_once(m, allSinks, keepRoot);
     %  견주어 보는 중일 뿐이므로 중간 성적표는 삼킨다. 저장한 쪽만 보고한다.
+    %  Only comparing, so intermediate reports are swallowed; only the saved one is reported.
     [~, k] = evalc('check_lines(m, false)');
-    close_system(m, 0);                 % 저장하지 않는다 — 어느 쪽이 나은지 재 볼 뿐
+    close_system(m, 0);                 % 저장하지 않는다 — 어느 쪽이 나은지 재 볼 뿐 / not saved, only measured
     if k < best, best = k;  bestAll = allSinks; end
     if best == 0, break, end
 end
@@ -133,6 +187,12 @@ close_system(m, 0);
 %  **컴파일되던 모델이 컴파일되지 않게 되면 무조건 되돌린다.** 도면을 예쁘게
 %  만들자고 모델을 망가뜨릴 수는 없다. 배선 검사만으로는 부족하다 — 매달린 선은
 %  겹치지도 블록을 뚫지도 않으므로 검사를 통과한다 (2026-09-17 W02_2).
+%  If it got worse after all moves, go back to the original file. Re-running on an already
+%  tidy model gives a different layout with no reason to be better.
+%
+%  A model that compiled and no longer compiles is always reverted. The model must not be
+%  broken to make the diagram pretty. Wiring checks alone are not enough: a dangling line
+%  neither overlaps nor crosses blocks and passes them (2026-09-17 W02_2).
 load_system(m);
 [~, n] = evalc('check_lines(m, false)');
 ok1 = compiles(m);
@@ -150,6 +210,9 @@ delete(keepFile);
 %  저장할 때 Simulink 가 선을 한 번 더 그린다. 그래서 방금 손댄 결과와 파일에
 %  들어앉은 결과가 다를 수 있다 — SB1 에서 네 번 꺾인 선 하나가 그렇게 남았다
 %  (2026-09-17). 블록은 두고 **선만** 더 나아지지 않을 때까지 손질한다.
+%  Simulink redraws lines once more on save, so the result just made and the one stored in
+%  the file can differ; in SB1 one four-turn line remained that way (2026-09-17). Blocks are
+%  kept and only lines are reworked until there is no further improvement.
 for t = 1:6
     load_system(m);
     [~, before] = evalc('check_lines(m, false)');
@@ -158,16 +221,19 @@ for t = 1:6
     %  한 번 돌려 잠깐 나빠졌다가 다음 번에 풀리는 경우가 있다. 한 가닥을 옮기면
     %  다음 가닥이 쓸 통로가 비기 때문이다 (W04_4 에서 2 -> 3 -> 0).
     %  그래서 몇 번 더 돌려 보고, **나아졌을 때만** 저장한다.
+    %  One pass may briefly make it worse and the next pass resolve it, because moving one
+    %  line frees a lane for the next (W04_4: 2 -> 3 -> 0). So a few more passes are tried
+    %  and the model is saved only when it improved.
     gain = false;
     for k = 1:4
         for s = 1:numel(sys)
             try, lay_links(sys{s}); catch, end
-            try, snug_tags(sys{s}); catch, end   % 태그는 늘 제 포트 옆으로
+            try, snug_tags(sys{s}); catch, end   % 태그는 늘 제 포트 옆으로 / tags always next to their ports
         end
         [~, cur] = evalc('check_lines(m, false)');
         if cur < before, gain = true; break, end
     end
-    if gain && ok0 && ~compiles(m), gain = false; end   % 망가뜨리면서 줄이지 않는다
+    if gain && ok0 && ~compiles(m), gain = false; end   % 망가뜨리면서 줄이지 않는다 / never reduce by breaking the model
     if gain, save_system(m); end
     close_system(m, 0);
     if ~gain, break, end
@@ -181,6 +247,8 @@ end
 function tf = compiles(m)
 %COMPILES  다이어그램 갱신이 통과하는가. 모델이 온전한지 재는 가장 싼 방법이다.
 %   ROS 블록이 있어도 네트워크는 필요 없다 — 차원·자료형만 따진다.
+%   Does a diagram update pass? The cheapest way to check that the model is intact.
+%   No network is needed even with ROS blocks; only dimensions and data types are checked.
 try
     evalc('set_param(m, ''SimulationCommand'', ''update'')');
     tf = true;
@@ -194,12 +262,17 @@ end
 function run_once(m, allSinks, keepRoot)
 %  반드시 파일에서 다시 읽는다. 앞선 시도의 배치가 남아 있으면 두 방식을
 %  견주는 것이 아니라 한쪽 위에 다른 쪽을 덧칠하게 된다.
+%  Always reload from file. If the previous attempt's layout remained, the two methods would
+%  not be compared; one would be painted over the other.
 if bdIsLoaded(m), close_system(m, 0); end
 load_system(m);
 sys = [{m}; find_system(m, 'LookUnderMasks','all', 'BlockType','SubSystem')];
 %  KeepRoot 이면 최상위는 빌더가 놓은 자리 그대로 둔다. arrangeSystem 은 단계
 %  순서를 모르므로 gnc_chain 으로 잡아 둔 열을 흩뜨린다 (check_flow 참조).
 %  선을 손질하는 lay_* 는 최상위에도 그대로 돈다 — 옮기는 것은 선이지 상자가 아니다.
+%  With KeepRoot the top level stays as the builder placed it. arrangeSystem does not know
+%  the stage order and scatters the columns set by gnc_chain (see check_flow). The line
+%  tools lay_* still run on the top level; they move lines, not boxes.
 arr = sys;
 if keepRoot, arr = arr(2:end); end
 for s = 1:numel(arr)
@@ -207,6 +280,7 @@ for s = 1:numel(arr)
 end
 
 %  --- 크기는 arrangeSystem **뒤**, 선 손질 **앞**에 정한다 ----------------
+%  --- sizes are set after arrangeSystem and before line rework -----------
 %  arrangeSystem 은 블록을 자기 기본 크기로 되돌린다 (게인은 40 px). 그래서
 %  그 앞에서 넓혀 두면 아무 소용이 없고, 식이 긴 게인은 다시 `-K-` 로 그려진다
 %  (2026-10-01: 전 주차에 26개가 그렇게 남았다).
@@ -214,6 +288,12 @@ end
 %  (같은 날: W03_1_frame_check 블록관통 2 · SB9 이름표위선 1).
 %  답은 이 사이다 — arrangeSystem 이 자리를 잡은 뒤 넓히고, **그 넓어진 크기를
 %  보고** 아래 lay_* 가 선을 놓는다.
+%  arrangeSystem resets blocks to their default size (gain 40 px), so widening before it is
+%  useless and long-expression gains are drawn as `-K-` again (2026-10-01: 26 left that way
+%  across all weeks). Widening after all lines are laid makes lines cross neighbouring blocks
+%  and run over labels (same day: W03_1_frame_check 2 block crossings, SB9 1 line over label).
+%  The answer is in between: widen after arrangeSystem has placed blocks, and let the lay_*
+%  steps below lay lines seeing the widened sizes.
 try, mss_style(m); catch, end
 
 for s = 1:numel(sys)
@@ -224,7 +304,9 @@ for s = 1:numel(sys)
     try, lay_links(sys{s});                 catch, end
     try, lay_links(sys{s});                 catch, end
     %  lay_links 가 길을 내느라 From 을 옮겨 놓았을 수 있다. 마지막에 한 번 더 끌어온다
+    %  lay_links may have moved From blocks while clearing a path; pull them back once more
     try, snug_tags(sys{s});                 catch, end
 end
 try, lay_notes(m); catch, end     % 주석도 옮긴 뒤에 견준다 (arrangeSystem 은 주석을 두고 간다)
+                                  % compare after moving notes too (arrangeSystem leaves notes behind)
 end

@@ -2,12 +2,13 @@
 
 - 작성: 충남대학교 자율운항시스템공학과 윤원근 교수
 - 저장소: <https://github.com/wkyouncnu/AVT3C-XY-Stage-Pen>
-- 매뉴얼(PDF, 한글): [docs/manual/AVT3C_XY_Stage_Pen.pdf](docs/manual/AVT3C_XY_Stage_Pen.pdf)
-- 매뉴얼(PDF, 영문): [docs/manual/AVT3C_XY_Stage_Pen_EN.pdf](docs/manual/AVT3C_XY_Stage_Pen_EN.pdf) (원본 [README_EN.md](README_EN.md))
-- 펜 기구학 보상 발췌본(PDF, 한글): [docs/manual/AVT3C_XY_Stage_Pen_Control.pdf](docs/manual/AVT3C_XY_Stage_Pen_Control.pdf) (3 장, 4.1 절, 6 장, 8.6 절, 14.6 절. `docs/make_pen_excerpt.py` 로 생성)
-- 펜 기구학 보상 발췌본(PDF, 영문): [docs/manual/AVT3C_XY_Stage_Pen_Control_EN.pdf](docs/manual/AVT3C_XY_Stage_Pen_Control_EN.pdf) (`docs/make_pen_excerpt.py --lang en` 으로 생성)
+- 매뉴얼(PDF, 한글): [2_docs/manual/AVT3C_XY_Stage_Pen.pdf](2_docs/manual/AVT3C_XY_Stage_Pen.pdf)
+- 매뉴얼(PDF, 영문): [2_docs/manual/AVT3C_XY_Stage_Pen_EN.pdf](2_docs/manual/AVT3C_XY_Stage_Pen_EN.pdf) (원본 [README_EN.md](README_EN.md))
+- 펜 기구학 보상 발췌본(PDF, 한글): [2_docs/manual/AVT3C_XY_Stage_Pen_Control.pdf](2_docs/manual/AVT3C_XY_Stage_Pen_Control.pdf) (3 장, 4.1 절, 6 장, 8.6 절, 14.6 절. `2_docs/make_pen_excerpt.py` 로 생성)
+- 펜 기구학 보상 발췌본(PDF, 영문): [2_docs/manual/AVT3C_XY_Stage_Pen_Control_EN.pdf](2_docs/manual/AVT3C_XY_Stage_Pen_Control_EN.pdf) (`2_docs/make_pen_excerpt.py --lang en` 으로 생성)
+- 스테이지 매뉴얼(Zaber): [5_references/manuals/X-LSM-E-Manual.pdf](5_references/manuals/X-LSM-E-Manual.pdf), 데이터시트 [5_references/manuals/X-LSM-E-Datasheet.pdf](5_references/manuals/X-LSM-E-Datasheet.pdf). 참고 논문 목록은 [5_references/README.md](5_references/README.md)
 
-![시스템 구성](docs/img/diagram_overview.svg)
+![시스템 구성](2_docs/img/diagram_overview.svg)
 
 *그림 1. 시스템 구성. 왼쪽 로봇 위 장비, 가운데 NUC 의 ROS 2 노드, 오른쪽 Simulink 제어기*
 
@@ -122,7 +123,7 @@ AVT-3C 는 자석 궤도로 철판에 붙는 궤도형(skid-steer) 로봇이다.
 
 ### 2.4 한 주기 (10 ms) 동안의 신호 흐름
 
-![ROS 2 노드와 토픽](docs/img/diagram_ros2.svg)
+![ROS 2 노드와 토픽](2_docs/img/diagram_ros2.svg)
 
 *그림 2. ROS 2 노드와 토픽 (형식, 필드, 단위, 주기)*
 
@@ -139,7 +140,7 @@ Simulink 제어기는 10 ms 마다 다음을 순서대로 한다.
 
 ### 2.5 Simulink 파일 네 개
 
-![Simulink 파일 4 개의 관계](docs/img/diagram_models.svg)
+![Simulink 파일 4 개의 관계](2_docs/img/diagram_models.svg)
 
 *그림 3. 네 파일의 관계*
 
@@ -151,7 +152,7 @@ Simulink 제어기는 10 ms 마다 다음을 순서대로 한다.
 
 ## 3. 좌표계와 회전행렬
 
-![좌표계](docs/img/fig_frames.png)
+![좌표계](2_docs/img/fig_frames.png)
 
 *그림 4. (a) 벽면 좌표계와 heading, (b) 바디·스테이지 좌표계*
 
@@ -175,7 +176,7 @@ $$
 | $R^{\top}(\psi)$ | 알 트랜스포즈 | 벽면 → 바디. 회전행렬은 직교행렬이므로 역행렬이 전치행렬 |
 | $a_W,\ a_B$ | – | 같은 화살표를 벽면 좌표, 바디 좌표로 쓴 성분 |
 
-![회전행렬](docs/img/fig_rotation.png)
+![회전행렬](2_docs/img/fig_rotation.png)
 
 *그림 5. 회전행렬의 열은 벽면 좌표로 쓴 바디 축이다*
 
@@ -197,7 +198,7 @@ $d$ 는 로봇에 고정된 값이므로 바디 좌표에서는 상수이지만,
 
 ### 4.1 펜 끝의 위치
 
-![기하](docs/img/fig_geometry.png)
+![기하](2_docs/img/fig_geometry.png)
 
 *그림 6. 벽면 좌표계와 펜 보상 기하 (확대, 축척 아님)*
 
@@ -255,7 +256,7 @@ $$
 
 ### 5.1 임무 단계와 제자리 회전
 
-![미션 모드](docs/img/diagram_modes.svg)
+![미션 모드](2_docs/img/diagram_modes.svg)
 
 *그림 7. 임무 단계 (Stateflow ModeChart)*
 
@@ -394,7 +395,7 @@ $$
 
 $R$ 이 직교행렬이므로 양변에 $R^{\top}$ 을 곱하면 바로 풀린다. 측정값 $\hat p$, $\hat\psi$ 를 쓰는 이유는 제어기가 아는 것이 측정값뿐이기 때문이다. 식 (12) 의 가운데 식은 바디 좌표에서 세 화살표가 이루는 삼각형이며, 그림 8 가 이를 그린 것이다.
 
-![바디 좌표의 펜 보상 삼각형](docs/img/fig_pen_body.png)
+![바디 좌표의 펜 보상 삼각형](2_docs/img/fig_pen_body.png)
 
 *그림 8. 바디 좌표에서 본 식 (12). (a) 로봇 전체 (실제 축척), (b) 스테이지 가운데 확대*
 
@@ -427,7 +428,7 @@ $$
 c_0 = \hat p + R(\hat\psi)\,d, \qquad \sigma = u^{\top}(c_0 - A), \qquad e_0 = n^{\top}(c_0 - A), \qquad p^{\star} = A + \sigma u = c_0 - e_0\,n \tag{13}
 $$
 
-![벽면 좌표의 직선과 펜 목표](docs/img/fig_pen_wall.png)
+![벽면 좌표의 직선과 펜 목표](2_docs/img/fig_pen_wall.png)
 
 *그림 9. 벽면 좌표에서 본 식 (13). (a) 직선 전체와 진행 거리 $\sigma$ (실제 축척), (b) 점선 상자 확대*
 
@@ -453,7 +454,7 @@ $\sigma$ 는 $u$ 와의 내적, 곧 화살표 $c_0 - A$ 의 직선 방향 그림
 
 ### 6.5 두 좌표를 잇는 $R^{\top}(\hat\psi)$
 
-![같은 삼각형의 벽면 성분과 바디 성분](docs/img/fig_pen_combined.png)
+![같은 삼각형의 벽면 성분과 바디 성분](2_docs/img/fig_pen_combined.png)
 
 *그림 10. 같은 세 화살표를 (a) 벽면 성분과 (b) 바디 성분으로 읽기. 가운데 화살표 $R^{\top}(\hat\psi)$ 가 (a) 를 (b) 로 바꾼다*
 
@@ -498,7 +499,7 @@ $$
 s^{\star} = s_c + 1000\,\Delta s \quad [\mathrm{mm}], \qquad s_c = 50.8\ \mathrm{mm} \tag{16}
 $$
 
-![Delta s 를 Zaber 명령으로 바꾸기](docs/img/fig_pen_stage.png)
+![Delta s 를 Zaber 명령으로 바꾸기](2_docs/img/fig_pen_stage.png)
 
 *그림 11. 식 (16). (a) 로봇에 붙은 Zaber 스테이지 위의 명령점, (b) Y 축 한 점의 세 가지 표기*
 
@@ -511,7 +512,7 @@ $$
 
 그림 11(b) 는 Y 축의 같은 점을 세 가지 눈금으로 쓴 것이다. 제어기 m 눈금의 0.0107 은 1000 을 곱해 제어기 mm 눈금의 10.72 가 되고, 50.8 을 더해 Zaber 눈금의 61.52 가 된다. 세 눈금의 가운데(0, 0, 50.8)와 양 끝($\pm 0.0508$ m, $\pm 50.8$ mm, 0 과 101.6 mm)은 모두 같은 점이다. $s_c$ 는 "스테이지를 가운데에 두고 출발하여 양쪽으로 $\pm 50.8$ mm 씩 움직일 여유를 가진다" 는 설계를 Zaber 숫자로 옮긴 값이다. 모드 3 이 아닐 때 $s^{\star} = (s_c,\ s_c)$ 인 것도 같은 이유로, 직선을 긋지 않는 동안 스테이지를 가운데에 대기시킨다. 반대로 펜 위치를 계산할 때(평가용 PenTrace)는 식 (3) 처럼 $s_c$ 를 빼고 1000 으로 나눈다.
 
-![펜 보상 계산 순서와 단위](docs/img/diagram_penchain.svg)
+![펜 보상 계산 순서와 단위](2_docs/img/diagram_penchain.svg)
 
 *그림 12. PenComp 계산 순서와 각 단계의 좌표계·단위*
 
@@ -519,7 +520,7 @@ $$
 
 ### 6.7 수치 예 종합
 
-![펜 보상 수치 예](docs/img/fig_pen_example.png)
+![펜 보상 수치 예](2_docs/img/fig_pen_example.png)
 
 *그림 13. 펜 보상 수치 예 종합 (mm). (a) 벽면, (b) 스테이지 명령, (c) 계산 단계*
 
@@ -584,7 +585,7 @@ $$
 
 ### 7.2 ZeroKey 태그 배치
 
-![태그 배치](docs/img/diagram_tags.svg)
+![태그 배치](2_docs/img/diagram_tags.svg)
 
 *그림 14. ZeroKey 태그 배치 세 안 (위에서 본 로봇, 바디 좌표)*
 
@@ -1144,9 +1145,7 @@ $$
 ```
 ├── README.md                 이 문서 (원본, 한글)
 ├── README_EN.md              영문판 (같은 장·식·그림 번호)
-├── docs/img/                 다이어그램 SVG (영문판은 *_en.svg), 수식 그림 PNG (src/make_fig_math.m, 펜 보상 그림 src/make_fig_pen.m)
-├── docs/manual/              README·README_EN 에서 생성한 PDF (통합본, 펜 제어 발췌본, 각각 한글·영문)
-├── 1_시뮬레이션/
+├── 1_simulation/             가상 실험·실기 Simulink 모델과 스크립트 (주석 한·영 병기)
 │   ├── XY_setup.m            파라미터 (먼저 실행)
 │   ├── build_xy_models.m     모델 생성기 — 두 .slx 는 이것으로만 만듦
 │   ├── XY_1_pen_sim.slx      가상 실험 (제어기 + 운동모델 + 센서, ROS 2 루프백)
@@ -1159,7 +1158,15 @@ $$
 │   ├── XY_plot.m             결과 그림
 │   ├── img/                  모델 그림, 결과 그래프
 │   └── video/                결과 동영상
-├── 3_로봇탑재코드/zaber_stage_node.py
+├── 2_docs/
+│   ├── img/                  다이어그램 SVG (영문판은 *_en.svg), 수식 그림 PNG (src/make_fig_math.m, 펜 보상 그림 src/make_fig_pen.m)
+│   ├── manual/               README·README_EN 에서 생성한 PDF (통합본, 펜 제어 발췌본, 각각 한글·영문)
+│   └── make_pen_excerpt.py   펜 제어 발췌본 생성
+├── 3_robot_code/zaber_stage_node.py   NUC 에서 도는 스테이지 노드 (RS-232)
+├── 4_CAD/                    로봇 STL (저장소에 올리지 않음)
+├── 5_references/
+│   ├── manuals/              Zaber X-LSM-E 사용자 매뉴얼, 데이터시트 (PDF)
+│   └── README.md             참고 논문 목록 (DOI). 논문 PDF 는 저작권 때문에 저장소에 올리지 않음
 └── _tools/                   Simulink 정리·검사 도구 (paint_roles, check_lines, check_flow, check_tags …)
 ```
 
@@ -1217,7 +1224,7 @@ $$
 
 ## 11. 제어기 계층 구조
 
-![제어 구조](docs/img/diagram_control.svg)
+![제어 구조](2_docs/img/diagram_control.svg)
 
 *그림 15. 제어 구조와 신호 단위 (위: 로봇 macro 루프, 아래: 스테이지 micro 루프, 맨 아래: 측정 되먹임)*
 
@@ -1343,7 +1350,7 @@ $$
 
 ## 13. Simulink 모델 구성
 
-![XY_1_pen_sim 최상위](1_시뮬레이션/img/XY_1_pen_sim.png)
+![XY_1_pen_sim 최상위](1_simulation/img/XY_1_pen_sim.png)
 
 *그림 16. XY_1_pen_sim 최상위 (윗줄 제어기, 오른쪽 아래 가상 실험장, 왼쪽 아래 평가·기록·실시간 화면)*
 
@@ -1377,12 +1384,12 @@ $$
 
 | 서브시스템 그림 | 파일 |
 |---|---|
-| 미션 | `1_시뮬레이션/img/XY_1_pen_sim__Mission.png` |
-| 로봇 제어 | `1_시뮬레이션/img/XY_1_pen_sim__RobotCtrl.png`, `__RobotCtrl__M3_Line.png` |
-| 펜 보상 | `1_시뮬레이션/img/XY_1_pen_sim__PenCtrl.png` |
-| 로봇 운동모델 | `1_시뮬레이션/img/XY_1_pen_sim__RobotPlant.png` |
-| 스테이지 모델 | `1_시뮬레이션/img/XY_1_pen_sim__StagePlant.png` |
-| 센서 | `1_시뮬레이션/img/XY_1_pen_sim__Sensors.png` |
+| 미션 | `1_simulation/img/XY_1_pen_sim__Mission.png` |
+| 로봇 제어 | `1_simulation/img/XY_1_pen_sim__RobotCtrl.png`, `__RobotCtrl__M3_Line.png` |
+| 펜 보상 | `1_simulation/img/XY_1_pen_sim__PenCtrl.png` |
+| 로봇 운동모델 | `1_simulation/img/XY_1_pen_sim__RobotPlant.png` |
+| 스테이지 모델 | `1_simulation/img/XY_1_pen_sim__StagePlant.png` |
+| 센서 | `1_simulation/img/XY_1_pen_sim__Sensors.png` |
 
 MATLAB Function 블록별 입출력 (각 블록 코드 머리에 한·영 같은 내용의 주석)
 
@@ -1412,7 +1419,7 @@ MATLAB Function 블록별 입출력 (각 블록 코드 머리에 한·영 같은
 | Encoder | 캐리지 위치 [m] | `stage_pos` [mm] | $1000\,x$, 0–101.6 포화 | `get pos` |
 | PenTraceFcn (평가) | `q_true`, `stage_pos` [mm] | 참 펜 위치 [m], 횡오차 [m] | $P = p + R(\psi)(d + (s - s_c)/1000)$ | 그림 12 (6)–(7) |
 
-![StagePlant](1_시뮬레이션/img/XY_1_pen_sim__StagePlant.png)
+![StagePlant](1_simulation/img/XY_1_pen_sim__StagePlant.png)
 
 *그림 17. StagePlant 내부 (명령 ZOH → 지연 → 펌웨어 궤적 → 서보 → 엔코더)*
 
@@ -1512,7 +1519,7 @@ StagePlant 는 Zaber 펌웨어를 블랙박스로 본 모델이다. 명령 ZOH(2
 | 단계 | 명령 | 결과 |
 |---|---|---|
 | 1 | `git clone https://github.com/wkyouncnu/AVT3C-XY-Stage-Pen.git` | 저장소 |
-| 2 | MATLAB 에서 `1_시뮬레이션` 으로 이동, `XY_setup` | 경로·파라미터, `ROS_DOMAIN_ID` 77 |
+| 2 | MATLAB 에서 `1_simulation` 으로 이동, `XY_setup` | 경로·파라미터, `ROS_DOMAIN_ID` 77 |
 | 3 | `build_xy_models` | 두 .slx 생성, 검사 결과 출력 |
 | 4 (NUC) | `pip install zaber-motion` | 스테이지 노드 의존성 |
 
@@ -1534,7 +1541,7 @@ StagePlant 는 Zaber 펌웨어를 블랙박스로 본 모델이다. 명령 ZOH(2
 - 실기 모델은 실시간 1×
 - 미션이 끝나면 (모드 5) 자동 정지
 
-![대시보드](1_시뮬레이션/img/XY_1_dashboard.png)
+![대시보드](1_simulation/img/XY_1_dashboard.png)
 
 *그림 18. 실시간 대시보드 (왼쪽 3D 벽면·펜 확대, 가운데 v·ω 명령 대비 실제와 펜 횡오차, 오른쪽 스테이지 캐리지와 현재 게인)*
 
@@ -1634,11 +1641,11 @@ Run 버튼으로 실행할 때의 동작
 - 두 축 모두 움직임. X (진행 방향) 는 2.8 mm 폭으로 거의 고정, Y (직선 법선) 가 횡오차를 지움 (식 (34))
 - 실행마다 수치 차이 있음 (18.5 절)
 
-![벽면 결과](1_시뮬레이션/img/XY_1_result_wall.png)
+![벽면 결과](1_simulation/img/XY_1_result_wall.png)
 
 *그림 19. 벽면 궤적 (파랑 목표 직선, 빨강 보상 펜 자국, 회색 보상 없는 펜 자국, 점선 로봇 태그 경로)*
 
-![시간 응답](1_시뮬레이션/img/XY_1_result_time.png)
+![시간 응답](1_simulation/img/XY_1_result_time.png)
 
 *그림 20. 펜 횡오차, 스테이지 위치, 모드, 펜 상태*
 
@@ -1646,13 +1653,13 @@ Run 버튼으로 실행할 때의 동작
 
 | 파일 | 내용 |
 |---|---|
-| `1_시뮬레이션/video/XY_1_live_view.mp4` | 그림 18 대시보드, 1600 × 900, 20 fps, 23.9 s (이전 판 플랜트로 녹화, 시뮬레이션 47.8 s 를 2 배속) |
+| `1_simulation/video/XY_1_live_view.mp4` | 그림 18 대시보드, 1600 × 900, 20 fps, 23.9 s (이전 판 플랜트로 녹화, 시뮬레이션 47.8 s 를 2 배속) |
 
 - `XY_record_live` 로 생성. 기록 재생 + 화면 밖 렌더링이므로 녹화 중 다른 창·메신저가 찍히지 않음
 
 ### 18.5 내부 루프와 오차 요인 진단
 
-대시보드의 명령 대비 실제 값 (그림 18 가운데) 으로 내부 루프와 게인을 점검한 결과. 모든 표는 8.2 절 수정 후 플랜트로 2026-11-11 재실행한 값 (`1_시뮬레이션/logs/gain_sweep_a.mat`, `gain_sweep_b.mat`, `error_budget.mat`).
+대시보드의 명령 대비 실제 값 (그림 18 가운데) 으로 내부 루프와 게인을 점검한 결과. 모든 표는 8.2 절 수정 후 플랜트로 2026-11-11 재실행한 값 (`1_simulation/logs/gain_sweep_a.mat`, `gain_sweep_b.mat`, `error_budget.mat`).
 
 요 각속도 떨림 (경우마다 2 회 실행)
 
@@ -1747,7 +1754,7 @@ Run 버튼으로 실행할 때의 동작
 
 `XY_compare.m` 으로 기준 조건 (1.2 m 직선, 30 mm/s) 에서 한두 값만 바꿔 10 경우를 같은 ROS 2 루프백 모델로 실행함. 경우마다 1 회 실행. 같은 조건 반복 시 펜 RMS 차이는 0.02 mm 이하 (18.5 절) 이므로 0.05 mm 이상 차이는 실제 차이로 봄.
 
-![비교 막대](1_시뮬레이션/img/XY_compare_bar.png)
+![비교 막대](1_simulation/img/XY_compare_bar.png)
 
 *그림 21. 경우별 펜 횡오차 (왼쪽 스테이지 보상, 오른쪽 같은 주행에서 스테이지를 중앙에 고정했을 때)*
 
@@ -1768,7 +1775,7 @@ Run 버튼으로 실행할 때의 동작
 
 - 8.2 절 수정 (적분점 = 중심, 모드 1 = 중심 기준) 후 2026-11-11 재실행 값. 이전 판 대비 가장 큰 차이는 스테이지 느슨 (1.73 → 1.20 mm)
 
-![비교 시계열](1_시뮬레이션/img/XY_compare_time.png)
+![비교 시계열](1_simulation/img/XY_compare_time.png)
 
 *그림 22. 위: 펜 횡오차 (스테이지 느슨 · 기준 · 센서 잡음 0), 아래: 스테이지 Y (기준 · 중앙 유지)*
 
@@ -1848,7 +1855,7 @@ Run 버튼으로 실행할 때의 동작
 | `XY_2_pen_ros2_v2.slx` | 실기 2 판 (제어기만, 도메인 0) |
 | 생성 | `XY_setup; build_xy_models([1 2], 2)` (1 판은 `build_xy_models` 그대로) |
 
-![InnerPI](1_시뮬레이션/img/XY_1_pen_sim_v2__InnerPI.png)
+![InnerPI](1_simulation/img/XY_1_pen_sim_v2__InnerPI.png)
 
 *그림 23. 2 판 InnerPI 상자 (오차 계산 → 이산 PI 두 개, 모드 전환 시 적분 리셋)*
 
@@ -1885,7 +1892,7 @@ $$
 | 2 판, $g_\omega$ = 1, 리셋 없음 (실기와 같음) | 1.22 | 3.7 | 20.6 | 33.0–70.8 | 0.0312 / 0.0306 | 1.6 |
 | 2 판, $g_\omega$ = 0.1443, 리셋 없음 | 1.43 | 4.6–4.7 | 20.1 | 52.1–70.6 | 0.0308 / 0.0305 | 5.4 |
 
-![2 판 시간 응답](1_시뮬레이션/img/XY_1v2_result_time.png)
+![2 판 시간 응답](1_simulation/img/XY_1v2_result_time.png)
 
 *그림 24. 2 판 기본 설정의 펜 횡오차, 스테이지 위치, 모드*
 

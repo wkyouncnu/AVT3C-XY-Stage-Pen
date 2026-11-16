@@ -19,11 +19,15 @@ function [Mp, ts, tr] = step_metrics(t, y, yf, t0)
 %   measured an angle by a different definition from the lecture's, disagreed
 %   by 0.56 deg, and failed a correct submission.
 %
+%   계단 전에 5 초를 도는 모델은 그렇지 않으면 정착시간을 5 초 길게 보고하며,
+%   숫자가 여전히 그럴듯해 보여 놓치기 쉽다.
 %   A model that runs five
 %   seconds before the step would otherwise report a settling time five
 %   seconds too long, and the error is easy to miss because the number still
 %   looks reasonable.
 %
+%   정착시간은 응답이 2 % 띠에 처음 들어온 순간이 아니라 띠 밖에 있던 마지막
+%   순간이다. 띠에 다시 들어왔다 다시 나가는 응답은 정착한 것이 아니다.
 %   Settling time is the last instant the response is outside the 2 % band,
 %   not the first instant it enters: a response that re-enters the band and
 %   leaves it again has not settled.

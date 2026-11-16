@@ -1,20 +1,25 @@
 function s = add_pose_subscriber(m, pos, topic, ts, navCode, outs)
 %ADD_POSE_SUBSCRIBER  Gazebo 의 odometry 를 받아 NED 항법량으로 바꾸는 상자.
+%                     A box that receives Gazebo odometry and converts it to NED navigation quantities.
 %
 %   add_pose_subscriber(m, [x y], topic, 'Ts_ctrl', navCode, ...
 %                       {'pn','pe','psi','u','r','beta','chi','U'})
 %
-%   안에 들어가는 것
-%     Subscribe      토픽에서 nav_msgs/Odometry 를 받는다
-%     IsNew(Display) 새 메시지가 왔는지 눈으로 볼 수 있게
-%     Bus Selector   필요한 아홉 필드만 꺼낸다
+%   안에 들어가는 것 / contents
+%     Subscribe      토픽에서 nav_msgs/Odometry 를 받는다 / receives nav_msgs/Odometry from the topic
+%     IsNew(Display) 새 메시지가 왔는지 눈으로 볼 수 있게 / shows whether a new message arrived
+%     Bus Selector   필요한 아홉 필드만 꺼낸다 / extracts only the nine needed fields
 %     Nav            ENU -> NED 변환. 원점 상수 두 개를 안에 갖는다
+%                    ENU -> NED conversion; holds the two origin constants inside
 %
 %   NAVCODE 의 인자 순서는 Bus Selector 의 출력 아홉 개 다음에 orgN, orgE 다.
+%   The argument order of NAVCODE is the nine Bus Selector outputs, then orgN, orgE.
 %
-%   왜 상자에 넣는가
+%   왜 상자에 넣는가 / why a box
 %       이 다섯 블록은 "배가 어디 있는지 읽는다" 한 가지 일을 한다. 최상위에
 %       펼쳐 놓으면 Bus Selector 에서 나오는 선 아홉 개가 화면을 가로지른다.
+%       These five blocks do one job: "read where the vessel is". Spread out at the top
+%       level, the nine lines leaving the Bus Selector would cross the whole screen.
 
 if nargin < 4 || isempty(ts), ts = '-1'; end
 
@@ -39,22 +44,32 @@ set_param([s '/Sel'], 'OutputSignals', ...
 %  입력 11 개의 간격이 52 px 이상이어야 orgN · orgE 두 Constant(키 30) 사이에
 %  이름표(14 px) 자리가 남는다. 460 px 이던 때는 간격이 42 px 라 orgN 의 이름이
 %  orgE 에 가려졌다 (2026-09-19). 키 = 52 x (11-1) + 40 = 560 px (row_feed 의 권고)
+%  Nav is built to take the nine Bus Selector outputs + the two origins.
+%  The pitch of the 11 inputs must be at least 52 px so that a name label (14 px) fits
+%  between the two Constants orgN · orgE (height 30). At 460 px the pitch was 42 px and
+%  orgN's name was hidden by orgE (2026-09-19). Height = 52 x (11-1) + 40 = 560 px (row_feed's advice)
 add_block('simulink/User-Defined Functions/MATLAB Function', ...
           [s '/Nav'], 'Position', [520 180 700 740]);
 ch = sfroot().find('-isa','Stateflow.EMChart','Path',[s '/Nav']);
 ch.Script = navCode;
 %  포트가 생기며 블록이 자라고, 그때의 포트 위치는 저장 뒤와 다르다. 다시 놓는다
+%  The block grows as ports appear, and port positions then differ from after saving. Place it again
 set_param([s '/Nav'], 'Position', [520 180 700 740]);
 
 %  Bus Selector 의 아홉 출력을 Nav 의 1~9 번 입력 높이에 **정확히** 맞춘다.
 %  두 블록의 포트 간격이 다르면 아홉 선이 전부 몇 px 기운 사선이 된다
 %  (2026-09-19 W05~W09 PoseSubscriber, 9건씩). 높이를 계산하지 않고 읽어서 맞춘다.
+%  Match the nine Bus Selector outputs **exactly** to the heights of Nav inputs 1~9.
+%  If the two blocks' port pitches differ, all nine lines become diagonals tilted a few px
+%  (2026-09-19 W05~W09 PoseSubscriber, 9 each). Heights are read, not calculated.
 a = port_xy(s, 'Nav', 'Inport', 1);
 b = port_xy(s, 'Nav', 'Inport', 9);
 fit_span(s, 'Sel', 'Outport', a(2), b(2));
 
 %  Subscribe 의 2번(메시지)을 Sel 의 입력 높이에 둔다 -> 직선.
 %  1번(새 메시지 여부)은 Sel 위로 올라가 IsNew 로 간다 (꺾임 2회, Sel 을 넘지 않는다)
+%  Put Subscribe output 2 (message) at Sel's input height -> straight line.
+%  Output 1 (new-message flag) goes up over Sel to IsNew (2 bends, does not cross Sel)
 align_to(s, 'OdomSub', 'Outport', port_xy(s, 'Sel', 'Inport', 1), 2);
 q  = get_param([s '/Sel'], 'Position');
 yN = q(2) - 50;
@@ -68,7 +83,7 @@ pd2 = get_param([s '/Sel'],    'PortHandles');
 draw_line(s, po.Outport(1), pd.Inport(1), [p1; p1(1)+30 p1(2); p1(1)+30 pn(2); pn]);
 draw_line(s, po.Outport(2), pd2.Inport(1));
 
-%  원점은 신호가 아니라 설정이다. 상자 안에 둔다
+%  원점은 신호가 아니라 설정이다. 상자 안에 둔다 / the origin is a setting, not a signal; keep it inside the box
 add_block('simulink/Sources/Constant', [s '/orgN'], ...
           'Position', [390 560 465 590], 'Value','origin_north');
 add_block('simulink/Sources/Constant', [s '/orgE'], ...

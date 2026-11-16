@@ -2,9 +2,10 @@ function [n, h, rows] = check_straight(mdl, verbose)
 %CHECK_STRAIGHT  선이 얼마나 곧은지 센다 — 꺾임 0·1·2·3회 이상의 분포.
 %                Count how straight the wires are: a histogram of bends per branch.
 %
-%   n = check_straight('W06_5_dock')      % 꺾임 2회 이상인 가지의 수
-%   check_straight(mdl, true)             % 어느 선이 몇 번 꺾이는지 나열
+%   n = check_straight('W06_5_dock')      % 꺾임 2회 이상인 가지의 수 / branches with 2+ turns
+%   check_straight(mdl, true)             % 어느 선이 몇 번 꺾이는지 나열 / list turns per line
 %   [n, h, rows] = check_straight(mdl)    % h = [0회 1회 2회 3회+], rows = 자세한 표
+%                                         % h = [0 1 2 3+ turns], rows = detailed table
 %
 %   무엇이 목표인가 / what the target is
 %
@@ -13,27 +14,43 @@ function [n, h, rows] = check_straight(mdl, verbose)
 %       **직선율을 올리고 꺾임 2회 이상을 0 으로 내리는 것**이다. 0 회가 가장 좋고,
 %       통로를 갈아타야 하는 되먹임선은 1 회가 어쩔 수 없다. 2 회는 배치를 고쳐
 %       풀 수 있는 경우가 대부분이다.
+%       Instructor's instruction 2026-10-15: "All lines straight, without bends, where
+%       possible." So the target is not "zero lines with 3+ turns" (`check_lines` covers that)
+%       but raising the straight ratio and bringing lines with 2+ turns to zero. Zero turns is
+%       best; a feedback line that must change lanes unavoidably has one. Two turns can mostly
+%       be resolved by fixing the layout.
 %
 %       꺾임 수는 `check_lines` 와 같은 셈법을 쓴다 — 점의 수에서 둘을 뺀 값이다.
 %       두 점짜리 선이 직선이다.
+%       Turns are counted as in `check_lines`: number of points minus two.
+%       A two-point line is straight.
 %
 %   무엇이 직선을 깨뜨리나 / what bends a wire
 %
 %     1) 포트 높이가 어긋남 — 블록 가운데를 맞추고 포트를 맞추지 않은 경우.
 %        `align_to(sys, 블록, 'Inport', port_xy(sys, 앞블록, 'Outport', k))` 로 푼다
+%        Port heights differ: block centres were aligned, not ports.
+%        Fix with `align_to(sys, block, 'Inport', port_xy(sys, prevBlock, 'Outport', k))`
 %     2) 선을 긋고 **나서** 블록을 옮김 — Simulink 는 끝점만 당기고 가운데 점을
 %        두므로 옛 길이 남는다. `flatten_lines(mdl)` 이 집어낸다
+%        Block moved after the line was drawn: Simulink pulls only end points and keeps the
+%        middle points, so the old path remains. `flatten_lines(mdl)` picks these up
 %     3) 몇 px 짜리 계단 — 사선과 원인이 같다. `square_lines(mdl)` 이 편다
+%        Small steps of a few px: same cause as diagonals. `square_lines(mdl)` straightens them
 %     4) 되먹임선이 통로를 갈아탐 — 1 회가 정상이다. 합산점 **아래**에서 올려
 %        붙이면 그 1 회로 끝난다 (`check_sums` 의 (5) 와 짝이다)
+%        Feedback line changing lanes: one turn is normal. Bringing it up from below the
+%        junction finishes with that one turn (paired with item (5) of `check_sums`)
 %
 %   돌려주는 값 / what comes back
 %
-%       n       꺾임 2회 이상인 가지의 수. 0 이 목표다
-%       h       [0회 1회 2회 3회+] 가지 수
+%       n       꺾임 2회 이상인 가지의 수. 0 이 목표다 / branches with 2+ turns; target 0
+%       h       [0회 1회 2회 3회+] 가지 수 / branch counts for [0 1 2 3+] turns
 %       rows    2회 이상 꺾인 가지의 목록 (시스템 · 선 이름 · 꺾임 수)
+%               list of branches with 2+ turns (system, line name, turns)
 %
 %   직선율은 h(1) / sum(h) 다. 모델 전체를 돌 때는 이 값을 같이 적어 둔다.
+%   The straight ratio is h(1) / sum(h). Record it too when running over all models.
 
 if nargin < 2, verbose = false; end
 if ~bdIsLoaded(bdroot_name(mdl)), load_system(mdl); end
@@ -69,6 +86,7 @@ for i = 1:numel(lines)
     p = get_param(lines(i), 'Points');
 
     %  길이 0 인 토막은 꺾임이 아니다. 블록을 옮긴 뒤 남은 흔적이다
+    %  Zero-length segments are not turns; they are traces left after moving a block
     keep = [true; any(abs(diff(p,1,1)) > 0.5, 2)];
     p    = p(keep,:);
 
@@ -87,6 +105,7 @@ end
 % =====================================================================
 function s = line_name(lh)
 %LINE_NAME  선을 사람이 알아볼 이름으로 — 신호 이름이 없으면 출발·도착 블록으로.
+%   Human-readable name of a line: the signal name, or source/destination blocks if none.
 s = '';
 try, s = get_param(lh, 'Name'); catch, end
 if ~isempty(s), return, end

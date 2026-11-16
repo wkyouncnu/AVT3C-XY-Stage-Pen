@@ -1,5 +1,7 @@
 function n = snug_tags(sys, varargin)
 %SNUG_TAGS  Goto 는 출발 포트 옆, From 은 도착 포트 옆으로 끌어와 선을 직선으로 만든다.
+%           Pulls each Goto beside its source port and each From beside its destination
+%           port so the lines become straight.
 %
 %   n = snug_tags('W04_3_heading_offline')
 %   n = snug_tags(sys, 'Gap', 30)
@@ -7,6 +9,8 @@ function n = snug_tags(sys, varargin)
 %   왜 이 도구가 필요한가 / why this exists
 %       2026-10-01 교수 지시 — "Goto 부분은 실제 신호에 최대한 가까이 모아 주고,
 %       선들도 꺾이는 부분을 최소화해서 해 줄 것."
+%       Instructor's instruction 2026-10-01 — "Gather the Goto parts as close to the
+%       actual signal as possible, and keep line bends to a minimum."
 %
 %       빌더는 `drop_tag` · `feed_from` 으로 태그를 포트 옆에 놓는다. 그런데 그
 %       뒤에 도는 배치 도구가 태그를 **멀리 끌고 간다.** Goto 는 출력이 없고
@@ -14,35 +18,58 @@ function n = snug_tags(sys, varargin)
 %       쓸어 내리고, `arrangeSystem` 은 태그를 층 끝으로 밀어낸다. 그래서
 %       `Go_N` 이 제 신호에서 1000 px 아래에 앉고, 잇는 선이 길게 꺾여 내려갔다
 %       (2026-10-01 W04_3_heading_offline 에서 교수가 직접 고쳐 보고 지적).
+%       The builder places tags beside ports with `drop_tag` / `feed_from`. But the layout
+%       tools run afterwards **drag tags far away**. A Goto has inputs and no output, so
+%       `lay_sinks` treats it as a sink and sweeps it down into the sink area, and
+%       `arrangeSystem` pushes tags to the end of the layer. So `Go_N` sat 1000 px below its
+%       signal and the joining line bent a long way down (pointed out by the instructor,
+%       who fixed W04_3_heading_offline by hand on 2026-10-01).
 %
 %       이 도구는 **마지막에 한 번 더** 태그를 제 신호 옆으로 끌어온다.
+%       This tool pulls the tags beside their signals **once more at the end**.
 %
 %           나쁨                                좋음
 %           Alloc ──┐                           Alloc ──▶[Go_N]
 %                   │ (1000 px 아래로)
 %                 [Go_N]
+%           (나쁨 bad: 1000 px 아래로 = 1000 px down; 좋음 good)
 %
 %   무엇을 지키는가 / what it guarantees
 %       옮긴 자리가 다른 블록·이름표·선과 포개지지 않는지 `spot_free` 로 먼저
 %       재고, 새로 그을 가로 토막이 남의 세로·가로 토막과 통로를 나눠 쓰지
 %       않는지도 본다. 하나라도 걸리면 **그 태그는 그대로 둔다.** 어설프게
 %       옮겨 다른 선을 망치는 것보다 낫다 (lay_links 와 같은 태도).
+%       `spot_free` first checks that the new spot does not overlap other blocks, labels
+%       or lines, and the new segments are checked for sharing a lane with others'
+%       vertical or horizontal segments. If anything fails, **the tag is left as is**.
+%       That is better than a clumsy move that ruins other lines (same stance as lay_links).
 %
 %   무엇을 건드리지 않는가 / what does not change
 %       연결 · 게인 · 태그 이름(GotoTag)은 한 자도 바뀌지 않는다. 옮기는 것은
 %       태그 블록의 **자리**와 그 한 가닥 선의 모양뿐이다.
+%       Connections, gains and tag names (GotoTag) do not change by a single character.
+%       Only the tag block's **position** and the shape of its one line are changed.
 %
-%   NAME/VALUE
+%   이름/값 / NAME/VALUE
 %     'Gap'   포트에서 태그까지의 가로 거리 [px]. 기본 30
+%             horizontal distance from port to tag [px]. Default 30
 %     'Tries' 자리가 차 있을 때 더 밀어 볼 거리들 [px]. 기본 [0 40 90 150 220]
 %             밖으로 다 밀어 본 뒤에는 **한 번 당겨 본다** (Gap 보다 15 px 가까이).
 %             Goto 와 From 이 같은 통로에서 마주 보는 자리가 있다 — 2026-10-15
 %             W06_1_point 의 `InnerLoop -> Go_FR … Fr_FR -> MotionModel` 은
 %             220 px 틈에 태그 둘(80+70 px)이 들어가야 해서 30 px 자리에서는
 %             두 상자가 15 px 겹친다. 하나가 당겨 앉으면 둘 다 직선이 된다
+%             extra distances [px] to try when the spot is taken. Default [0 40 90 150 220].
+%             After pushing outward, it **tries pulling in once** (15 px closer than Gap).
+%             Some places have a Goto and a From facing each other in one lane — on
+%             2026-10-15 `InnerLoop -> Go_FR … Fr_FR -> MotionModel` in W06_1_point had to
+%             fit two tags (80+70 px) into a 220 px gap, so at 30 px the two boxes overlapped
+%             by 15 px. With one pulled in, both become straight
 %     'Passes' 다시 돌아 볼 횟수. 기본 5 (옮긴 것이 없으면 그 자리에서 그친다)
+%             number of repeat passes. Default 5 (stops early when nothing moved)
 %
 %   돌려주는 값은 자리를 옮긴 태그의 수다.
+%   The return value is the number of tags moved.
 
 p = inputParser;
 p.addParameter('Gap',    30);
@@ -57,6 +84,7 @@ blks = blks(~strcmp(blks, sys));
 if isempty(blks), return, end
 
 %  Goto 를 먼저, From 을 뒤에 — 앞에서 자리를 비워 주면 뒤가 수월하다.
+%  Goto first, From after — space freed by the first makes the second easier.
 kind = cell(numel(blks),1);
 for i = 1:numel(blks), kind{i} = get_param(blks{i}, 'BlockType'); end
 order = [find(strcmp(kind,'Goto'))' find(strcmp(kind,'From'))'];
@@ -66,6 +94,11 @@ order = [find(strcmp(kind,'Goto'))' find(strcmp(kind,'From'))'];
 %  자리를 쓰면 된다. 순서를 안 두면 비켜 앉을 태그가 이웃 포트의 높이를 먼저
 %  차지해 **직선으로 앉을 수 있던 태그를 밀어낸다** — 2026-10-15 W06_1_point 에서
 %  `Go_y_ref` 가 120 px 아래로 비켜 앉아 `Go_gate` 의 높이(y = 220)를 덮었다.
+%  Within that, **tags that can sit in a straight line choose first**. Tags that must step aside
+%  (their port also branches to other blocks) bend once anyway, so they take what is left.
+%  Without this order, a stepping-aside tag takes a neighbour port's height first and **pushes
+%  out a tag that could have been straight** — on 2026-10-15 in W06_1_point `Go_y_ref` stepped
+%  120 px down and covered the height of `Go_gate` (y = 220).
 rank = zeros(1, numel(blks));
 for i = order, rank(i) = tag_rank(sys, blks{i}, kind{i}); end
 [~, k] = sort(rank(order), 'ascend');
@@ -76,6 +109,11 @@ order  = order(k);
 %  노린다 — 맨 아래 하나만 옮겨지고 나머지는 그대로 남는다 (2026-10-14
 %  W06_3_thrust 에서 Fr_v 가 OuterLoop 선의 통로에 남아 겹침·블록관통 3건).
 %  아래 것이 비켜 주면 위 것의 자리가 열리므로, 옮긴 것이 없을 때까지 다시 돈다
+%  One pass leaves tags blocking each other. With five tags lined up one slot above their ports,
+%  the first aims at the second's spot and the second at the third's — only the bottom one moves
+%  and the rest stay (2026-10-14 W06_3_thrust: Fr_v stayed in the OuterLoop line's lane, 3
+%  overlaps/block crossings). When the lower one moves, the upper one's spot opens, so passes
+%  repeat until nothing moves
 for pass = 1:o.Passes
     moved = 0;
     for i = order
@@ -95,6 +133,7 @@ end
 % =========================================================================
 function moved = snug_goto(sys, blk, nm, o)
 %  Goto 의 입력 포트를 출발 포트와 **같은 높이**, 한 칸 오른쪽에 둔다.
+%  Put the Goto's input port at the **same height** as the source port, one slot to the right.
 moved = 0;
 ph = get_param(blk, 'PortHandles');
 if numel(ph.Inport) ~= 1, return, end
@@ -102,7 +141,7 @@ dp = ph.Inport(1);
 sp = src_of(sys, dp);
 if sp <= 0, return, end
 
-a = get_param(sp, 'Position');              % 출발 포트
+a = get_param(sp, 'Position');              % 출발 포트 / source port
 r = get_param(blk, 'Position');
 w = r(3)-r(1);  h = r(4)-r(2);
 
@@ -111,6 +150,11 @@ w = r(3)-r(1);  h = r(4)-r(2);
 %  2026-10-15 W06_1_point 의 `Fr_gate` 가 제 열에서 90 px 튀어나온 채로 남았다.
 %  교수 지시 2026-10-15 — "가능하면 위치도 통일해서… 가로 세로도 정렬 되도록."
 %  같은 블록에 붙는 태그는 Gap 이 같으므로, 제 자리에 앉히면 열이 저절로 맞는다.
+%  If it already sits **in its own spot**, there is nothing to do. Its spot is the port height,
+%  Gap to the right of the port. Accepting "close enough" makes the columns ragged — on
+%  2026-10-15 `Fr_gate` in W06_1_point stayed 90 px out of its column.
+%  Instructor's instruction 2026-10-15 — "Unify positions where possible... so rows and columns
+%  line up." Tags on the same block share the same Gap, so seating each in its spot aligns the column.
 if abs(mid(r) - a(2)) < 0.5 && abs((r(1) - a(1)) - o.Gap) <= 2, return, end
 
 seg = lanes(sys, nm);
@@ -121,8 +165,13 @@ gaps = try_gaps(o);
 %  (2026-10-14 W06_1_point — Go_x_ref 가 Guidance/1 -> OuterLoop/1 통로에 앉아
 %   직선이던 선이 215 -> 195 -> 345 -> 70 으로 돌아갔다).
 %  그때는 1) 을 건너뛰고 포트 가까이에서 위아래로 비킨다
+%  If another line from the same port goes **further right**, that height is that line's lane.
+%  A tag placed there makes the line detour around it with three bends
+%  (2026-10-14 W06_1_point — Go_x_ref sat in the Guidance/1 -> OuterLoop/1 lane and a once
+%   straight line detoured 215 -> 195 -> 345 -> 70).
+%  In that case step 1) is skipped and the tag steps up or down near the port
 if ~right_run(sp, a, blk)
-    %  1) 같은 높이 — 선은 수평 직선, 꺾임 0 회
+    %  1) 같은 높이 — 선은 수평 직선, 꺾임 0 회 / same height — straight horizontal line, 0 bends
     for g = gaps
         x = round(a(1) + g);  y = round(a(2));
         if try_put(sys, blk, nm, [x, y-h/2, x+w, y+h/2], [a; x y], ...
@@ -137,6 +186,13 @@ end
 %     앉아 그 포트의 태그가 직선으로 못 나간다 — 2026-10-15 W06_1_point 에서
 %     Guidance 의 2 번 출력 태그(`Go_y_ref`)가 60 px 아래로 비켜 3 번 출력
 %     높이(y = 170)를 덮었고, 그래서 `Go_psi_ref` 가 두 번 꺾여 내려갔다.
+%  2) If every spot beside is taken, step up or down **near the port** (1 bend).
+%     Not sending it far is the point — a tag belongs beside its signal.
+%
+%     It steps toward the **outer side** of the port row. Stepping inward lands on a neighbour
+%     port's height and that port's tag cannot go straight — on 2026-10-15 in W06_1_point the
+%     tag of Guidance output 2 (`Go_y_ref`) stepped 60 px down and covered the height of
+%     output 3 (y = 170), so `Go_psi_ref` went down with two bends.
 for dy = aside_order(sp)
     for g = gaps
         x = round(a(1) + g);  y = round(a(2) + dy);
@@ -149,18 +205,22 @@ end
 % =========================================================================
 function moved = snug_from(sys, blk, nm, o)
 %  From 의 출력 포트를 도착 포트와 **같은 높이**, 한 칸 왼쪽에 둔다.
+%  Put the From's output port at the **same height** as the destination port, one slot to the left.
 moved = 0;
 ph = get_param(blk, 'PortHandles');
 if numel(ph.Outport) ~= 1, return, end
 dp = dst_of(ph.Outport(1));
-if numel(dp) ~= 1 || dp <= 0, return, end   % 여러 곳으로 갈라지는 From 은 둔다
+if numel(dp) ~= 1 || dp <= 0, return, end   % 여러 곳으로 갈라지는 From 은 둔다 / leave a From that branches to several places
 
-b  = get_param(dp, 'Position');             % 도착 포트
+b  = get_param(dp, 'Position');             % 도착 포트 / destination port
 db = get_param(dp, 'Parent');
 dr = get_param(db, 'Position');
 %  옆면 포트(왼·오른 테두리)만 같은 높이로 들어올 수 있다. 포트는 테두리보다
 %  몇 px 바깥에 있으므로 **블록의 x 범위 밖**이면 옆면이다. 둥근 Sum 의 2번
 %  입력처럼 x 범위 **안**에 있는 것은 아래쪽 포트다 (feed_from 과 같은 판정).
+%  Only side ports (left/right border) can be entered at the same height. Ports sit a few px
+%  outside the border, so **outside the block's x range** means a side port. One **inside** the
+%  x range, like input 2 of a round Sum, is a bottom port (same test as feed_from).
 side = b(1) <= dr(1) || b(1) >= dr(3);
 dnm  = get_param(db, 'Name');
 
@@ -171,7 +231,7 @@ if side && abs(mid(r) - b(2)) < 0.5 && abs((b(1) - r(3)) - (o.Gap + 10)) <= 2, r
 seg = lanes(sys, nm);
 gaps = try_gaps(o) + 10;
 
-%  1) 같은 높이 — 선은 수평 직선, 꺾임 0 회
+%  1) 같은 높이 — 선은 수평 직선, 꺾임 0 회 / same height — straight horizontal line, 0 bends
 if side
     for g = gaps
         x = round(b(1) - g);  y = round(b(2));
@@ -182,6 +242,8 @@ end
 
 %  2) 옆이 차 있거나 포트가 블록 **아래쪽**(둥근 Sum 의 2번)이면 포트 가까이에서
 %     위아래로 비킨다. 옆면 포트는 세로로 간 뒤 가로로, 아래쪽 포트는 그 반대다.
+%  2) If the side is taken or the port is on the block's **bottom** (input 2 of a round Sum), step
+%     up or down near the port. Side ports: vertical then horizontal; bottom ports: the reverse.
 for dy = [90 -90 60 -60 120 -120 160 -160 210 -210]
     for g = gaps
         x = round(b(1) - g);  y = round(b(2) + dy);
@@ -195,6 +257,7 @@ end
 % =========================================================================
 function ok = try_put(sys, blk, nm, rect, pts, skip, seg, port, kind)
 %TRY_PUT  RECT 가 비어 있고 PTS 가 남의 통로를 뺏지 않으면 옮기고 다시 긋는다.
+%         If RECT is free and PTS takes no other line's lane, move the tag and redraw.
 ok = false;
 if ~spot_free(sys, rect, nm, pts, skip, {nm}), return, end
 if lane_clash(seg, pts), return, end
@@ -211,6 +274,7 @@ end
 % =========================================================================
 function relink(sys, sp, dp, pts)
 %  가지 하나만 끊고 다시 긋는다. 뿌리 선을 지우면 같은 신호의 다른 가지가 사라진다
+%  Cut and redraw only one branch. Deleting the root line removes other branches of the same signal
 cut_line(sys, dp);
 draw_line(sys, sp, dp, pts);
 end
@@ -219,8 +283,11 @@ function y = mid(r), y = (r(2)+r(4))/2; end
 
 function r = tag_rank(sys, blk, kind)
 %TAG_RANK  자리를 고르는 차례. 작을수록 먼저다.
+%          Order of choosing spots. Smaller goes first.
 %   1 직선으로 앉을 수 있는 Goto   2 비켜 앉을 Goto
 %   3 옆면 포트로 들어가는 From     4 아래쪽 포트로 들어가는 From (둥근 Sum 의 2번)
+%   1 Goto that can sit straight    2 Goto that must step aside
+%   3 From into a side port         4 From into a bottom port (input 2 of a round Sum)
 r = 4;
 ph = get_param(blk, 'PortHandles');
 try
@@ -244,8 +311,11 @@ end
 
 function dys = aside_order(sp)
 %ASIDE_ORDER  비켜 볼 높이들 — 포트 줄의 바깥쪽을 먼저 본다.
+%             Heights to try stepping to — the outer side of the port row first.
 %   출발 포트가 그 블록 출력 줄의 위쪽 절반이면 위로, 아래쪽 절반이면 아래로.
 %   포트가 하나뿐이면 이웃이 없으니 순서를 바꿀 까닭이 없다.
+%   Up if the source port is in the upper half of the block's output row, down if in the lower half.
+%   With only one port there are no neighbours, so no reason to change the order.
 dys = [60 -60 90 -90 120 -120 160 -160 210 -210];
 try
     ph = get_param(get_param(sp,'Parent'), 'PortHandles');
@@ -253,12 +323,15 @@ try
     if numel(y) < 2, return, end
     a2 = get_param(sp,'Position')*[0;1];
     if a2 <= (min(y) + max(y))/2
-        dys = -dys;                            % 위쪽 절반 — 위로 비킨다
+        dys = -dys;                            % 위쪽 절반 — 위로 비킨다 / upper half — step up
     end
 
     %  이웃 포트의 높이는 그 포트의 태그가 쓸 자리다. 태그 상자는 26 px 이므로
     %  30 px 안쪽으로 다가가면 두 상자가 겹친다. 그 높이들은 아예 빼고 고른다 —
     %  그래야 **직선으로 앉을 수 있는 이웃이 제 높이를 지킨다**.
+    %  A neighbour port's height is the spot its tag will use. Tag boxes are 26 px, so
+    %  coming within 30 px makes two boxes overlap. Those heights are excluded outright —
+    %  so that **a neighbour that can sit straight keeps its height**.
     other = y(abs(y - a2) > 1);
     if ~isempty(other)
         ok = arrayfun(@(d) all(abs(a2 + d - other) >= 30), dys);
@@ -270,49 +343,62 @@ end
 
 function g = try_gaps(o)
 %TRY_GAPS  포트에서 태그까지 재 볼 거리들 — 밖으로 밀어 보고, 마지막에 당겨 본다.
+%          Port-to-tag distances to try — push outward, then finally pull in.
 %   당기는 자리는 Gap 보다 15 px 가깝다. 포트에서 10 px 안쪽으로는 가지 않는다 —
 %   그만큼 붙으면 태그 상자가 포트 화살표를 덮는다.
+%   The pulled-in spot is 15 px closer than Gap. It never goes within 10 px of the port —
+%   that close, the tag box covers the port arrow.
 g = o.Gap + o.Tries;
 if o.Gap - 15 >= 10, g = [g, o.Gap - 15]; end
 end
 
 function tf = right_run(sp, a, me)
 %RIGHT_RUN  이 출발 포트에서 오른쪽으로 더 가는 **다른** 도착지가 있는가.
+%           Does this source port have **another** destination further to the right?
 %   있으면 출발 포트 높이는 그 선이 쓸 통로이므로 태그가 비켜 주어야 한다.
+%   If so, the source port height is that line's lane and the tag must step aside.
 %
 %   가지 친 선은 뿌리의 DstPortHandle 이 -1 이라 선으로는 세기 어렵다. 그래서
 %   출발 블록의 PortConnectivity 로 이 포트의 도착 블록들을 바로 읽는다.
+%   For a branched line the root's DstPortHandle is -1, so counting by lines is hard.
+%   So the destination blocks of this port are read directly from the source block's
+%   PortConnectivity.
 %
 %   ME 는 지금 옮기려는 태그다. **빼고 세지 않으면 스스로를 장애물로 센다.**
 %   태그가 제 포트에서 멀리 끌려가 있는 상태(바로 이 도구가 고치려는 상태)는
 %   언제나 `q(1) > a(1)+80` 이므로, 빼지 않으면 모든 태그가 1) 같은 높이를
 %   건너뛰고 2) 로 내려가 꺾임이 1 회씩 남는다 — 2026-10-15 W06_1_point 에서
 %   MotionModel 의 출력 9 개가 전부 그랬다 (Goto 는 x = 1795, 포트는 x = 1545).
+%   ME is the tag being moved now. **Unless excluded, it counts itself as an obstacle.**
+%   A tag dragged far from its port (exactly the state this tool fixes) always has
+%   `q(1) > a(1)+80`, so without exclusion every tag skips 1) same height, drops to 2),
+%   and keeps one bend — on 2026-10-15 in W06_1_point all 9 MotionModel outputs did so
+%   (Goto at x = 1795, port at x = 1545).
 tf = false;
 sb = get_param(sp, 'Parent');
 k  = get_param(sp, 'PortNumber');
 pc = get_param(sb, 'PortConnectivity');
 mh = get_param(me, 'Handle');
 for i = 1:numel(pc)
-    if isempty(pc(i).DstBlock), continue, end             % 출력 포트만 DstBlock 을 갖는다
+    if isempty(pc(i).DstBlock), continue, end             % 출력 포트만 DstBlock 을 갖는다 / only output ports have DstBlock
     if ~strcmp(pc(i).Type, num2str(k)), continue, end
     for j = 1:numel(pc(i).DstBlock)
-        if pc(i).DstBlock(j) == mh, continue, end          % 나는 비켜 줄 상대가 아니다
+        if pc(i).DstBlock(j) == mh, continue, end          % 나는 비켜 줄 상대가 아니다 / not something to step aside for: it is me
         q = get_param(pc(i).DstBlock(j), 'Position');
-        if q(1) > a(1) + 80, tf = true; return, end        % 태그가 들어설 자리보다 멀다
+        if q(1) > a(1) + 80, tf = true; return, end        % 태그가 들어설 자리보다 멀다 / farther than the tag's spot
     end
 end
 end
 
 function sp = src_of(sys, dp)
-%  이 도착 포트로 들어오는 선의 출발 포트
+%  이 도착 포트로 들어오는 선의 출발 포트 / source port of the line entering this destination port
 sp = -1;
 L = find_system(sys, 'FindAll','on', 'SearchDepth',1, 'Type','line');
 for i = 1:numel(L)
     d = get_param(L(i), 'DstPortHandle');
     if ~any(d == dp), continue, end
     h = L(i);
-    for depth = 1:16                       % 가지면 뿌리로 올라가 출발 포트를 찾는다
+    for depth = 1:16                       % 가지면 뿌리로 올라가 출발 포트를 찾는다 / for a branch, climb to the root to find the source port
         s = get_param(h, 'SrcPortHandle');
         if s > 0, sp = s; return, end
         try, par = get_param(h, 'LineParent'); catch, break, end
@@ -327,7 +413,7 @@ nm = get_param(get_param(sp, 'Parent'), 'Name');
 end
 
 function dp = dst_of(sp)
-%  이 출발 포트에서 나가는 선들의 도착 포트 전부 (가지 포함)
+%  이 출발 포트에서 나가는 선들의 도착 포트 전부 (가지 포함) / all destination ports of lines leaving this source port (branches included)
 dp = [];
 for L = get_param(sp, 'Line')'
     if L <= 0, continue, end
@@ -350,7 +436,8 @@ end
 % =========================================================================
 function seg = lanes(sys, mine)
 %LANES  이 시스템의 선 토막들. MINE 에 붙은 선은 뺀다 (다시 그을 것이므로).
-%   [가로인가? 좌표 lo hi]
+%       Line segments of this system. Lines attached to MINE are excluded (they will be redrawn).
+%   [가로인가? 좌표 lo hi] / [horizontal? coord lo hi]
 seg = zeros(0,4);
 L = find_system(sys, 'FindAll','on', 'SearchDepth',1, 'Type','line');
 for i = 1:numel(L)
@@ -387,6 +474,7 @@ end
 
 function tf = lane_clash(seg, pts)
 %LANE_CLASH  새 토막이 남의 토막과 같은 직선 위를 나눠 쓰는가 (check_lines 의 (1)).
+%            Does a new segment share a straight run with another line's segment (item (1) of check_lines)?
 tf = false;
 for k = 1:size(pts,1)-1
     a = pts(k,:);  b = pts(k+1,:);
@@ -403,6 +491,11 @@ for k = 1:size(pts,1)-1
         %  태그의 테두리이고 진짜 선은 그 5 px 밖 포트에서 시작하므로, 1e-6 로
         %  물으면 바로 옆의 통로를 빈 자리로 보고 앉는다 — 2026-10-14 W06_1_point 에서
         %  Fr_x_n 과 Fr_y_n 의 세로 토막이 x = 430 에서 10 px 겹쳤다
+        %  Two segments within 8 px are one line in print (same yardstick as check_lines).
+        %  Asking only for identical coordinates misses — the trial points for the new spot are
+        %  the tag's border while the real line starts at the port 5 px outside, so a 1e-6 test
+        %  sees the adjacent lane as free and sits there — on 2026-10-14 in W06_1_point the
+        %  vertical segments of Fr_x_n and Fr_y_n overlapped by 10 px at x = 430
         if seg(i,1) ~= hz || abs(seg(i,2)-c) > 8, continue, end
         if min(seg(i,4),hi) - max(seg(i,3),lo) > 1, tf = true; return, end
     end

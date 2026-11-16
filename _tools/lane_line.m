@@ -21,12 +21,17 @@ function lane_line(sys, s, sk, d, dk, xl)
 %       defect that can be seen by reading the builder, and check_overlaps
 %       finds whatever is left.
 %
+%   두 포트가 이미 같은 높이에 있으면 선을 곧게 긋고 통로는 무시하므로, 어느
+%   경우든 같은 호출이 옳다.
 %   If the two ports already share a row the line is drawn straight and the
 %   lane is ignored, so the same call is correct either way.
 
 a = port_xy(sys, s, 'Outport', sk);
 b = port_xy(sys, d, 'Inport',  dk);
 
+%  둥근 Sum 은 둘째 입력을 원의 아래쪽에 두며, 그 포트에는 옆이 아니라 아래에서
+%  다가가야 한다. 옆을 향한 포트는 블록 왼쪽 모서리 바깥에 있으므로, x 가 블록
+%  안쪽에 있는 것으로 알아본다.
 %  A round Sum puts its second input on the BOTTOM of the circle, and that port
 %  must be approached from below, not from the side. It is recognised by its x
 %  lying inside the block rather than outside its left edge, which is where a
@@ -35,6 +40,8 @@ q = get_param([sys '/' d], 'Position');
 if b(1) > q(1) && b(1) < q(3)
     xl = b(1);
 elseif isempty(xl) || xl <= 0
+    %  통로를 주지 않았으면 가운데를 쓴다. 기본값이 아니라 대비책이다 — 통로가
+    %  무엇을 피해야 하는 호출자는 통로 자리를 밝혀야 한다.
     %  No lane named: take the midpoint. This is a fallback, not a default -
     %  a caller that needs the lane to miss something must say where it goes.
     xl = round((a(1) + b(1))/2);
@@ -46,6 +53,8 @@ else
     p = [a; xl a(2); xl b(2); b];
 end
 
+%  통로가 이미 출발이나 도착 포트의 x 이면 길이 0 토막이 생긴다. Simulink 가 그것을
+%  잔 표시로 그리므로 지운다.
 %  Drop the zero-length segments that appear when the lane is already the
 %  source's or the destination's own x. Simulink draws those as stray marks.
 keep = [true; any(abs(diff(p,1,1)) > 0.5, 2)];

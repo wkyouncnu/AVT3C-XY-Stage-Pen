@@ -1,12 +1,17 @@
 function tf = spot_free(sys, rect, name, pts, skip, ignore)
 %SPOT_FREE  새 블록을 RECT 에 놓고 PTS 로 이어도 아무것과 포개지지 않는가.
+%           Whether a new block placed at RECT and connected along PTS overlaps nothing.
 %
 %   tf = spot_free(s, [x1 y1 x2 y2], 'Go_X', [a; a(1) y; x1 y], {'MotorLag'})
-%   tf = spot_free(s, rect, 'Go_X', pts, {'MotorLag'}, {'Go_X'})   % 자기는 없는 셈
+%   tf = spot_free(s, rect, 'Go_X', pts, {'MotorLag'}, {'Go_X'})   % 자기는 없는 셈 / itself counts as absent
 %
 %   IGNORE 에 적은 블록은 **아예 없는 것으로 본다** — 사각형도 이름표도, 그 블록에
 %   붙은 선도 세지 않는다. 이미 놓인 태그를 **다른 자리로 옮겨 보는** 도구가 쓴다
 %   (snug_tags). 자기 자신과 자기 선을 장애물로 세면 어디로도 옮길 수 없다.
+%   Blocks listed in IGNORE are **treated as absent** — neither their rectangle, their name
+%   label nor the lines attached to them are counted. Used by the tool that **tries moving**
+%   an already placed tag elsewhere (snug_tags); counting itself and its own lines as
+%   obstacles would leave nowhere to move.
 %
 %   drop_tag · feed_from 이 태그 자리를 고를 때 쓴다. 다섯을 본다.
 %     - 새 블록 사각형과 그 이름표(아래 14 px)가 다른 블록·이름표와 겹치는가
@@ -15,12 +20,22 @@ function tf = spot_free(sys, rect, name, pts, skip, ignore)
 %     - 이미 있는 선이 새 블록을 지나는가
 %     - 이미 있는 선이 새 블록의 **이름표** 위를 지나는가
 %   check_lines 의 (2) 블록관통 · (6) 블록겹침 · (7) 이름표 위 선과 같은 판정이다.
+%   Used by drop_tag · feed_from to choose a tag position. Five things are checked:
+%     - does the new block rectangle or its name label (14 px below) overlap another block or label
+%     - does the new line PTS pass through another block (blocks listed in SKIP excepted)
+%     - does the new line PTS pass over another block's **name label**
+%     - does an existing line pass through the new block
+%     - does an existing line pass over the new block's **name label**
+%   Same tests as items (2) line through block · (6) block overlap · (7) line over label of check_lines.
 %
 %   왜 필요한가 / why this exists
 %       tag_feedback 은 태그를 포트에서 정해진 거리(90 px) 아래에 매단다. 그 자리에
 %       이미 다른 블록이 있으면 태그가 그 위에 포개진다 (2026-09-19 SB8 의
 %       Fr_SumA_1_1 이 One 위에, W04_3·W04_4 의 Go_/Fr_ 가 Scope 위에).
 %       자리를 먼저 재 보고 비어 있을 때만 놓는다.
+%       tag_feedback hangs a tag a fixed distance (90 px) below the port. If another block is
+%       already there, the tag lands on top of it (2026-09-19: Fr_SumA_1_1 on One in SB8,
+%       Go_/Fr_ on Scope in W04_3·W04_4). So the spot is measured first and used only when free.
 
 if nargin < 5, skip = {}; end
 if nargin < 6 || isempty(ignore), ignore = {}; end
@@ -28,7 +43,7 @@ tf = false;
 nb = name_box(name, rect);
 b = find_system(sys, 'SearchDepth',1, 'Type','Block');
 b = b(~strcmp(b, sys));
-gone = false(numel(b),1);           % 없는 셈으로 보는 블록의 핸들
+gone = false(numel(b),1);           % 없는 셈으로 보는 블록의 핸들 / blocks treated as absent
 for i = 1:numel(b)
     gone(i) = any(strcmp(get_param(b{i},'Name'), ignore));
 end
@@ -44,7 +59,7 @@ for i = 1:numel(b)
     if any(strcmp(nm, skip)), continue, end
     for k = 1:size(pts,1)-1
         if seg_hits(pts(k,:), pts(k+1,:), r), return, end
-        %  남의 이름표 위를 지나는 선은 그 이름을 지워 버린다
+        %  남의 이름표 위를 지나는 선은 그 이름을 지워 버린다 / a line over another block's label hides that name
         if ~any(isnan(t)) && seg_hits(pts(k,:), pts(k+1,:), t), return, end
     end
 end
@@ -56,6 +71,8 @@ for i = 1:numel(L)
         if seg_hits(q(k,:), q(k+1,:), rect), return, end
         %  이미 있는 선이 **새 태그의 이름표** 위를 지나면 태그 이름을 읽을 수 없다
         %  (2026-09-21 W07_0·W07_1 의 Fr_psi_b)
+        %  If an existing line passes over **the new tag's name label**, the tag name cannot be read
+        %  (2026-09-21, Fr_psi_b in W07_0·W07_1)
         if seg_hits(q(k,:), q(k+1,:), nb), return, end
     end
 end
@@ -68,6 +85,7 @@ end
 
 function tf = touches(ln, gh)
 %TOUCHES  이 선이 IGNORE 로 적은 블록에 붙어 있는가. 뿌리·가지를 한 단계만 본다.
+%         Whether this line is attached to a block listed in IGNORE. Looks one level at root and branches.
 tf = false;
 h = [];
 try, h = [h; get_param(ln,'SrcBlockHandle')]; catch, end
@@ -87,7 +105,7 @@ tf = any(ismember(h(h>0), gh));
 end
 
 function tf = seg_hits(a, b, r)
-%  check_lines 의 seg_hits_box 와 같다 (테두리 2 px 여유)
+%  check_lines 의 seg_hits_box 와 같다 (테두리 2 px 여유) / same as seg_hits_box in check_lines (2 px border margin)
 M = 2;  lo = [r(1)+M r(2)+M];  hi = [r(3)-M r(4)-M];
 tf = false;
 if any(hi <= lo), return, end

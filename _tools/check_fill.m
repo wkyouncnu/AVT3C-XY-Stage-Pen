@@ -2,28 +2,35 @@ function [ratio, info] = check_fill(mdl, verbose)
 %CHECK_FILL  도면의 **채움 비율**을 잰다 — 블록 넓이 / 경계 넓이.
 %            Measure how much of a diagram is actually drawn on.
 %
-%   ratio = check_fill(mdl)                최상위 채움 비율 (0~1)
-%   [ratio, info] = check_fill(mdl, true)  층마다 나열한다
+%   ratio = check_fill(mdl)                최상위 채움 비율 (0~1) / top-level fill ratio (0~1)
+%   [ratio, info] = check_fill(mdl, true)  층마다 나열한다 / lists every level
 %
 %   교수 지시 2026-10-01 — *"블록을 띄엄띄엄 놓지 말고 가까이 모아 주세요.
 %   빈 공간이 너무 많습니다. 점검은 눈대중이 아니라 채움 비율로."*
+%   Instructor's instruction 2026-10-01 — *"Do not scatter blocks; gather them close.
+%   There is too much empty space. Check with the fill ratio, not by eye."*
 %
-%   왜 비율인가
+%   왜 비율인가 / Why a ratio
 %
 %   도면이 넓어지면 PDF 쪽폭에 맞출 때 **글씨가 작아진다.** 같은 내용이면
 %   작은 도면이 낫다. 그런데 "넓다" 는 눈대중으로는 판정이 갈린다. 블록이
 %   실제로 차지하는 넓이를 경계상자 넓이로 나누면 숫자 하나로 남는다.
+%   A wider diagram means **smaller text** when fitted to the PDF page width. For the same
+%   content a smaller diagram is better. But "too wide" judged by eye varies. Dividing the
+%   area actually taken by blocks by the bounding-box area leaves a single number.
 %
-%   읽는 법 — 최상위 기준
+%   읽는 법 — 최상위 기준 / How to read — top level
 %
-%   | 비율 | 뜻 |
+%   | 비율 | 뜻 |                                     | ratio | meaning |
 %   |---|---|
-%   | 0.20 이상 | 좋다. 사슬이 모여 있다 |
-%   | 0.10~0.20 | 보통. 로깅·화면 상자가 떨어져 있을 수 있다 |
-%   | 0.10 미만 | **빈칸이 90 % 다.** 시작 좌표와 단계 간격을 줄인다 |
+%   | 0.20 이상 | 좋다. 사슬이 모여 있다 |              | >= 0.20: good, the chain is compact
+%   | 0.10~0.20 | 보통. 로깅·화면 상자가 떨어져 있을 수 있다 | 0.10~0.20: fair, logging/display boxes may be apart
+%   | 0.10 미만 | **빈칸이 90 % 다.** 시작 좌표와 단계 간격을 줄인다 | < 0.10: 90 % empty; reduce start coordinates and stage spacing
 %
 %   합격선을 두지 않는다. 사슬이 길면 가로로 눕고 비율이 자연히 낮아지기
 %   때문이다. **고치기 전후를 견주는 숫자**로 쓴다.
+%   There is no pass threshold, because a long chain lies horizontally and the ratio
+%   naturally drops. It is used as **a number to compare before and after a fix**.
 
 if nargin < 2, verbose = false; end
 
@@ -53,6 +60,7 @@ for i = 1:numel(sysList)
     if size(P,1) < 2, continue; end
 
     %  Note(주석) 블록은 Position 이 두 값만 있는 경우가 있다 — 걸러낸다
+    %  Note blocks may have a Position with only two values — filter them out
     good = (P(:,3) > P(:,1)) & (P(:,4) > P(:,2));
     P = P(good,:);
     if size(P,1) < 2, continue; end
@@ -71,7 +79,7 @@ if isempty(info)
     return
 end
 
-ratio = info{1,3};      % 첫 줄이 최상위다
+ratio = info{1,3};      % 첫 줄이 최상위다 / the first row is the top level
 
 if verbose
     fprintf('  check_fill %s — 최상위 채움 %.1f %%  (경계 %d x %d px)\n', ...

@@ -1,13 +1,18 @@
 function tidy_all(root)
 % TIDY_ALL  주차별 Simulink 모델을 모두 정리하고 결과를 표로 보고한다.
+%           Tidies every weekly Simulink model and reports the result as a table.
 %
-%   tidy_all                       % 기본 볼트 경로
-%   tidy_all('<10-주차별-강의자료 경로>')
+%   tidy_all                       % 기본 볼트 경로 / default vault path
+%   tidy_all('<10-주차별-강의자료 경로>')   % 주차별 강의자료 폴더 경로 / path of the weekly lecture folder
 %
 %   각 모델에 tidy_layout 을 적용한 뒤
 %     - 블록 겹침 쌍
 %     - 꺾인 선 개수
 %   를 센다. 겹침 0 이 목표다.
+%   After applying tidy_layout to each model it counts
+%     - pairs of overlapping blocks
+%     - the number of bent lines
+%   The target is 0 overlaps.
 
 if nargin < 1
     root = fullfile(fileparts(fileparts(mfilename('fullpath'))), '10-주차별-강의자료');

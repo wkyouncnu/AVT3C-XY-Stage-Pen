@@ -1,5 +1,6 @@
 function n = lay_feedback(sys, varargin)
 %LAY_FEEDBACK  되돌아가는 선을 블록들 아래 제 통로로 돌려 보낸다. 꺾임 2회.
+%   Routes backward lines through their own lane below the blocks. Two turns.
 %
 %   n = lay_feedback('SB8_discrete_done')
 %   lay_feedback(sys, 'Gap', 60, 'Lane', 30)
@@ -7,28 +8,40 @@ function n = lay_feedback(sys, varargin)
 %   무엇을 고치는가 / what it fixes
 %       되먹임 선은 오른쪽 출력에서 나와 왼쪽 입력으로 돌아가야 한다. 배치기에
 %       맡기면 블록 사이를 비집고 다니며 네 번 꺾인다. 눈이 따라갈 수 없다.
+%       A feedback line leaves a right-side output and must return to a left-side input.
+%       Left to the arranger, it squeezes between blocks and turns four times; the eye
+%       cannot follow it.
 %
 %       내려갔다 왼쪽으로 가로질러 올라오면 **두 번**이면 끝난다.
+%       Going down, across to the left and up takes only two turns.
 %
 %           ┌─[SumA]─▶ ... ─▶[UD]─┐        [UD]───▶[SumA]
 %           │                     │          ▲         │
 %           └─── (네 번 꺾임) ────┘          └─────────┘  두 번
+%                (four turns)                             two turns
 %
 %   왜 태그로 바꾸지 않는가 / why not a Goto/From pair
 %       W05~W09 처럼 되먹임을 태그로 바꾸면 도면은 깨끗해지지만, 되먹임이 있다는
 %       사실 자체가 그림에서 사라진다. SB8·SB9 처럼 "되먹임이 무엇인지" 를
 %       가르치는 모델에서는 선이 보여야 한다. 배치만으로 두 번에 끝나므로
 %       구조를 바꿀 이유가 없다.
+%       Replacing feedback with tags as in W05-W09 cleans the diagram, but the fact that
+%       there is feedback disappears from the picture. In models that teach what feedback
+%       is, such as SB8 and SB9, the line must be visible. Layout alone achieves two turns,
+%       so there is no reason to change the structure.
 %
 %   되돌아가는 선 / a backward line
 %       받는 블록의 왼쪽 테두리가 내는 포트보다 **왼쪽에** 있는 선. 그런 선은
 %       반드시 왼쪽으로 달려야 하고, 가는 길에 블록들이 놓여 있다.
+%       A line whose receiving block's left border lies to the left of the sending port.
+%       Such a line must run leftward, and blocks lie on its way.
 %
 %   NAME/VALUE
-%     'Gap'   맨 아래 블록과 첫 통로 사이의 간격. 기본 60
-%     'Lane'  통로 사이의 간격. 기본 30
+%     'Gap'   맨 아래 블록과 첫 통로 사이의 간격. 기본 60 / gap between lowest block and first lane; default 60
+%     'Lane'  통로 사이의 간격. 기본 30 / spacing between lanes; default 30
 %
 %   돌려주는 값은 다시 그은 선의 수다.
+%   The return value is the number of lines redrawn.
 
 p = inputParser;
 p.addParameter('Gap',  60);
@@ -45,7 +58,7 @@ box = zeros(numel(blks), 4);
 for i = 1:numel(blks), box(i,:) = get_param(blks{i}, 'Position'); end
 ych = max(box(:,4)) + o.Gap;
 
-% --- 되돌아가는 선을 찾는다 ---------------------------------------------
+% --- 되돌아가는 선을 찾는다 / find backward lines ------------------------
 back = struct('src',{},'sp',{},'dst',{},'dp',{},'h',{},'span',{});
 L = find_system(sys, 'FindAll','on', 'SearchDepth',1, 'Type','line');
 for i = 1:numel(L)
@@ -55,7 +68,7 @@ for i = 1:numel(L)
     for dd = get_param(L(i), 'DstPortHandle')'
         if dd < 0, continue, end
         b = get_param(dd, 'Position');
-        if b(1) >= a(1), continue, end            % 앞으로 가는 선은 그대로 둔다
+        if b(1) >= a(1), continue, end            % 앞으로 가는 선은 그대로 둔다 / forward lines are left alone
         back(end+1) = struct( ...
             'src', get_param(get_param(s,'Parent'), 'Name'), ...
             'sp',  get_param(s,  'PortNumber'), ...
@@ -67,10 +80,12 @@ end
 if isempty(back), return, end
 
 %  멀리 도는 선을 더 아래 통로에 둔다. 그래야 통로끼리 서로 건너뛰지 않는다.
+%  Lines spanning farther go into lower lanes, so that lanes do not cross each other.
 [~, ord] = sort([back.span]);
 back = back(ord);
 
 %  가지 하나만 끊는다. 뿌리 선을 지우면 같은 신호의 다른 가지까지 사라진다
+%  Cut only one branch; deleting the root line would also remove other branches of the signal
 for i = 1:numel(back)
     pd = get_param([sys '/' back(i).dst], 'PortHandles');
     cut_line(sys, pd.Inport(back(i).dp));
@@ -83,6 +98,9 @@ for i = 1:numel(back)
     %  출력 포트 바로 아래로 내려가 가로지른 뒤, 입력 포트 바로 아래로 올라간다.
     %  세로 토막이 블록을 뚫으면 내는 쪽만 옆으로 비켜 준다 (꺾임 3회가 되지만
     %  블록을 뚫는 것보다는 낫다).
+    %  Go down right below the output port, cross, then go up right below the input port.
+    %  If the vertical segment crosses a block, only the sending side is shifted aside
+    %  (giving three turns, which is still better than crossing a block).
     x = a(1);
     for t = 1:40
         if ~hits_any(box, [x a(2)], [x y]), break, end
@@ -94,6 +112,7 @@ for i = 1:numel(back)
         pts = [a; x a(2); x y; b(1) y; b];
     end
     %  포트로 먼저 잇는다. 점만 주면 끝점이 포트에 붙지 않고 매달릴 수 있다
+    %  Connect by ports first; with points only, an end may fail to attach and dangle
     ps = get_param([sys '/' back(i).src], 'PortHandles');
     pd = get_param([sys '/' back(i).dst], 'PortHandles');
     draw_line(sys, ps.Outport(back(i).sp), pd.Inport(back(i).dp), pts);
@@ -104,6 +123,7 @@ end
 % -------------------------------------------------------------------------
 function tf = hits_any(occ, a, b)
 %HITS_ANY  구간 a-b 가 사각형 하나라도 안쪽으로 지나는가. check_lines 와 같은 판정.
+%   Does segment a-b pass through the inside of any rectangle? Same test as check_lines.
 M  = 2;
 tf = false;
 d  = b - a;

@@ -1,23 +1,34 @@
 function tidy_layout(m, varargin)
 % TIDY_LAYOUT  Simulink 모델을 읽기 좋게 정리한다. 선은 전부 직선이 된다.
+%              Tidies a Simulink model for readability. All lines become straight.
 %
 %   tidy_layout('W05_0_offline')
-%   tidy_layout('W05_0_offline','Recurse',false)     % 서브시스템은 두고
+%   tidy_layout('W05_0_offline','Recurse',false)     % 서브시스템은 두고 / leave subsystems alone
 %
-%   하는 일
+%   하는 일 / what it does
 %     1) 포트가 많은 블록을 세로로 늘려 포트 간격을 확보한다
+%        Stretches blocks with many ports vertically to secure port spacing
 %     2) 앞뒤로 이어지는 블록은 포트 간격까지 맞춰 나란히 놓는다
+%        Places consecutive blocks side by side, matching their port spacing too
 %     3) 겹친 블록을 떼어놓는다
+%        Separates overlapping blocks
 %     4) 먹임 블록(Constant, From, Clock, Unit Delay)을 받는 쪽 포트 높이에 맞춘다
+%        Aligns feed blocks (Constant, From, Clock, Unit Delay) to the receiving port height
 %     5) 그래도 높이가 안 맞는 연결은 **Goto/From 태그로 바꾼다**
 %        -> 남는 선은 전부 짧은 수평 직선이 된다
+%        Connections still at different heights **become Goto/From tags**
+%        -> every remaining line is a short horizontal straight line
 %     6) 기능별로 배경색을 칠하고, 겹치기만 하는 블록 이름은 감춘다
+%        Paints background colours by function and hides block names that only clutter
 %
-%   색 규칙
+%   색 규칙 / colour rules
 %     유도(파랑) · 미션(보라) · 제어(주황) · 추진기(노랑)
 %     운동모델(초록) · ROS(연보라) · 로깅(회색) · 설정(흰색)
+%     guidance (blue) · mission (purple) · control (orange) · thruster (yellow)
+%     plant model (green) · ROS (lavender) · logging (grey) · settings (white)
 %
 %   되돌리려면 build_wXX_models 를 다시 실행하면 된다.
+%   To undo, run build_wXX_models again.
 
 p = inputParser;
 addParameter(p, 'Recurse',    true);
@@ -38,6 +49,10 @@ if opt.Recurse
         % MATLAB Function 블록도 속은 Stateflow 라서 SFBlockType 으로 걸러야 한다.
         % SFBlockType 은 보통 서브시스템에서 'NONE' 을 돌려준다.
         % MATLAB Function 이면 'MATLAB Function', 상태도면 'Chart' 다.
+        % The inside of masked blocks (PID etc.) and Stateflow · MATLAB Function blocks is not touched.
+        % A MATLAB Function block is Stateflow inside too, so it must be filtered by SFBlockType.
+        % SFBlockType normally returns 'NONE' for a subsystem,
+        % 'MATLAB Function' for a MATLAB Function, and 'Chart' for a state chart.
         mt = ''; sft = 'NONE';
         try, mt  = get_param(ss{k}, 'MaskType');    catch, end
         try, sft = get_param(ss{k}, 'SFBlockType'); catch, end
@@ -47,11 +62,14 @@ if opt.Recurse
 end
 
 % 최상위는 직접 배치한다. 신호 흐름이 한 방향이라 모든 선을 직선으로 만들 수 있다.
+% The top level is laid out directly. Signal flow goes one way, so every line can be straight.
 if opt.Verbose, disp(['  정리(직선): ' systems{1}]); end
 tidyOne(systems{1}, opt);
 
 % 서브시스템은 안쪽 연결이 촘촘해서 모두 직선으로 만들면 오히려 읽기 어렵다.
 % Simulink 자체 배치 엔진을 쓰면 겹침 없이 직각으로 깔끔하게 정리된다.
+% Subsystems have dense inner connections; making them all straight would be harder to read.
+% Simulink's own layout engine tidies them cleanly with right angles and no overlaps.
 for k = 2:numel(systems)
     if opt.Verbose, disp(['  정리(자동배치): ' systems{k}]); end
     try, Simulink.BlockDiagram.arrangeSystem(systems{k}); catch, end
@@ -65,7 +83,7 @@ end
 % =====================================================================
 function tidyOne(sys, opt)
 
-FEED = {'Constant','From','DigitalClock','UnitDelay','Inport'};   % 내보내기만 하는 것
+FEED = {'Constant','From','DigitalClock','UnitDelay','Inport'};   % 내보내기만 하는 것 / output-only blocks
 SINK = {'Goto','Terminator','Display','Scope','ToWorkspace','Outport'};
 
 conn = grabConnections(sys);
@@ -75,12 +93,14 @@ delAllLines(sys);
 blks = localBlocks(sys);
 
 % ---- 1. 포트 간격 확보 ----------------------------------------------
+% ---- 1. secure port spacing ---------------------------------------------
 for i = 1:numel(blks)
     b = blks{i};
     if ismember(get_param(b,'BlockType'), [FEED SINK]), continue; end
     n = maxPorts(b);
     if n < 2, continue; end
     % 포트 간격은 블록 종류마다 계산식이 다르다. 재보면서 늘린다.
+    % The port-spacing formula differs per block type, so it is stretched while measuring.
     for tries = 1:3
         gg = [portGapAbs(b,'in') portGapAbs(b,'out')];  gg = gg(gg > 0);
         if isempty(gg), break; end
@@ -93,8 +113,11 @@ for i = 1:numel(blks)
 end
 
 % ---- 2. 이어지는 블록끼리 포트 간격 맞추기 ---------------------------
+% ---- 2. match port spacing between consecutive blocks ------------------
 %      dst 의 입력 1..k 가 src 의 출력 1..k 에서 차례로 온다면
 %      dst 높이를 조절해 간격을 같게 만든다. 그러면 k 개가 모두 직선이 된다.
+%      If inputs 1..k of dst come in order from outputs 1..k of src,
+%      dst's height is adjusted to equal spacing, so all k lines become straight.
 pairs = chainPairs(sys, conn, FEED);
 for i = 1:size(pairs,1)
     s = pairs{i,1}; d = pairs{i,2}; k = pairs{i,3};
@@ -102,6 +125,7 @@ for i = 1:size(pairs,1)
     gs = portGap(sys, s, 'out');
     if gs <= 0, continue; end
     % 높이를 늘리면 포트 간격도 같은 비율로 늘어난다. 재보면서 맞춘다.
+    % Raising the height raises port spacing in proportion; matched while measuring.
     for tries = 1:4
         gd = portGap(sys, d, 'in');
         if gd <= 0 || abs(gd - gs) <= 1, break; end
@@ -112,23 +136,28 @@ for i = 1:size(pairs,1)
 end
 
 % ---- 3~4. 겹침 정리와 본선 정렬을 번갈아 ------------------------------
+% ---- 3~4. alternate overlap removal and main-line alignment -------------
 %      마지막은 반드시 alignChain 으로 끝낸다.
 %      뒤에 세로 이동을 하면 애써 맞춘 포트 높이가 다시 어긋난다.
+%      Always finish with alignChain.
+%      A vertical move afterwards would undo the carefully matched port heights.
 for it = 1:6
     deOverlapVertical(sys, blks, FEED, SINK);
     alignChain(sys, conn, FEED);
 end
 
 % ---- 5. 먹임 블록을 받는 쪽 포트 높이에 맞춘다 -----------------------
+% ---- 5. align feed blocks to the receiving port height ------------------
 for pass = 1:2
     for i = 1:numel(conn)
         c  = conn(i);
         sb = [sys '/' c.srcBlk];
         if ~ismember(get_param(sb,'BlockType'), FEED), continue; end
-        if sum(strcmp({conn.srcBlk}, c.srcBlk)) > 1, continue; end   % 갈라지면 못 맞춤
+        if sum(strcmp({conn.srcBlk}, c.srcBlk)) > 1, continue; end   % 갈라지면 못 맞춤 / cannot align a fan-out
         moveOutportTo(sys, c.srcBlk, 1, portY(sys, c.dstBlk,'in', c.dstPort));
     end
     % 받기만 하는 블록(Goto 등)도 보내는 쪽 높이에 맞춘다
+    % Receive-only blocks (Goto etc.) are also aligned to the sender's height
     for i = 1:numel(conn)
         c  = conn(i);
         db = [sys '/' c.dstBlk];
@@ -139,24 +168,34 @@ for pass = 1:2
 end
 
 % ---- 6. 겹침 해소 — 가로로만 옮긴다 -----------------------------------
+% ---- 6. remove overlaps — horizontal moves only -------------------------
 %      가로 이동은 포트 높이를 바꾸지 않으므로 직선이 깨지지 않는다.
+%      A horizontal move does not change port heights, so straight lines stay straight.
 deOverlapHorizontal(sys, localBlocks(sys), FEED, SINK);
 
 % ---- 6-2. 먹임 블록을 받는 블록 **바로 옆**으로 데려온다 ----------------
+% ---- 6-2. bring feed blocks **right beside** the receiving block --------
 %      멀리 있으면 선이 중간의 큰 블록들을 가로질러 지나간다.
 %      자리가 막혀 있으면 받는 블록부터 오른쪽으로 밀어 공간을 만든다.
+%      If far away, the line cuts across the large blocks in between.
+%      If the spot is blocked, room is made by pushing from the receiving block rightwards.
 placeFeeders(sys, conn, FEED);
 deOverlapHorizontal(sys, localBlocks(sys), FEED, SINK);
 
 % ---- 6-3. 설명글(주석)을 블록 위쪽 빈 자리로 옮긴다 --------------------
+% ---- 6-3. move notes (annotations) to empty space above the blocks ------
 liftAnnotations(sys);
 
 % ---- 7. 색과 이름 ------------------------------------------------------
+% ---- 7. colours and names ------------------------------------------------
 colorAll(sys);
 
 % ---- 8. 선 다시 그리기 -------------------------------------------------
+% ---- 8. redraw lines -----------------------------------------------------
 %      포트 높이가 맞으면 곧은 선, 아니면 직각으로 꺾어 그린다.
 %      대각선은 만들지 않는다.
+%      Matching port heights give a straight line; otherwise it is drawn with right-angle bends.
+%      No diagonals are made.
 for i = 1:numel(conn)
     c  = conn(i);
     sp = sprintf('%s/%d', c.srcBlk, c.srcPort);
@@ -177,6 +216,7 @@ end
 
 % =====================================================================
 % 남은 꺾인 연결을 Goto/From 으로 대체
+% Replace remaining bent connections with Goto/From
 % =====================================================================
 function conn = convertToTags(sys, conn, FEED, SINK, opt) %#ok<INUSD>
 keep = true(1, numel(conn));
@@ -187,13 +227,13 @@ for i = 1:numel(conn)
     c  = conn(i);
     sy = portY(sys, c.srcBlk, 'out', c.srcPort);
     dy = portY(sys, c.dstBlk, 'in',  c.dstPort);
-    if abs(sy - dy) <= 1, continue; end                 % 이미 직선
+    if abs(sy - dy) <= 1, continue; end                 % 이미 직선 / already straight
 
     key = sprintf('%s_%d', c.srcBlk, c.srcPort);
     tag = matlab.lang.makeValidName(key);
     if numel(tag) > 24, tag = tag(1:24); end
 
-    % 이 출력 포트에 Goto 가 아직 없으면 만든다
+    % 이 출력 포트에 Goto 가 아직 없으면 만든다 / create a Goto if this output port has none yet
     if ~isKey(made, key)
         gname = uniqueName(sys, ['Go_' tag]);
         sp    = get_param([sys '/' c.srcBlk],'Position');
@@ -204,7 +244,7 @@ for i = 1:numel(conn)
         made(key) = gname;
     end
 
-    % 받는 쪽 바로 앞에 From 을 놓는다
+    % 받는 쪽 바로 앞에 From 을 놓는다 / place a From right in front of the receiver
     fname = uniqueName(sys, ['Fr_' tag]);
     dp    = get_param([sys '/' c.dstBlk],'Position');
     add_block('simulink/Signal Routing/From', [sys '/' fname], ...
@@ -216,6 +256,7 @@ end
 
 conn = [conn(keep) newC];
 % 새로 놓은 태그가 다른 블록과 겹치면 가로로 떼어놓는다
+% If newly placed tags overlap other blocks, separate them horizontally
 deOverlapHorizontal(sys, localBlocks(sys), FEED, SINK);
 end
 
@@ -232,6 +273,7 @@ end
 
 % =====================================================================
 % 배치 도우미
+% Layout helpers
 % =====================================================================
 function blks = localBlocks(sys)
 blks = find_system(sys, 'SearchDepth',1, 'Type','Block');
@@ -261,6 +303,7 @@ end
 
 function pairs = chainPairs(sys, conn, FEED)
 % dst 의 입력 1..k 가 src 의 출력 1..k 에서 차례로 오는 쌍을 찾는다
+% Finds pairs where inputs 1..k of dst come in order from outputs 1..k of src
 pairs = {};
 dsts = unique({conn.dstBlk});
 for i = 1:numel(dsts)
@@ -281,6 +324,7 @@ end
 
 function alignChain(sys, conn, FEED)
 % 먹임 블록을 뺀 소스가 하나뿐인 블록을 그 소스에 맞춘다
+% Aligns a block whose only source (feed blocks excluded) is one block to that source
 dsts = unique({conn.dstBlk});
 for i = 1:numel(dsts)
     d = dsts{i};
@@ -326,6 +370,8 @@ end
 function deOverlapHorizontal(sys, blks, FEED, SINK) %#ok<INUSL>
 % 겹친 블록을 가로로만 떼어놓는다.
 % 먼저 작은 태그·상수를 옮기고, 그래도 남으면 큰 블록도 옮긴다.
+% Separates overlapping blocks horizontally only.
+% Small tags and constants move first; if overlaps remain, large blocks move too.
 for iter = 1:14
     moved = false;
     for i = 1:numel(blks)
@@ -336,7 +382,7 @@ for iter = 1:14
             if ~boxesOverlap(pa,pb), continue; end
             [t, other] = pickMovable(blks{i}, pa, blks{j}, pb, FEED, SINK);
             if isempty(t)
-                % 둘 다 큰 블록이면 오른쪽 것을 더 오른쪽으로 민다
+                % 둘 다 큰 블록이면 오른쪽 것을 더 오른쪽으로 민다 / both large: push the right one further right
                 if pa(1) <= pb(1), t = blks{j}; other = pa; else, t = blks{i}; other = pb; end
                 p = get_param(t,'Position'); w = p(3)-p(1);
                 x1 = other(3) + 60;  set_param(t,'Position',[x1 p(2) x1+w p(4)]);
@@ -382,11 +428,12 @@ end
 
 function enforceFlow(sys, conn, FEED)
 % 받는 포트가 보내는 포트보다 왼쪽이면 선이 뒤로 돈다. 받는 쪽을 오른쪽으로 민다.
+% If the receiving port is left of the sending port, the line runs backwards; push the receiver right.
 for it = 1:8
     moved = false;
     for i = 1:numel(conn)
         c = conn(i);
-        if ismember(get_param([sys '/' c.dstBlk],'BlockType'), FEED), continue; end  % 되먹임은 예외
+        if ismember(get_param([sys '/' c.dstBlk],'BlockType'), FEED), continue; end  % 되먹임은 예외 / feedback is exempt
         sx = portX(sys, c.srcBlk, 'out', c.srcPort);
         dx = portX(sys, c.dstBlk, 'in',  c.dstPort);
         if sx <= dx - 15, continue; end
@@ -429,6 +476,7 @@ end
 
 function liftAnnotations(sys)
 % 주석 글상자가 블록 위에 겹쳐 있으면 읽을 수 없다. 도면 위쪽 빈 자리로 올린다.
+% A note box over a block cannot be read; it is moved up to empty space above the diagram.
 anns = find_system(sys,'SearchDepth',1,'FindAll','on','Type','annotation');
 if isempty(anns), return; end
 blks = localBlocks(sys);
@@ -450,17 +498,18 @@ end
 
 function placeFeeders(sys, conn, FEED)
 % 목적지가 하나뿐인 먹임 블록을 받는 블록 왼쪽 60px 자리에 붙인다.
+% Attaches a feed block with a single destination 60 px left of the receiving block.
 for i = 1:numel(conn)
     c  = conn(i);
     sb = [sys '/' c.srcBlk];
     bt = get_param(sb,'BlockType');
     if ~ismember(bt, FEED) || strcmp(bt,'Inport'), continue; end
-    if sum(strcmp({conn.srcBlk}, c.srcBlk)) > 1, continue; end   % 갈라지면 못 맞춤
+    if sum(strcmp({conn.srcBlk}, c.srcBlk)) > 1, continue; end   % 갈라지면 못 맞춤 / cannot align a fan-out
     db = [sys '/' c.dstBlk];
     a  = get_param(sb,'Position');   w = a(3) - a(1);
     b  = get_param(db,'Position');
     gap = b(1) - a(3);
-    if gap >= 20 && gap <= 200, continue; end                    % 이미 가깝다
+    if gap >= 20 && gap <= 200, continue; end                    % 이미 가깝다 / already close
     tgt = [b(1)-60-w a(2) b(1)-60 a(4)];
     for guard = 1:6
         blk = findBlocker(sys, sb, tgt);
@@ -488,6 +537,8 @@ end
 function shiftRightFrom(sys, xThresh, dx)
 % xThresh 오른쪽에 있는 블록을 전부 dx 만큼 민다. 세로 위치는 건드리지 않으므로
 % 이미 맞춰 놓은 직선이 깨지지 않는다.
+% Shifts every block right of xThresh by dx. Vertical positions are untouched, so
+% straight lines already aligned stay intact.
 blks = localBlocks(sys);
 for i = 1:numel(blks)
     p = get_param(blks{i},'Position');
@@ -500,18 +551,21 @@ end
 function pushLeftOf(sys, blk, dstBlk) %#ok<DEFNU>
 % 먹임 블록은 **받는 블록 바로 왼쪽**에 붙인다.
 % 멀리 떨어져 있으면 선이 중간의 큰 블록들을 가로질러 지나간다.
+% A feed block is attached **right to the left of the receiving block**.
+% If it is far away, the line cuts across the large blocks in between.
 if strcmp(get_param([sys '/' blk],'BlockType'), 'Inport'), return; end
 a = get_param([sys '/' blk],'Position');
 b = get_param([sys '/' dstBlk],'Position');
 w = a(3) - a(1);
 gap = b(1) - a(3);
-if gap >= 20 && gap <= 200, return; end     % 이미 적당히 가깝다
+if gap >= 20 && gap <= 200, return; end     % 이미 적당히 가깝다 / already close enough
 x2 = b(1) - 60;
 set_param([sys '/' blk],'Position',[x2-w a(2) x2 a(4)]);
 end
 
 function pushRightOf(sys, blk, srcBlk)
 % 받기만 하는 블록(Goto, To Workspace 등)은 보내는 블록 바로 오른쪽에 붙인다.
+% Receive-only blocks (Goto, To Workspace etc.) are attached right to the right of the sending block.
 if strcmp(get_param([sys '/' blk],'BlockType'), 'Outport'), return; end
 a = get_param([sys '/' blk],'Position');
 b = get_param([sys '/' srcBlk],'Position');
@@ -524,6 +578,7 @@ end
 
 % =====================================================================
 % 연결 수집
+% Collect connections
 % =====================================================================
 function conn = grabConnections(sys)
 conn = struct('srcBlk',{},'srcPort',{},'dstBlk',{},'dstPort',{},'srcIdx',{});
@@ -564,6 +619,7 @@ end
 
 % =====================================================================
 % 색과 이름
+% Colours and names
 % =====================================================================
 function colorAll(sys)
 blks = localBlocks(sys);

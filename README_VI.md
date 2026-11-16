@@ -169,7 +169,7 @@ Hướng $\psi$ là góc đo ngược chiều kim đồng hồ từ trục $x$ �
 Ma trận biến đổi một vectơ $a_B$ viết trong tọa độ thân thành tọa độ tường là ma trận quay.
 
 $$
-R(\psi) = \begin{bmatrix} \cos\psi & -\sin\psi \\ \sin\psi & \cos\psi \end{bmatrix} = \begin{bmatrix} x_B & y_B \end{bmatrix}, \qquad a_W = R(\psi)\,a_B, \qquad a_B = R^{\top}(\psi)\,a_W \qquad (1)
+R(\psi) = \begin{bmatrix} \cos\psi & -\sin\psi \cr \sin\psi & \cos\psi \end{bmatrix} = \begin{bmatrix} x_B & y_B \end{bmatrix}, \qquad a_W = R(\psi)\thinspace a_B, \qquad a_B = R^{\top}(\psi)\thinspace a_W \qquad (1)
 $$
 
 | Ký hiệu | Cách đọc | Ý nghĩa |
@@ -182,7 +182,7 @@ $$
 
 *Hình 5. Các cột của ma trận quay là các trục thân viết trong tọa độ tường*
 
-Cột thứ nhất là $x_B$ vì khi thay vectơ thân $a_B = (1,\ 0)$, tức vectơ đơn vị theo phương $x_B$, thì $R a_B$ bằng cột thứ nhất. Ví dụ, tại $\psi = 0$, khi robot hướng sang phải, $R = I$, và tại $\psi = 90^{\circ}$, khi robot hướng lên trần, $R = [\,0\ \ {-1};\ 1\ \ 0\,]$. Tại $\psi = 0$ cột thứ nhất $(1,\ 0)$ là phương $x$, tức sang phải trên tường, đúng là hướng phía trước của robot. Cột thứ hai $(0,\ 1)$ là phương $y$, tức hướng lên. Bên trái của robot hướng sang phải là phía trên, nên điều này cũng đúng. Ở tư thế này, di chuyển trục Y của bàn trượt theo chiều + sẽ di chuyển bút lên trên tường. Sự tương ứng này được dùng trực tiếp để hiểu các dấu trong Chương 6.
+Cột thứ nhất là $x_B$ vì khi thay vectơ thân $a_B = (1,\ 0)$, tức vectơ đơn vị theo phương $x_B$, thì $R a_B$ bằng cột thứ nhất. Ví dụ, tại $\psi = 0$, khi robot hướng sang phải, $R = I$, và tại $\psi = 90^{\circ}$, khi robot hướng lên trần, $R = [\thinspace 0\ \ {-1};\ 1\ \ 0\thinspace]$. Tại $\psi = 0$ cột thứ nhất $(1,\ 0)$ là phương $x$, tức sang phải trên tường, đúng là hướng phía trước của robot. Cột thứ hai $(0,\ 1)$ là phương $y$, tức hướng lên. Bên trái của robot hướng sang phải là phía trên, nên điều này cũng đúng. Ở tư thế này, di chuyển trục Y của bàn trượt theo chiều + sẽ di chuyển bút lên trên tường. Sự tương ứng này được dùng trực tiếp để hiểu các dấu trong Chương 6.
 
 ### 3.3 Cánh tay đòn
 
@@ -192,7 +192,7 @@ $$
 d = r_{pen0} - r_{tag} = (0,\ 0) - (-0.08,\ 0.06) = (0.08,\ -0.06)\ \mathrm{m} \qquad (2)
 $$
 
-Vì $d$ gắn cố định với robot nên nó là hằng số trong tọa độ thân, nhưng trong tọa độ tường nó trở thành $R(\psi)\,d$, có hướng thay đổi theo hướng robot. Nếu hướng được biết sai thì $R(\hat\psi)\,d$ sai, và độ chênh lệch đó trực tiếp trở thành sai số vị trí bút (Chương 7).
+Vì $d$ gắn cố định với robot nên nó là hằng số trong tọa độ thân, nhưng trong tọa độ tường nó trở thành $R(\psi)\thinspace d$, có hướng thay đổi theo hướng robot. Nếu hướng được biết sai thì $R(\hat\psi)\thinspace d$ sai, và độ chênh lệch đó trực tiếp trở thành sai số vị trí bút (Chương 7).
 
 ---
 
@@ -207,7 +207,7 @@ Vì $d$ gắn cố định với robot nên nó là hằng số trong tọa đ�
 Đầu bút $P$ là điểm nhận được bằng cách xuất phát từ vị trí thẻ định vị $p$, cộng cánh tay đòn $d$ và độ dịch chuyển con trượt của bàn trượt $\Delta s$ trong tọa độ thân, rồi quay kết quả sang hệ tọa độ tường.
 
 $$
-P = p + R(\psi)\,(d + \Delta s), \qquad \Delta s = \frac{s - s_c}{1000}\ [\mathrm{m}] \qquad (3)
+P = p + R(\psi)\thinspace (d + \Delta s), \qquad \Delta s = \frac{s - s_c}{1000}\ [\mathrm{m}] \qquad (3)
 $$
 
 | Ký hiệu | Ý nghĩa | Đơn vị |
@@ -224,7 +224,7 @@ $$
 Bút nằm trên đường thẳng $AB$ có nghĩa là khoảng cách của bút theo phương pháp tuyến với đường thẳng, tức sai số ngang, bằng 0.
 
 $$
-e(t) = n^{\top}\big(P(t) - A\big) = 0, \qquad u = \frac{B - A}{\lVert B - A\rVert}, \quad n = J u, \quad J = \begin{bmatrix} 0 & -1 \\ 1 & 0 \end{bmatrix} \qquad (4)
+e(t) = n^{\top}\big(P(t) - A\big) = 0, \qquad u = \frac{B - A}{\lVert B - A\rVert}, \quad n = J u, \quad J = \begin{bmatrix} 0 & -1 \cr 1 & 0 \end{bmatrix} \qquad (4)
 $$
 
 $u$ là vectơ đơn vị dọc theo đường thẳng, và $n$ là pháp tuyến nhận được bằng cách quay $u$ ngược chiều kim đồng hồ 90° (phía trái của đường thẳng; hướng lên đối với đường này). Dọc theo đường thẳng, bút chỉ cần đi từ $A$ đến $B$, nên không cần lịch trình thời gian chính xác. Nghĩa là đại lượng duy nhất cần điều khiển là sai số ngang $e$, còn việc di chuyển là một điều kiện lỏng "chỉ cần cuối cùng đến được điểm cuối".
@@ -234,7 +234,7 @@ $u$ là vectơ đơn vị dọc theo đường thẳng, và $n$ là pháp tuyế
 Chuyển động của tâm robot $c$ và hướng như sau (nhiễu và sự dịch chuyển tâm quay được trình bày ở Mục 8.2).
 
 $$
-\dot c = v \begin{bmatrix} \cos\psi \\ \sin\psi \end{bmatrix}, \qquad \dot\psi = \omega \qquad (5)
+\dot c = v \begin{bmatrix} \cos\psi \cr \sin\psi \end{bmatrix}, \qquad \dot\psi = \omega \qquad (5)
 $$
 
 Việc không có vận tốc ngang trong PT (5) chính là ràng buộc không holonom. Robot chỉ chuyển động theo phương $x_B$, và vị trí ngang của nó chỉ thay đổi khi thay đổi hướng. Ngược lại, bàn trượt di chuyển X và Y của thân một cách độc lập và nhanh, nhưng không thể vượt quá $\lvert\Delta s_i\rvert \le 50.8$ mm.
@@ -272,10 +272,10 @@ Nhiệm vụ được chia thành năm giai đoạn, và máy trạng thái Stat
 
 Ở chế độ 4 (Stop_Destination), robot dừng tại điểm cuối, và 2 s sau mô phỏng kết thúc ở chế độ 5. Trong chế độ 3, bút chỉ được đánh giá là hạ bút khi đích bút nằm giữa $A$ và $B$. Robot thật chưa có cơ cấu nâng bút, nên việc xác định khoảng này chỉ dùng cho ghi log.
 
-Đoạn thẳng mà robot bám theo không trùng với đường bút. Để bút nằm trên đường thẳng khi bàn trượt ở giữa, thẻ định vị phải bám theo một đường song song lệch khỏi đường thẳng một lượng $-R(\theta_l)\,d$. Ngoài ra, robot bắt đầu sớm hơn 60 mm để ổn định trước khi bút đến $A$, và đi quá điểm cuối 40 mm.
+Đoạn thẳng mà robot bám theo không trùng với đường bút. Để bút nằm trên đường thẳng khi bàn trượt ở giữa, thẻ định vị phải bám theo một đường song song lệch khỏi đường thẳng một lượng $-R(\theta_l)\thinspace d$. Ngoài ra, robot bắt đầu sớm hơn 60 mm để ổn định trước khi bút đến $A$, và đi quá điểm cuối 40 mm.
 
 $$
-r_A = A - R(\theta_l)\,d - 0.06\,u, \qquad r_B = B - R(\theta_l)\,d + 0.04\,u, \qquad c_A = r_A - R(\theta_l)\,r_{tag} \qquad (6)
+r_A = A - R(\theta_l)\thinspace d - 0.06\thinspace u, \qquad r_B = B - R(\theta_l)\thinspace d + 0.04\thinspace u, \qquad c_A = r_A - R(\theta_l)\thinspace r_{tag} \qquad (6)
 $$
 
 ### 5.2 Luật bám đường thẳng
@@ -283,13 +283,13 @@ $$
 Điểm tham chiếu $x_r$ của chế độ 3 di chuyển dọc đoạn thẳng với tốc độ không đổi $v_r$ theo thời gian. Robot xét độ chênh lệch giữa nó và điểm tham chiếu này trong tọa độ thân.
 
 $$
-x_r(t) = r_A + v_r\,(t - t_{line})\,u, \qquad
-\begin{bmatrix} e_x \\ e_y \end{bmatrix} = R^{\top}(\hat\psi)\,(x_r - \hat p), \qquad
+x_r(t) = r_A + v_r\thinspace (t - t_{line})\thinspace u, \qquad
+\begin{bmatrix} e_x \cr e_y \end{bmatrix} = R^{\top}(\hat\psi)\thinspace (x_r - \hat p), \qquad
 e_\theta = \mathrm{wrap}(\theta_l - \hat\psi) \qquad (7)
 $$
 
 $$
-v_c = v_r \cos e_\theta + k_x\,e_x, \qquad \omega_c = k_y\,e_y + k_\psi \sin e_\theta \qquad (8)
+v_c = v_r \cos e_\theta + k_x\thinspace e_x, \qquad \omega_c = k_y\thinspace e_y + k_\psi \sin e_\theta \qquad (8)
 $$
 
 $e_x$ là khoảng cách điểm tham chiếu nằm phía trước robot, và $e_y$ là khoảng cách điểm tham chiếu nằm bên trái robot. Robot có thể giảm trực tiếp sai số dọc $e_x$ bằng tốc độ tiến, nhưng không thể giảm trực tiếp sai số ngang $e_y$. Do đó $e_y$ đi vào lệnh quay $\omega_c$. Nếu điểm tham chiếu ở bên trái ($e_y > 0$), robot quay trái, và sai số ngang giảm dần khi robot tiến với hướng đã lệch.
@@ -297,7 +297,7 @@ $e_x$ là khoảng cách điểm tham chiếu nằm phía trước robot, và $e
 Lý do quá trình này chậm trở nên rõ ràng khi tuyến tính hóa các phương trình gần đường thẳng. Gọi $y_l$ là vị trí ngang của robot đo về phía trái đường thẳng và $\phi = \psi - \theta_l$ là độ chênh hướng so với đường thẳng; khi đó từ PT (5), $\dot y_l = v\sin\phi \approx v_r\phi$ và $\dot\phi = \omega$. Với sai số nhỏ $e_y \approx -y_l$ và $e_\theta \approx -\phi$, nên PT (8) trở thành $\omega = -k_y y_l - k_\psi\phi$, và vòng kín như sau.
 
 $$
-\ddot y_l + k_\psi\,\dot y_l + v_r k_y\,y_l = 0, \qquad
+\ddot y_l + k_\psi\thinspace \dot y_l + v_r k_y\thinspace y_l = 0, \qquad
 \lambda = \frac{-k_\psi \pm \sqrt{k_\psi^2 - 4 v_r k_y}}{2} \qquad (9)
 $$
 
@@ -344,7 +344,7 @@ Bù bút gồm vài dòng mã MATLAB trong khối Simulink PenComp. Các phươn
 | $\hat\psi$ | `pose(3)` | – | rad | Hướng do IMU đo được (ngược chiều kim đồng hồ tính từ trục $x$) | – |
 | $R(\hat\psi)$ | `R` | thân → tường | – | Ma trận quay một mũi tên trong hệ thân thành mũi tên trong hệ tường | các trục $x_B$, $y_B$ màu xám |
 | $d$ | `pen_d` | hệ tọa độ thân $\mathcal B$ | m | Cánh tay đòn từ thẻ định vị đến bút khi bàn trượt ở giữa; là hằng số do cách lắp đặt quy định | mũi tên tím |
-| $c_0$ | `pc` | tường | m | Điểm bút chạm tới khi bàn trượt ở giữa, $\hat p + R(\hat\psi)\,d$ | hình tròn trắng |
+| $c_0$ | `pc` | tường | m | Điểm bút chạm tới khi bàn trượt ở giữa, $\hat p + R(\hat\psi)\thinspace d$ | hình tròn trắng |
 | $A$, $B$, $L$ | `lineAB`, `L` | tường | m | Hai đầu mút và chiều dài của đường thẳng cần vẽ | các chấm xanh đậm, đường xanh lam |
 | $u$, $n$ | `u` | tường | – | Vectơ đơn vị dọc đường thẳng, pháp tuyến $n = Ju$ (hướng lên là +) | các mũi tên xanh đậm |
 | $\sigma$ | `sigma` | – | m | Khoảng cách dọc đường thẳng của $c_0$ | đường kích thước |
@@ -379,7 +379,7 @@ Mọi giá trị số trong chương này đều thuộc về cùng một thời
 | Hình 8 | Thân (nhìn khi ngồi trên robot) | $d$, $\Delta s$ và tam giác mũi tên |
 | Hình 9 | Tường (nhìn thẳng vào tường) | $u$, $n$, $\sigma$, $c_0$, $p^{\star}$, $e_0$ |
 | Hình 10 | Hai hệ tọa độ đặt cạnh nhau | Cách $R^{\top}(\hat\psi)$ thay đổi thang đo dùng để đọc cùng một mũi tên |
-| Hình 11 | Bàn trượt (thang Zaber) | $\times 1000$ và $+\,s_c$ |
+| Hình 11 | Bàn trượt (thang Zaber) | $\times 1000$ và $+\thinspace s_c$ |
 | Hình 12 | Trình tự tính toán | Hệ tọa độ và đơn vị của từng bước |
 | Hình 13 | Bốn hình trên gộp vào một trang | Toàn bộ các bước tính toán và lệnh cuối cùng |
 
@@ -388,11 +388,11 @@ Mọi giá trị số trong chương này đều thuộc về cùng một thời
 Vị trí đầu bút được cho bởi PT (3). Khi con trượt của bàn trượt được dịch đi $\Delta s$ khỏi vị trí giữa, bút nằm tại mũi tên thân $d + \Delta s$ tính từ thẻ định vị. Khi vị trí trên tường $p^{\star}$ mà bút phải tới đã được xác định, giải phương trình này theo $\Delta s$ sẽ cho chuyển động của con trượt.
 
 $$
-p^{\star} = \hat p + R(\hat\psi)\,(d + \Delta s)
+p^{\star} = \hat p + R(\hat\psi)\thinspace (d + \Delta s)
 \quad\Longrightarrow\quad
-\underbrace{d}_{\text{tím}} + \underbrace{\Delta s}_{\text{cam}} = \underbrace{R^{\top}(\hat\psi)\,(p^{\star} - \hat p)}_{\text{xanh lá}}
+\underbrace{d}_{\text{tím}} + \underbrace{\Delta s}_{\text{cam}} = \underbrace{R^{\top}(\hat\psi)\thinspace (p^{\star} - \hat p)}_{\text{xanh lá}}
 \quad\Longrightarrow\quad
-\Delta s = R^{\top}(\hat\psi)\,(p^{\star} - \hat p) - d \qquad (12)
+\Delta s = R^{\top}(\hat\psi)\thinspace (p^{\star} - \hat p) - d \qquad (12)
 $$
 
 Vì $R$ là ma trận trực giao, nhân hai vế với $R^{\top}$ sẽ giải được phương trình ngay. Các giá trị đo được $\hat p$, $\hat\psi$ được sử dụng vì phép đo là tất cả những gì bộ điều khiển biết. Đẳng thức ở giữa của PT (12) là một tam giác tạo bởi ba mũi tên trong hệ tọa độ thân, và Hình 8 minh họa tam giác đó.
@@ -409,7 +409,7 @@ Hình 8 là góc nhìn từ phía trên robot. Vì hệ tọa độ thân quay c
 | hình tròn trắng | $c_0$ | thân $(0,\ 0)$ | Bút khi bàn trượt ở giữa ($s = s_c$) |
 | hình vuông xanh ngọc | hành trình bàn trượt | $\pm 50.8$ | Phạm vi bút có thể di chuyển so với thân |
 | mũi tên tím | $d$ | $(80.0,\ -60.0)$ | Từ $\hat p$ đến $c_0$; là hằng số, bộ điều khiển không thể thay đổi |
-| mũi tên xanh lá | $R^{\top}(\hat\psi)\,(p^{\star} - \hat p)$ | $(80.6,\ -49.3)$ | Từ $\hat p$ đến mục tiêu của bút; do phép đo và đường thẳng quyết định, thay đổi ở mỗi chu kỳ |
+| mũi tên xanh lá | $R^{\top}(\hat\psi)\thinspace (p^{\star} - \hat p)$ | $(80.6,\ -49.3)$ | Từ $\hat p$ đến mục tiêu của bút; do phép đo và đường thẳng quyết định, thay đổi ở mỗi chu kỳ |
 | hình thoi xanh lá | $p^{\star}$ | thân $(0.56,\ 10.72)$ | Nơi bút phải tới |
 | mũi tên cam | $\Delta s$ | $(0.56,\ 10.72)$ | Từ $c_0$ đến $p^{\star}$; lượng bàn trượt dịch bút |
 
@@ -427,7 +427,7 @@ Phép trừ được thực hiện trong hệ tọa độ thân vì $d$ là đ�
 Như đã thấy ở Mục 4.2, điểm trên đường thẳng mà bút cần có mặt không được quy định trước. Vị trí dọc đường thẳng do robot quyết định khi tiến tới, và bàn trượt chỉ cần loại bỏ độ lệch khỏi đường thẳng. Do đó, mục tiêu là chân đường vuông góc hạ xuống đường thẳng từ $c_0$, tức vị trí bút khi bàn trượt ở giữa.
 
 $$
-c_0 = \hat p + R(\hat\psi)\,d, \qquad \sigma = u^{\top}(c_0 - A), \qquad e_0 = n^{\top}(c_0 - A), \qquad p^{\star} = A + \sigma u = c_0 - e_0\,n \qquad (13)
+c_0 = \hat p + R(\hat\psi)\thinspace d, \qquad \sigma = u^{\top}(c_0 - A), \qquad e_0 = n^{\top}(c_0 - A), \qquad p^{\star} = A + \sigma u = c_0 - e_0\thinspace n \qquad (13)
 $$
 
 ![Đường thẳng và mục tiêu của bút trong hệ tọa độ tường](2_docs/img/fig_pen_wall.png)
@@ -442,13 +442,13 @@ Hình 9 cho thấy bức tường khi nhìn thẳng vào. $x$ hướng sang ph�
 | mũi tên ngang tại $A$ | $u$ | $(1,\ 0)$ | Vectơ đơn vị dọc đường thẳng, $(B - A)/L$ |
 | mũi tên đứng tại $A$ | $n = Ju$ | $(0,\ 1)$ | Pháp tuyến của đường thẳng; hướng đo sai số ngang (hướng lên là +) |
 | hình vuông đen | $\hat p$ | $(-200.0,\ 345.0)$ | Giá trị đo của ZeroKey |
-| mũi tên tím (b) | $R(\hat\psi)\,d$ | $(83.0,\ -55.7)$ | $d$ của Hình 8 được quay sang hệ tọa độ tường |
+| mũi tên tím (b) | $R(\hat\psi)\thinspace d$ | $(83.0,\ -55.7)$ | $d$ của Hình 8 được quay sang hệ tọa độ tường |
 | hình tròn trắng | $c_0$ | $(-117.0,\ 289.3)$ | Điểm bút chạm tới khi bàn trượt ở giữa |
 | đường kích thước phía dưới | $\sigma$ | 583.0 | Khoảng cách từ $A$ đến $c_0$ đo dọc đường thẳng; bút đã đi được bao xa dọc đường thẳng |
 | – | $e_0$ | $-10.73$ | $c_0$ nằm thấp hơn đường thẳng 10.73 mm |
 | hình thoi xanh lá | $p^{\star}$ | $(-117.0,\ 300.0)$ | Điểm trên đường thẳng có cùng vị trí dọc đường thẳng với $c_0$ |
 | mũi tên xanh lá (b) | $p^{\star} - \hat p$ | $(83.0,\ -45.0)$ | Thành phần tường của mũi tên xanh lá trong Hình 8 |
-| mũi tên cam (b) | $R(\hat\psi)\,\Delta s = -e_0\,n$ | $(0.00,\ 10.73)$ | Thành phần tường của mũi tên cam trong Hình 8 |
+| mũi tên cam (b) | $R(\hat\psi)\thinspace \Delta s = -e_0\thinspace n$ | $(0.00,\ 10.73)$ | Thành phần tường của mũi tên cam trong Hình 8 |
 
 $\sigma$ là tích vô hướng với $u$, tức độ dài hình chiếu (bóng) của mũi tên $c_0 - A$ lên phương dọc đường thẳng. Tương tự, $e_0$ là độ dài hình chiếu (bóng) lên pháp tuyến $n$. Vì $p^{\star}$ là điểm thu được khi chỉ loại bỏ thành phần pháp tuyến khỏi $c_0$, bàn trượt chỉ di chuyển vuông góc với đường thẳng và chỉ bằng độ lớn của sai số ngang. Lý do của sự phân công này là hành trình. Bút đã đi được bao xa dọc đường thẳng ($\sigma$) là phần việc của robot khi tiến tới, nên bàn trượt không can thiệp vào phương đó. Nếu $p^{\star}$ được đặt tại một điểm cụ thể trên đường thẳng (ví dụ một điểm tham chiếu di chuyển theo thời gian, hoặc $A$), bàn trượt sẽ cố hấp thụ cả sai số dọc đường thẳng vài cm của robot, và hành trình 101.6 mm sẽ không đủ. Thực tế, khi một phiên bản ban đầu kẹp $p^{\star}$ về $A$, trục X của bàn trượt đã chạy tới khoảng 95 mm ngay khi bắt đầu chế độ 3.
 
@@ -465,16 +465,16 @@ Hai khung của Hình 10 vẽ cùng ba mũi tên; chỉ thang đo là khác nhau
 | Mũi tên | (a) Thành phần tường [mm] | (b) Thành phần thân [mm] | Phép chuyển |
 |---|---|---|---|
 | xanh lá: $\hat p \to p^{\star}$ | $p^{\star} - \hat p = (83.0,\ -45.0)$ | $(80.6,\ -49.3)$ | $R^{\top}(\hat\psi)(p^{\star} - \hat p)$ |
-| tím: $\hat p \to c_0$ | $R(\hat\psi)\,d = (83.0,\ -55.7)$ | $d = (80.0,\ -60.0)$ | $R^{\top}R\,d = d$ |
-| cam: $c_0 \to p^{\star}$ | $R(\hat\psi)\,\Delta s = (0.00,\ 10.73)$ | $\Delta s = (0.56,\ 10.72)$ | $R^{\top}R\,\Delta s = \Delta s$ |
+| tím: $\hat p \to c_0$ | $R(\hat\psi)\thinspace d = (83.0,\ -55.7)$ | $d = (80.0,\ -60.0)$ | $R^{\top}R\thinspace d = d$ |
+| cam: $c_0 \to p^{\star}$ | $R(\hat\psi)\thinspace \Delta s = (0.00,\ 10.73)$ | $\Delta s = (0.56,\ 10.72)$ | $R^{\top}R\thinspace \Delta s = \Delta s$ |
 
 Tác dụng của $R^{\top}(\hat\psi)$ có thể thấy qua các đường nét đứt xanh lá trong Hình 10(a). Hạ các đường vuông góc từ đầu mũi tên xanh lá xuống các trục robot $x_B$, $y_B$ sẽ cho độ dài hình chiếu trên các trục lần lượt là 80.6 mm và $-49.3$ mm. Như đã thấy ở Mục 3.2, hai cột của $R$ là $x_B = (\cos\hat\psi,\ \sin\hat\psi)$ và $y_B = (-\sin\hat\psi,\ \cos\hat\psi)$ viết trong hệ tọa độ tường, nên hai hàng của $R^{\top}$ là $x_B^{\top}$, $y_B^{\top}$, và tích với mỗi hàng chính là độ dài hình chiếu.
 
 $$
-R^{\top}(\hat\psi)\,(p^{\star} - \hat p) =
-\begin{bmatrix} x_B^{\top}(p^{\star} - \hat p) \\ y_B^{\top}(p^{\star} - \hat p) \end{bmatrix}
-= \begin{bmatrix} 83.0\cos 3^{\circ} - 45.0\sin 3^{\circ} \\ -83.0\sin 3^{\circ} - 45.0\cos 3^{\circ} \end{bmatrix}
-= \begin{bmatrix} 80.6 \\ -49.3 \end{bmatrix}\ \mathrm{mm} \qquad (14)
+R^{\top}(\hat\psi)\thinspace (p^{\star} - \hat p) =
+\begin{bmatrix} x_B^{\top}(p^{\star} - \hat p) \cr y_B^{\top}(p^{\star} - \hat p) \end{bmatrix}
+= \begin{bmatrix} 83.0\cos 3^{\circ} - 45.0\sin 3^{\circ} \cr -83.0\sin 3^{\circ} - 45.0\cos 3^{\circ} \end{bmatrix}
+= \begin{bmatrix} 80.6 \cr -49.3 \end{bmatrix}\ \mathrm{mm} \qquad (14)
 $$
 
 Tóm lại, PT (12) được đọc theo ba bước.
@@ -483,22 +483,22 @@ Tóm lại, PT (12) được đọc theo ba bước.
 |---|---|---|
 | 1 | $p^{\star} - \hat p$ | Đo mũi tên xanh lá của Hình 9(b) trên thang tường |
 | 2 | $R^{\top}(\hat\psi)(\cdot)$ | Đo lại cùng mũi tên đó trên thang robot (Hình 10(a) → (b)) |
-| 3 | $-\,d$ | Trừ đi mũi tên tím đã gắn sẵn trên robot (Hình 8) |
+| 3 | $-\thinspace d$ | Trừ đi mũi tên tím đã gắn sẵn trên robot (Hình 8) |
 
-Cũng có thể thu được kết quả này một cách ngắn gọn hơn. Vì $c_0 = \hat p + R(\hat\psi)\,d$, PT (12) tương đương với $\Delta s = R^{\top}(\hat\psi)(p^{\star} - c_0)$, và thay $p^{\star} - c_0 = -e_0\,n$ từ PT (13) vào sẽ cho dạng đơn giản sau.
+Cũng có thể thu được kết quả này một cách ngắn gọn hơn. Vì $c_0 = \hat p + R(\hat\psi)\thinspace d$, PT (12) tương đương với $\Delta s = R^{\top}(\hat\psi)(p^{\star} - c_0)$, và thay $p^{\star} - c_0 = -e_0\thinspace n$ từ PT (13) vào sẽ cho dạng đơn giản sau.
 
 $$
-\Delta s = -e_0\,R^{\top}(\hat\psi)\,n = -e_0 \begin{bmatrix} \sin(\hat\psi - \theta_l) \\ \cos(\hat\psi - \theta_l) \end{bmatrix} \qquad (15)
+\Delta s = -e_0\thinspace R^{\top}(\hat\psi)\thinspace n = -e_0 \begin{bmatrix} \sin(\hat\psi - \theta_l) \cr \cos(\hat\psi - \theta_l) \end{bmatrix} \qquad (15)
 $$
 
-Nghĩa là, $\Delta s$ là mũi tên cam $(0.00,\ 10.73)$ mm của Hình 9(b) được đọc lại trên thang robot, $10.73\,(\sin 3^{\circ},\ \cos 3^{\circ}) = (0.56,\ 10.72)$ mm. Khi robot song song với đường thẳng ($\hat\psi = \theta_l$), $\Delta s = (0,\ -e_0)$; tức là chỉ trục Y di chuyển, ngược chiều với sai số ngang và với cùng độ lớn. Khi robot nghiêng 3°, trục X cũng di chuyển một lượng $-e_0\sin 3^{\circ}$, nhờ đó bút được dịch vuông góc với đường thẳng trên tường chứ không theo trục Y đang bị nghiêng. Trong thí nghiệm ảo, trục X hầu như không di chuyển (51.0–53.8 mm) trong khi trục Y loại bỏ sai số ngang (61.3–72.2 mm), phù hợp với phương trình này. Đoạn mã tính trực tiếp từ $\hat p$ mà không đi qua $c_0$ chỉ là cùng một phương trình được viết theo thứ tự khác.
+Nghĩa là, $\Delta s$ là mũi tên cam $(0.00,\ 10.73)$ mm của Hình 9(b) được đọc lại trên thang robot, $10.73\thinspace (\sin 3^{\circ},\ \cos 3^{\circ}) = (0.56,\ 10.72)$ mm. Khi robot song song với đường thẳng ($\hat\psi = \theta_l$), $\Delta s = (0,\ -e_0)$; tức là chỉ trục Y di chuyển, ngược chiều với sai số ngang và với cùng độ lớn. Khi robot nghiêng 3°, trục X cũng di chuyển một lượng $-e_0\sin 3^{\circ}$, nhờ đó bút được dịch vuông góc với đường thẳng trên tường chứ không theo trục Y đang bị nghiêng. Trong thí nghiệm ảo, trục X hầu như không di chuyển (51.0–53.8 mm) trong khi trục Y loại bỏ sai số ngang (61.3–72.2 mm), phù hợp với phương trình này. Đoạn mã tính trực tiếp từ $\hat p$ mà không đi qua $c_0$ chỉ là cùng một phương trình được viết theo thứ tự khác.
 
 ### 6.6 Từ $\Delta s$ đến lệnh Zaber: 1000 và $s_c$
 
 $\Delta s$ trong các PT (12)–(15) là một vectơ trong hệ tọa độ thân, tính theo m. Tuy nhiên, firmware Zaber và topic `/stage/target_pos` dùng mm, và gốc của chúng là một đầu của hành trình (vị trí gốc (home)). Vì vậy, lệnh bàn trượt còn phải qua thêm hai bước.
 
 $$
-s^{\star} = s_c + 1000\,\Delta s \quad [\mathrm{mm}], \qquad s_c = 50.8\ \mathrm{mm} \qquad (16)
+s^{\star} = s_c + 1000\thinspace \Delta s \quad [\mathrm{mm}], \qquad s_c = 50.8\ \mathrm{mm} \qquad (16)
 $$
 
 ![Chuyển Delta s thành lệnh Zaber](2_docs/img/fig_pen_stage.png)
@@ -510,7 +510,7 @@ Hình 11(a) phóng to hình vuông xanh ngọc (bàn trượt) của Hình 8. Tr
 | Phép toán | Vì sao cần | Điều gì xảy ra nếu bỏ qua |
 |---|---|---|
 | $\times 1000$ | Bộ điều khiển tính mọi độ dài nội bộ theo đơn vị SI là m và chỉ chuyển sang mm tại giao diện với bàn trượt ($1\ \mathrm{m} = 1000\ \mathrm{mm}$) | Gửi 0.0107 khiến Zaber hiểu là 0.0107 mm, nên bút hầu như không di chuyển (dấu × xám ở giữa Hình 11(a)) |
-| $+\,s_c$ | $\Delta s = 0$ trong bộ điều khiển là vị trí giữa bàn trượt, còn điểm 0 của Zaber là vị trí gốc (home) (mép của hành trình) | Gửi 10.72 sẽ đưa con trượt về gần vị trí gốc, thấp hơn vị trí giữa 40 mm (dấu × xám ở góc dưới bên trái Hình 11(a)) |
+| $+\thinspace s_c$ | $\Delta s = 0$ trong bộ điều khiển là vị trí giữa bàn trượt, còn điểm 0 của Zaber là vị trí gốc (home) (mép của hành trình) | Gửi 10.72 sẽ đưa con trượt về gần vị trí gốc, thấp hơn vị trí giữa 40 mm (dấu × xám ở góc dưới bên trái Hình 11(a)) |
 
 Hình 11(b) ghi cùng một điểm trên trục Y theo ba thang đo. Giá trị 0.0107 trên thang m của bộ điều khiển trở thành 10.72 trên thang mm của bộ điều khiển sau khi nhân với 1000, và thành 61.52 trên thang Zaber sau khi cộng 50.8. Các điểm giữa (0, 0, 50.8) và các điểm đầu mút ($\pm 0.0508$ m, $\pm 50.8$ mm, 0 và 101.6 mm) của ba thang đo là những điểm trùng nhau. $s_c$ chuyển thành con số Zaber thiết kế "bắt đầu với bàn trượt ở giữa và giữ khoảng dự trữ $\pm 50.8$ mm ở mỗi phía". Cũng vì lý do đó, $s^{\star} = (s_c,\ s_c)$ ngoài chế độ 3, nên bàn trượt chờ ở vị trí giữa khi không vẽ đường thẳng. Ngược lại, khi tính vị trí bút (PenTrace, dùng để đánh giá), $s_c$ được trừ đi và kết quả được chia cho 1000, như trong PT (3).
 
@@ -518,7 +518,7 @@ Hình 11(b) ghi cùng một điểm trên trục Y theo ba thang đo. Giá trị
 
 *Hình 12. Trình tự tính toán của PenComp cùng hệ tọa độ và đơn vị của từng bước*
 
-Hình 12 trình bày trình tự tính toán của các PT (12)–(16) dưới dạng các khối. Quá trình bắt đầu từ các đại lượng trong hệ tọa độ tường theo m ($\hat p$, $c_0$, $p^{\star}$), chuyển sang hệ tọa độ thân sau khi qua $R^{\top}$, và cuối cùng chuyển sang thang mm của bàn trượt sau khi qua $\times 1000$ và $+\,s_c$.
+Hình 12 trình bày trình tự tính toán của các PT (12)–(16) dưới dạng các khối. Quá trình bắt đầu từ các đại lượng trong hệ tọa độ tường theo m ($\hat p$, $c_0$, $p^{\star}$), chuyển sang hệ tọa độ thân sau khi qua $R^{\top}$, và cuối cùng chuyển sang thang mm của bàn trượt sau khi qua $\times 1000$ và $+\thinspace s_c$.
 
 ### 6.7 Tổng hợp ví dụ số
 
@@ -530,23 +530,23 @@ Hình 13 gộp nội dung của các Hình 8–11 vào một trang. Đó là th�
 
 | Bước | Mã | Phương trình | Giá trị trong ví dụ này [mm] | Trên hình |
 |---|---|---|---|---|
-| 1 | `pc = pT + R*pen_d` | $c_0 = \hat p + R(\hat\psi)\,d$ | $(-200.0,\ 345.0) + (83.0,\ -55.7) = (-117.0,\ 289.3)$ | Hình 9(b) hình tròn trắng |
+| 1 | `pc = pT + R*pen_d` | $c_0 = \hat p + R(\hat\psi)\thinspace d$ | $(-200.0,\ 345.0) + (83.0,\ -55.7) = (-117.0,\ 289.3)$ | Hình 9(b) hình tròn trắng |
 | 2 | `sigma = dot(u, pc - A)` | $\sigma = u^{\top}(c_0 - A)$ | 583.0 | Hình 9(a) đường kích thước |
 | – | – | $e_0 = n^{\top}(c_0 - A)$ | $-10.73$ (bút nằm dưới đường thẳng) | Hình 9(b) |
 | 3 | `p_des = A + sigma*u` | $p^{\star} = A + \sigma u$ | $(-117.0,\ 300.0)$ | Hình 9(b) hình thoi xanh lá |
 | 4 | `p_des - pT` | $p^{\star} - \hat p$ | $(83.0,\ -45.0)$ | Hình 10(a) mũi tên xanh lá |
 | 5 | `R'*(p_des - pT)` | $R^{\top}(\hat\psi)(p^{\star} - \hat p)$ | $(80.6,\ -49.3)$ | Hình 10(b), Hình 8 mũi tên xanh lá |
 | 6 | `e_b = ... - pen_d` | $\Delta s$ | $(80.6,\ -49.3) - (80.0,\ -60.0) = (0.56,\ 10.72)$ | Hình 8(b) mũi tên cam |
-| 7 | `s_cmd = stage_c + 1000*e_b` | $s^{\star} = s_c + 1000\,\Delta s$ | $(51.36,\ 61.52)$ | Hình 11(a) hình tròn đỏ |
+| 7 | `s_cmd = stage_c + 1000*e_b` | $s^{\star} = s_c + 1000\thinspace \Delta s$ | $(51.36,\ 61.52)$ | Hình 11(a) hình tròn đỏ |
 | 8 | `pen_on` | $0 \le \sigma \le L$ | 1 (hạ bút) | Hình 9(a) |
 
-Kiểm tra bằng PT (15) cho $-e_0\,(\sin 3^{\circ},\ \cos 3^{\circ}) = 10.73\,(0.0523,\ 0.9986) = (0.56,\ 10.72)$ mm, trùng với bước 6. Kết quả được kiểm chứng như sau.
+Kiểm tra bằng PT (15) cho $-e_0\thinspace (\sin 3^{\circ},\ \cos 3^{\circ}) = 10.73\thinspace (0.0523,\ 0.9986) = (0.56,\ 10.72)$ mm, trùng với bước 6. Kết quả được kiểm chứng như sau.
 
 | Mục kiểm tra | Phép tính | Kết quả |
 |---|---|---|
 | Chuyển động trục Y | $61.52 - 50.8$ | 10.72 mm. Ở tư thế này $y_B$ hướng gần như thẳng lên trên, nên bút di chuyển lên trên tường |
 | Chuyển động trục X | $51.36 - 50.8$ | 0.56 mm. "Lên trên tường" và "bên trái robot" lệch nhau $3^{\circ}$, nên bút cũng phải được dịch về phía trước một lượng $10.73\sin 3^{\circ}$ để đi thẳng lên trên |
-| Đầu bút | $P = \hat p + R(\hat\psi)\,(d + \Delta s)$ | $(-117.0,\ 300.0) = p^{\star}$ |
+| Đầu bút | $P = \hat p + R(\hat\psi)\thinspace (d + \Delta s)$ | $(-117.0,\ 300.0) = p^{\star}$ |
 | Sai số ngang | $n^{\top}(P - A)$ | 0. Vì $c_0$ nằm dưới đường thẳng 10.73 mm, bút rơi đúng vào $p^{\star}$, tức là nằm trên đường thẳng |
 | Phương dọc đường thẳng | $u^{\top}(P - c_0)$ | 0. Bàn trượt không dịch bút dọc đường thẳng |
 
@@ -574,7 +574,7 @@ Bàn trượt có đủ nhanh hay không có thể được đánh giá bằng c
 Phép bù ở Chương 6 không đo bút; nó tính vị trí bút từ tư thế robot đo được, nên bút lệch khỏi đường thẳng đúng bằng lượng mà phép đo bị sai. Định nghĩa sai số đo vị trí là $\delta p = \hat p - p$ và sai số đo hướng là $\delta\psi = \hat\psi - \psi$, sai số ngang của bút ở bậc một như sau (các PT (39)–(41)).
 
 $$
-e \approx -\,n^{\top}\delta p \;-\; \ell_u\,\delta\psi, \qquad \ell_u = u^{\top}R(\psi)(d + \Delta s) \approx 0.08\ \mathrm{m} \qquad (17)
+e \approx -\thinspace n^{\top}\delta p \thickspace -\thickspace \ell_u\thinspace \delta\psi, \qquad \ell_u = u^{\top}R(\psi)(d + \Delta s) \approx 0.08\ \mathrm{m} \qquad (17)
 $$
 
 $$
@@ -598,10 +598,10 @@ Vì ZeroKey là yếu tố chi phối, phương án thêm một thẻ định v�
 (b) Thẻ định vị thứ hai $T_2$ được lắp trên thân robot sao cho bút nằm đúng chính giữa hai thẻ. Trong bố trí hiện tại, $T_2 = -r_{tag} = (0.08,\ -0.06)$ m. Khi ba điểm trên một vật rắn nằm trên cùng một đường thẳng, vị trí điểm giữa là trung bình của hai điểm còn lại, không phụ thuộc vào hướng.
 
 $$
-c_0 = \tfrac12(p_1 + p_2) \quad\Rightarrow\quad \hat P = \tfrac12(\hat p_1 + \hat p_2) + R(\hat\psi)\,\Delta s, \qquad \sigma_e^2 \approx \tfrac12\sigma_p^2 + \lvert\Delta s\rvert^2\sigma_\psi^2 \qquad (19)
+c_0 = \tfrac12(p_1 + p_2) \quad\Rightarrow\quad \hat P = \tfrac12(\hat p_1 + \hat p_2) + R(\hat\psi)\thinspace \Delta s, \qquad \sigma_e^2 \approx \tfrac12\sigma_p^2 + \lvert\Delta s\rvert^2\sigma_\psi^2 \qquad (19)
 $$
 
-Nếu nhiễu của hai thẻ độc lập, phương sai của giá trị trung bình giảm một nửa, và sai số hướng chỉ nhân với độ dịch của con trượt $\lvert\Delta s\rvert \approx$ 15 mm, thu nhỏ còn 0.1 mm hoặc ít hơn. Nghĩa là, ảnh hưởng của độ trôi hướng gần như biến mất. Ngoài ra, hướng có thể được tính trực tiếp từ đường cơ sở $b = 0.2$ m nối hai thẻ. Nhiễu của nó, $\sqrt2\,\sigma_p/b \approx 0.41^{\circ}$, lớn hơn nhiễu của IMU, nhưng vì không có độ trôi nên có thể kết hợp với IMU trong một bộ lọc bù (complementary filter) để loại bỏ độ trôi.
+Nếu nhiễu của hai thẻ độc lập, phương sai của giá trị trung bình giảm một nửa, và sai số hướng chỉ nhân với độ dịch của con trượt $\lvert\Delta s\rvert \approx$ 15 mm, thu nhỏ còn 0.1 mm hoặc ít hơn. Nghĩa là, ảnh hưởng của độ trôi hướng gần như biến mất. Ngoài ra, hướng có thể được tính trực tiếp từ đường cơ sở $b = 0.2$ m nối hai thẻ. Nhiễu của nó, $\sqrt2\thinspace \sigma_p/b \approx 0.41^{\circ}$, lớn hơn nhiễu của IMU, nhưng vì không có độ trôi nên có thể kết hợp với IMU trong một bộ lọc bù (complementary filter) để loại bỏ độ trôi.
 
 (c) Thẻ định vị thứ hai $T_3$ được lắp trên con trượt của bàn trượt (cạnh bút). Vì nó đo vị trí bút gần như trực tiếp, ưu điểm là sai số hiệu chuẩn cánh tay đòn, sai số bàn trượt và sai số tư thế robot đều đi vào phép đo. Tuy nhiên, nhiễu thẻ $\sigma_p$ vẫn giữ nguyên, và ngay khi bàn trượt được điều khiển theo vị trí bút đo được, một vòng phản hồi chứa độ trễ 50 ms được hình thành, đòi hỏi phải thiết kế vòng điều khiển. Khối lượng của thẻ cộng thêm vào khối lượng chuyển động của con trượt Y (0.16 kg), và tín hiệu vô tuyến có thể bị che chắn gần bút đánh dấu (marker) và tường.
 
@@ -613,7 +613,7 @@ Các dự đoán và mô phỏng gần đúng cho ba phương án như sau. Các
 | (b) 2 thẻ trên robot, bút ở giữa | 0.71 mm | 0.82 mm | 0.84 mm | 2.5 mm |
 | (c) 1 thẻ trên robot + 1 thẻ trên con trượt | 1.0 mm | 1.08 mm | 1.07 mm | 3.3 mm |
 
-(b) chính xác nhất, và vì không tạo ra vòng phản hồi mới ở phía bàn trượt nên cũng đơn giản khi triển khai. Do đó, thẻ định vị thứ hai nên được lắp trên thân robot, với bút nằm đúng chính giữa hai thẻ, thay vì lắp trên bút. Thẻ định vị trên bút (con trượt) phù hợp hơn cho việc hiệu chuẩn cánh tay đòn $d$ hoặc kiểm chứng kết quả. Tuy nhiên, phép so sánh này dựa trên giả thiết rằng nhiễu của hai thẻ độc lập. Nếu hai thẻ ở gần nhau và chịu cùng một sai số đa đường (multipath), lợi ích của (b) sẽ giảm, vì vậy trước hết cần đo tương quan nhiễu trên robot thật với cả hai thẻ đứng yên. Nếu bút không nằm đúng chính giữa, thay cho giá trị trung bình của PT (19) sẽ dùng trung bình có trọng số $(1-\lambda)\hat p_1 + \lambda\hat p_2$, với phương sai $((1-\lambda)^2 + \lambda^2)\,\sigma_p^2$. Để dùng tính năng này cần thêm đầu vào thẻ định vị thứ hai cho Nav và PenComp (mô hình hiện tại có một thẻ định vị).
+(b) chính xác nhất, và vì không tạo ra vòng phản hồi mới ở phía bàn trượt nên cũng đơn giản khi triển khai. Do đó, thẻ định vị thứ hai nên được lắp trên thân robot, với bút nằm đúng chính giữa hai thẻ, thay vì lắp trên bút. Thẻ định vị trên bút (con trượt) phù hợp hơn cho việc hiệu chuẩn cánh tay đòn $d$ hoặc kiểm chứng kết quả. Tuy nhiên, phép so sánh này dựa trên giả thiết rằng nhiễu của hai thẻ độc lập. Nếu hai thẻ ở gần nhau và chịu cùng một sai số đa đường (multipath), lợi ích của (b) sẽ giảm, vì vậy trước hết cần đo tương quan nhiễu trên robot thật với cả hai thẻ đứng yên. Nếu bút không nằm đúng chính giữa, thay cho giá trị trung bình của PT (19) sẽ dùng trung bình có trọng số $(1-\lambda)\hat p_1 + \lambda\hat p_2$, với phương sai $((1-\lambda)^2 + \lambda^2)\thinspace \sigma_p^2$. Để dùng tính năng này cần thêm đầu vào thẻ định vị thứ hai cho Nav và PenComp (mô hình hiện tại có một thẻ định vị).
 
 ---
 
@@ -637,9 +637,9 @@ Các dự đoán và mô phỏng gần đúng cho ba phương án như sau. Các
 | Phương ngang | Phía phải của hình là $+x$. Đường thẳng $A \to B$ chạy theo hướng $+x$ |
 | Hình chữ nhật xám, $x_B$, $y_B$ | Thân robot và các trục thân. Robot trong hình này ở $\psi \approx -6^{\circ}$ (hướng sang phải, mũi hơi chúc xuống) |
 | Hình vuông đen $p$ | Thẻ định vị (tag) ZeroKey. Điểm đo được là điểm này, không phải tâm robot |
-| Mũi tên tím $R(\psi)\,d$ | Cánh tay đòn từ thẻ định vị đến "bút khi bàn trượt ở giữa" $c_0$ (hình tròn trắng), biểu diễn trong tọa độ tường |
+| Mũi tên tím $R(\psi)\thinspace d$ | Cánh tay đòn từ thẻ định vị đến "bút khi bàn trượt ở giữa" $c_0$ (hình tròn trắng), biểu diễn trong tọa độ tường |
 | Hình chữ nhật nét đứt xanh lá | Hành trình bàn trượt (tâm tại $c_0$, song song với các trục thân) |
-| Mũi tên cam $R(\psi)\,\Delta s$ | Độ dịch chuyển của bút trên tường do chuyển động của con trượt |
+| Mũi tên cam $R(\psi)\thinspace \Delta s$ | Độ dịch chuyển của bút trên tường do chuyển động của con trượt |
 | Hình tròn đỏ $P$ | Đầu bút thực tế |
 | Hình thoi xanh đậm $p^{\star}$ | Chân đường vuông góc từ $c_0$ xuống đường thẳng = mục tiêu của bút |
 | Mũi tên đỏ $e$ | Sai số ngang của bút. Khoảng cách đến đường thẳng đo theo hướng $n$ (hướng lên) |
@@ -682,37 +682,37 @@ Các dự đoán và mô phỏng gần đúng cho ba phương án như sau. Các
 $x_B$ là vectơ đơn vị nhận được khi quay trục $x$ ngược chiều kim đồng hồ một góc $\psi$, và $y_B$ là $x_B$ quay thêm $+90^{\circ}$.
 
 $$
-x_B^{\mathcal{W}} = \begin{bmatrix} \cos\psi \\ \sin\psi \end{bmatrix}, \qquad
-y_B^{\mathcal{W}} = \begin{bmatrix} \cos(\psi + 90^{\circ}) \\ \sin(\psi + 90^{\circ}) \end{bmatrix} = \begin{bmatrix} -\sin\psi \\ \cos\psi \end{bmatrix}
+x_B^{\mathcal{W}} = \begin{bmatrix} \cos\psi \cr \sin\psi \end{bmatrix}, \qquad
+y_B^{\mathcal{W}} = \begin{bmatrix} \cos(\psi + 90^{\circ}) \cr \sin(\psi + 90^{\circ}) \end{bmatrix} = \begin{bmatrix} -\sin\psi \cr \cos\psi \end{bmatrix}
 $$
 
 Vectơ $v^{\mathcal{B}} = [a,\ b]^{\top}$ trong tọa độ thân có nghĩa là "$a$ về phía trước, $b$ sang trái", nên trong tọa độ tường nó là tổng của hai vectơ trục.
 
 $$
-v^{\mathcal{W}} = a\,x_B^{\mathcal{W}} + b\,y_B^{\mathcal{W}}
-= \underbrace{\begin{bmatrix} x_B^{\mathcal{W}} & y_B^{\mathcal{W}} \end{bmatrix}}_{R(\psi)} \begin{bmatrix} a \\ b \end{bmatrix},
+v^{\mathcal{W}} = a\thinspace x_B^{\mathcal{W}} + b\thinspace y_B^{\mathcal{W}}
+= \underbrace{\begin{bmatrix} x_B^{\mathcal{W}} & y_B^{\mathcal{W}} \end{bmatrix}}_{R(\psi)} \begin{bmatrix} a \cr b \end{bmatrix},
 \qquad
-R(\psi) = \begin{bmatrix} \cos\psi & -\sin\psi \\ \sin\psi & \cos\psi \end{bmatrix}, \qquad
-J = R(90^{\circ}) = \begin{bmatrix} 0 & -1 \\ 1 & 0 \end{bmatrix} \qquad (20)
+R(\psi) = \begin{bmatrix} \cos\psi & -\sin\psi \cr \sin\psi & \cos\psi \end{bmatrix}, \qquad
+J = R(90^{\circ}) = \begin{bmatrix} 0 & -1 \cr 1 & 0 \end{bmatrix} \qquad (20)
 $$
 
 *(Cùng hình: Hình 5)*
 
 | Tính chất | Phương trình | Dùng cho |
 |---|---|---|
-| Thân → tường | $v^{\mathcal{W}} = R(\psi)\,v^{\mathcal{B}}$ | Cánh tay đòn $R d$, độ dịch chuyển con trượt $R\,\Delta s$ (PT (32)) |
-| Tường → thân | $v^{\mathcal{B}} = R^{\top}(\psi)\,v^{\mathcal{W}}$ ($R^{\top}R = I$, $\det R = 1$) | Lệnh bàn trượt $\Delta s$ (PT (33)), sai số thân $e_x, e_y$ (PT (30a)) |
-| Hợp góc | $R(\alpha)R(\beta) = R(\alpha + \beta)$, $R^{\top}(\psi) = R(-\psi)$ | $R^{\top}(\psi)\,n = R(\theta_l + 90^{\circ} - \psi)\,e_1$ trong PT (34) |
-| Đạo hàm | $\dot R = \dot\psi\,\partial R/\partial\psi = \omega\,J R$ | Lan truyền sai số (PT (39)) |
+| Thân → tường | $v^{\mathcal{W}} = R(\psi)\thinspace v^{\mathcal{B}}$ | Cánh tay đòn $R d$, độ dịch chuyển con trượt $R\thinspace \Delta s$ (PT (32)) |
+| Tường → thân | $v^{\mathcal{B}} = R^{\top}(\psi)\thinspace v^{\mathcal{W}}$ ($R^{\top}R = I$, $\det R = 1$) | Lệnh bàn trượt $\Delta s$ (PT (33)), sai số thân $e_x, e_y$ (PT (30a)) |
+| Hợp góc | $R(\alpha)R(\beta) = R(\alpha + \beta)$, $R^{\top}(\psi) = R(-\psi)$ | $R^{\top}(\psi)\thinspace n = R(\theta_l + 90^{\circ} - \psi)\thinspace e_1$ trong PT (34) |
+| Đạo hàm | $\dot R = \dot\psi\thinspace \partial R/\partial\psi = \omega\thinspace J R$ | Lan truyền sai số (PT (39)) |
 | Quay $+90^{\circ}$ | $J v$ = $v$ quay sang trái, $J^{\top}J = I$, $J^2 = -I$ | Pháp tuyến trái của đường thẳng $n = Ju$ |
 
 Kiểm tra ($\psi = 0^{\circ}$, khi bám đường thẳng / $\psi = 90^{\circ}$, tư thế xuất phát)
 
 $$
 R(0^{\circ}) = I:\quad
-R\begin{bmatrix} 1 \\ 0 \end{bmatrix} = \begin{bmatrix} 1 \\ 0 \end{bmatrix}\ (\text{phía trước} = \text{phải}), \qquad
-R(90^{\circ}) = \begin{bmatrix} 0 & -1 \\ 1 & 0 \end{bmatrix}:\quad
-R\begin{bmatrix} 1 \\ 0 \end{bmatrix} = \begin{bmatrix} 0 \\ 1 \end{bmatrix}\ (\text{phía trước} = \text{lên})
+R\begin{bmatrix} 1 \cr 0 \end{bmatrix} = \begin{bmatrix} 1 \cr 0 \end{bmatrix}\ (\text{phía trước} = \text{phải}), \qquad
+R(90^{\circ}) = \begin{bmatrix} 0 & -1 \cr 1 & 0 \end{bmatrix}:\quad
+R\begin{bmatrix} 1 \cr 0 \end{bmatrix} = \begin{bmatrix} 0 \cr 1 \end{bmatrix}\ (\text{phía trước} = \text{lên})
 $$
 
 - Khi bám đường thẳng, con trượt dịch 1 mm sang trái thân ($\Delta s_Y = +0.001$) làm bút trên tường dịch lên 1 mm ($+y$)
@@ -726,7 +726,7 @@ $$
 | $\psi$ | psi | Góc hướng. Góc từ trục $x$ đến trục $x_B$ (phải là 0, ngược chiều kim đồng hồ là +) | rad |
 | $R(\psi)$ | R của psi | Ma trận quay thân → tường (PT (20)). $\dot R = \omega J R$ | – |
 | $c$ | c | Vị trí tâm robot | m |
-| $p$ | p | Vị trí thẻ định vị ZeroKey $p = c + R(\psi)\,r_{tag}$ (PT (21a)) | m |
+| $p$ | p | Vị trí thẻ định vị ZeroKey $p = c + R(\psi)\thinspace r_{tag}$ (PT (21a)) | m |
 | $r_{tag},\ r_{pen,0}$ | – | Vị trí thẻ định vị trong tọa độ thân, vị trí bút khi bàn trượt ở giữa | $(-0.08,\ 0.06)$, $(0,\ 0)$ m |
 | $q = [c^{\top},\ \psi]^{\top}$ | q | Tư thế robot | m, rad |
 | $V = [v,\ \omega]^{\top}$ | V | Tốc độ tiến, tốc độ góc yaw | m/s, rad/s |
@@ -741,18 +741,18 @@ $$
 ### 8.2 Động học robot bánh xích
 
 $$
-\dot q = S(q)\,V + w(t), \qquad
-S(q) = \begin{bmatrix} \cos\psi & u_c \sin\psi \\ \sin\psi & -u_c\cos\psi \\ 0 & 1 \end{bmatrix} \qquad (21)
+\dot q = S(q)\thinspace V + w(t), \qquad
+S(q) = \begin{bmatrix} \cos\psi & u_c \sin\psi \cr \sin\psi & -u_c\cos\psi \cr 0 & 1 \end{bmatrix} \qquad (21)
 $$
 
 $$
-w(t) = \begin{bmatrix} -k_s\,\lvert v\rvert \\ 0 \\ \dot\psi_w(t) \end{bmatrix}, \qquad
-\psi_w(t) = a_w \sin(2\pi f_w t) + \tfrac{1}{2} a_w \sin(2\pi\,2.3 f_w t + 1) \qquad (22)
+w(t) = \begin{bmatrix} -k_s\thinspace \lvert v\rvert \cr 0 \cr \dot\psi_w(t) \end{bmatrix}, \qquad
+\psi_w(t) = a_w \sin(2\pi f_w t) + \tfrac{1}{2} a_w \sin(2\pi\thinspace 2.3 f_w t + 1) \qquad (22)
 $$
 
 | Ký hiệu | Định nghĩa | Giá trị |
 |---|---|---|
-| $u_c$ | Độ dịch dọc của tâm quay tức thời (ICR). Zou [1] PT (34) $u_c = -\mathrm{sgn}(\omega)\,R_t \sin\alpha$, $R_t = \lvert v/\omega\rvert$ | 0 khi $\alpha = 0$ |
+| $u_c$ | Độ dịch dọc của tâm quay tức thời (ICR). Zou [1] PT (34) $u_c = -\mathrm{sgn}(\omega)\thinspace R_t \sin\alpha$, $R_t = \lvert v/\omega\rvert$ | 0 khi $\alpha = 0$ |
 | $\alpha$ | Góc trượt | `alpha_s` = 0 |
 | $k_s$ | Trượt (creep) của xích từ tính: trượt theo hướng trọng lực tỉ lệ với tốc độ di chuyển | 0.08 [cần đo thực tế] |
 | $a_w,\ f_w$ | Biên độ và tần số dao động góc hướng do độ gồ ghề của xích | 1.5°, 0.35 Hz [cần đo thực tế] |
@@ -764,20 +764,20 @@ $$
 
 $$
 \dot c = \text{các thành phần vị trí của PT (21)}, \qquad
-p = c + R(\psi)\,r_{tag}, \qquad
-\dot p = \dot c + \omega\,J R(\psi)\,r_{tag} \qquad (21a)
+p = c + R(\psi)\thinspace r_{tag}, \qquad
+\dot p = \dot c + \omega\thinspace J R(\psi)\thinspace r_{tag} \qquad (21a)
 $$
 
 | Hạng mục | Phiên bản trước | Phiên bản hiện tại |
 |---|---|---|
 | Trạng thái tích phân của `RobotPlant` | Điểm thẻ định vị $p$ (thẻ định vị là tâm quay) | Tâm robot $c$ (giống 6WP_sim gốc), giá trị đầu `q0c` |
 | Đầu ra `q_true` | Tư thế thẻ định vị | Tư thế thẻ định vị (khối `TagPoint` chuyển đổi bằng PT (21a)) |
-| Vận tốc ZeroKey (`ZkVel`) | $v\,[\cos\psi,\ \sin\psi]^{\top}$ | $\dot p$ của PT (21a) (gồm cả thành phần quay) |
+| Vận tốc ZeroKey (`ZkVel`) | $v\thinspace [\cos\psi,\ \sin\psi]^{\top}$ | $\dot p$ của PT (21a) (gồm cả thành phần quay) |
 | Thẻ định vị khi quay tại chỗ | Gần như đứng yên | Cung tròn bán kính $\lVert r_{tag}\rVert$ = 0.1 m (giống robot thật) |
 
 - Bù bút (các PT (32)–(34)) chỉ dùng các giá trị đo được $\hat p,\ \hat\psi$ và $d$, nên không bị ảnh hưởng bởi sửa đổi này
 - Ngay sau sửa đổi, sai số bút tăng lên RMS 3.46 mm, cực đại 25.9 mm. Sau khi chế độ 1 đặt thẻ định vị tại điểm xuất phát, lần quay khoảng 70° ở chế độ 2 làm thẻ định vị lệch khỏi đường thẳng khoảng 11 cm, và bút được hạ xuống trong khi góc hướng vẫn còn dao động tới −115° do chế độ 3 đang hiệu chỉnh độ lệch này. Hiện tượng tương tự xảy ra trên robot thật
-- Biện pháp khắc phục: chế độ 1 đưa ước lượng tâm robot $\hat c = \hat p - R(\hat\psi)\,r_{tag}$, thay vì thẻ định vị, tới tâm xuất phát $c_A = r_A - R(\theta_l)\,r_{tag}$ (Mục 8.5). Sau khi quay, thẻ định vị đến đúng điểm xuất phát $r_A$ → độ cao thẻ định vị khi bắt đầu chế độ 3 $y$ = 0.343 m (mục tiêu 0.360 m). 17 mm còn lại là độ trượt (creep) trong lúc quay, giảm từ khoảng 110 mm trước sửa đổi
+- Biện pháp khắc phục: chế độ 1 đưa ước lượng tâm robot $\hat c = \hat p - R(\hat\psi)\thinspace r_{tag}$, thay vì thẻ định vị, tới tâm xuất phát $c_A = r_A - R(\theta_l)\thinspace r_{tag}$ (Mục 8.5). Sau khi quay, thẻ định vị đến đúng điểm xuất phát $r_A$ → độ cao thẻ định vị khi bắt đầu chế độ 3 $y$ = 0.343 m (mục tiêu 0.360 m). 17 mm còn lại là độ trượt (creep) trong lúc quay, giảm từ khoảng 110 mm trước sửa đổi
 - Kết quả sau khắc phục ở Mục 18.3 (RMS bút 1.17–1.20 mm)
 
 ### 8.3 Động lực học (phiên bản trên tường)
@@ -785,26 +785,26 @@ $$
 Động lực học rút gọn của hai bài báo (Zou PT (33b), Sabiha PT (29)) được bổ sung lực hút lên tường và trọng lực. Thành phần vận tốc thứ hai viết là $L\omega$ để nhất quán thứ nguyên.
 
 $$
-\tilde M\,\dot\nu + \tilde C\,\nu + S^{\top}(f_1 + f_2) = \tilde B\,\tau + S^{\top} f_g, \qquad
-\nu = \begin{bmatrix} v \\ L\omega \end{bmatrix},\quad \tau = \begin{bmatrix} F_r \\ F_l \end{bmatrix} \qquad (23)
+\tilde M\thinspace \dot\nu + \tilde C\thinspace \nu + S^{\top}(f_1 + f_2) = \tilde B\thinspace \tau + S^{\top} f_g, \qquad
+\nu = \begin{bmatrix} v \cr L\omega \end{bmatrix},\quad \tau = \begin{bmatrix} F_r \cr F_l \end{bmatrix} \qquad (23)
 $$
 
 $$
-\tilde M = S^{\top} M S = m\begin{bmatrix} 1 & 0 \\ 0 & 1 + u_c^2/L^2 \end{bmatrix}, \quad
+\tilde M = S^{\top} M S = m\begin{bmatrix} 1 & 0 \cr 0 & 1 + u_c^2/L^2 \end{bmatrix}, \quad
 \tilde C = S^{\top} M \dot S, \quad
-\tilde B = \begin{bmatrix} 1 & 1 \\ b/2L & -b/2L \end{bmatrix}, \quad
+\tilde B = \begin{bmatrix} 1 & 1 \cr b/2L & -b/2L \end{bmatrix}, \quad
 L = \sqrt{(l^2 + b^2)/12} \qquad (24)
 $$
 
 $$
-f_1 = \mu_l N \begin{bmatrix} \cos\psi \\ \sin\psi \\ 0 \end{bmatrix} \tanh\!\frac{v}{\varepsilon_v}, \qquad
-f_2 = \begin{bmatrix} F_y \sin\psi \\ -F_y\cos\psi \\ M_r / L \end{bmatrix}, \qquad
-f_g = \begin{bmatrix} 0 \\ -m g \\ 0 \end{bmatrix} \qquad (25)
+f_1 = \mu_l N \begin{bmatrix} \cos\psi \cr \sin\psi \cr 0 \end{bmatrix} \tanh\negthinspace \frac{v}{\varepsilon_v}, \qquad
+f_2 = \begin{bmatrix} F_y \sin\psi \cr -F_y\cos\psi \cr M_r / L \end{bmatrix}, \qquad
+f_g = \begin{bmatrix} 0 \cr -m g \cr 0 \end{bmatrix} \qquad (25)
 $$
 
 $$
-F_y = 2\mu_t \frac{N}{l}\,u_c \tanh\!\frac{\omega}{\varepsilon_\omega}, \qquad
-M_r = \mu_t \frac{N}{l}\left(\frac{l^2}{4} - u_c^2\right) \tanh\!\frac{\omega}{\varepsilon_\omega} \qquad (26)
+F_y = 2\mu_t \frac{N}{l}\thinspace u_c \tanh\negthinspace \frac{\omega}{\varepsilon_\omega}, \qquad
+M_r = \mu_t \frac{N}{l}\left(\frac{l^2}{4} - u_c^2\right) \tanh\negthinspace \frac{\omega}{\varepsilon_\omega} \qquad (26)
 $$
 
 | Ký hiệu | Định nghĩa | Giá trị |
@@ -823,39 +823,39 @@ Khác biệt so với các phương trình của bài báo gốc
 |---|---|---|---|
 | 1 | Tải pháp tuyến $W = mg$ (Zou các PT (24)–(27)) | Lực hút $N$ | Trên tường, lực pháp tuyến sinh ra ma sát là lực hút từ, không phải trọng lực |
 | 2 | Không có số hạng trọng lực | $f_g$ (PT (25)) | Mặt phẳng di chuyển thẳng đứng, nên trọng lực nằm trong mặt phẳng chuyển động |
-| 3 | $M_r = \mathrm{sgn}(\omega)\,\mu_t \frac{W}{l}\left(u_c^2 - \frac{l^2}{4}\right)$ (Zou PT (27), Sabiha PT (24)) | $\frac{l^2}{4} - u_c^2$ | Với phương trình gốc, khi $\lvert u_c\rvert < l/2$, $M_r$ có dấu ngược với $\omega$, nên mô-men cản quay lại hỗ trợ việc quay. Được sửa để dấu phù hợp với độ lớn $\mu_t W l / 4$ của Wong ($u_c = 0$) |
+| 3 | $M_r = \mathrm{sgn}(\omega)\thinspace \mu_t \frac{W}{l}\left(u_c^2 - \frac{l^2}{4}\right)$ (Zou PT (27), Sabiha PT (24)) | $\frac{l^2}{4} - u_c^2$ | Với phương trình gốc, khi $\lvert u_c\rvert < l/2$, $M_r$ có dấu ngược với $\omega$, nên mô-men cản quay lại hỗ trợ việc quay. Được sửa để dấu phù hợp với độ lớn $\mu_t W l / 4$ của Wong ($u_c = 0$) |
 | 4 | $\upsilon = [v,\ \dot\theta]^{\top}$ (Zou PT (19), Sabiha PT (18)) | $\nu = [v,\ L\omega]^{\top}$ | Với $q_3 = L\theta$, thành phần thứ hai phải là $L\dot\theta$ để hàng thứ ba $[0\ \ 1]$ của $S$ và số hạng $u_c\sin\psi/L$ ở hàng thứ nhất nhất quán thứ nguyên |
-| 5 | $M = (F_l + F_r)\,b/2$ (Sabiha PT (23)) | $(F_l - F_r)\,b/2$ | Lỗi đánh máy. PT (26c) và $\bar B$ của cùng bài báo dùng hiệu |
+| 5 | $M = (F_l + F_r)\thinspace b/2$ (Sabiha PT (23)) | $(F_l - F_r)\thinspace b/2$ | Lỗi đánh máy. PT (26c) và $\bar B$ của cùng bài báo dùng hiệu |
 | 6 | $\mathrm{sgn}(\cdot)$ | $\tanh(\cdot/\varepsilon)$ | Ngăn dao động số (chatter) gần trạng thái đứng yên |
 
 Bước tích phân số
 
 - Gần $\omega = 0$, độ dốc của mô-men cản quay $\partial M_r/\partial\omega = \mu_t N l / (4\varepsilon_\omega)$ = 1500 N·m·s; chia cho quán tính yaw $mL^2$ = 0.168 kg·m², trị riêng $\lambda \approx 8.9\times10^{3}\ \mathrm{s^{-1}}$
 - So với điều kiện ổn định $\lvert\lambda h\rvert \lesssim 2.8$ của RK4 bước cố định (ode4), $h$ = 5 ms cho $\lambda h$ = 44 → $\omega$ dao động số (xác nhận ở Mục 18.5)
-- Với $h$ = 0.5 ms, $\lambda h$ = 4.5 vẫn vượt tiêu chí tuyến tính, nhưng độ dốc chỉ lớn khi $\lvert\omega\rvert < \varepsilon_\omega$, nên dao động biến mất. Chênh lệch giữa $\int\omega\,dt$ và $\Delta\psi$ trong phạm vi 2.5° (đo được)
+- Với $h$ = 0.5 ms, $\lambda h$ = 4.5 vẫn vượt tiêu chí tuyến tính, nhưng độ dốc chỉ lớn khi $\lvert\omega\rvert < \varepsilon_\omega$, nên dao động biến mất. Chênh lệch giữa $\int\omega\thinspace dt$ và $\Delta\psi$ trong phạm vi 2.5° (đo được)
 
 ### 8.4 Hệ truyền động và vòng tốc độ trong
 
 $(v_c, \omega_c)$ do bộ điều khiển xuất ra được chuyển thành PWM và gửi đến ESC, và bộ PI tốc độ bên trong mô hình chuyển động tạo ra lực kéo của xích.
 
 $$
-\bar V = \mathrm{sat}_{0.5}\!\left(\frac{v_c}{2v_{full}}\right), \quad
-\bar W = \mathrm{sat}_{0.5}\!\left(\frac{\omega_c}{2\omega_{full}}\right), \quad
+\bar V = \mathrm{sat}_{0.5}\negthinspace \left(\frac{v_c}{2v_{full}}\right), \quad
+\bar W = \mathrm{sat}_{0.5}\negthinspace \left(\frac{\omega_c}{2\omega_{full}}\right), \quad
 \begin{aligned}
-u_L &= 1500 + T(\bar V) - T_s(\bar W) \\
+u_L &= 1500 + T(\bar V) - T_s(\bar W) \cr
 u_R &= 1500 - T(\bar V) - T_s(\bar W)
 \end{aligned} \qquad (27)
 $$
 
 $$
-T(\bar V) = d_v \tanh\!\frac{\bar V}{0.02} + (400 - d_v)\,\frac{\bar V}{0.5}, \qquad
-T_s(\bar W) = d_\omega \tanh\!\frac{\bar W}{0.10} + (400 - d_\omega)\,\frac{\bar W}{0.5} \qquad (28)
+T(\bar V) = d_v \tanh\negthinspace \frac{\bar V}{0.02} + (400 - d_v)\thinspace \frac{\bar V}{0.5}, \qquad
+T_s(\bar W) = d_\omega \tanh\negthinspace \frac{\bar W}{0.10} + (400 - d_\omega)\thinspace \frac{\bar W}{0.5} \qquad (28)
 $$
 
 $$
-\tau_X = K_{P,v}\,e_v + K_{I,v}\!\int e_v\,dt, \quad
-\tau_N = K_{P,\omega}\,L e_\omega + K_{I,\omega}\!\int L e_\omega\,dt, \quad
-\tau = \tilde B^{-1}\begin{bmatrix} \tau_X \\ \tau_N \end{bmatrix} \qquad (29)
+\tau_X = K_{P,v}\thinspace e_v + K_{I,v}\negthinspace \int e_v\thinspace dt, \quad
+\tau_N = K_{P,\omega}\thinspace L e_\omega + K_{I,\omega}\negthinspace \int L e_\omega\thinspace dt, \quad
+\tau = \tilde B^{-1}\begin{bmatrix} \tau_X \cr \tau_N \end{bmatrix} \qquad (29)
 $$
 
 | Ký hiệu | Định nghĩa | Giá trị |
@@ -875,8 +875,8 @@ $$
 Chế độ 3 (bám đường thẳng). Bám theo một điểm tham chiếu biến thiên theo thời gian bằng các sai số trong hệ tọa độ thân.
 
 $$
-x_r(t) = W_{prev} + v_r\,(t - t_{line})\,u_r, \qquad
-\begin{bmatrix} e_x \\ e_y \end{bmatrix} = R^{\top}(\psi)\,(x_r - p), \qquad
+x_r(t) = W_{prev} + v_r\thinspace (t - t_{line})\thinspace u_r, \qquad
+\begin{bmatrix} e_x \cr e_y \end{bmatrix} = R^{\top}(\psi)\thinspace (x_r - p), \qquad
 e_\theta = \mathrm{wrap}(\theta_r - \psi) \qquad (30a)
 $$
 
@@ -889,12 +889,12 @@ Chế độ 1 (đến điểm xuất phát), chế độ 4 (dừng tại điểm
 
 $$
 \rho = \lVert W - p\rVert, \quad
-\alpha = \mathrm{wrap}\!\left(\mathrm{atan2}(W - p) - \psi\right), \quad
-v_c = k_\rho\,\rho \max(0, \cos\alpha), \quad
-\omega_c = k_\alpha\,\alpha + \tfrac{1}{2}\sin\alpha\cos\alpha \qquad (31)
+\alpha = \mathrm{wrap}\negthinspace \left(\mathrm{atan2}(W - p) - \psi\right), \quad
+v_c = k_\rho\thinspace \rho \max(0, \cos\alpha), \quad
+\omega_c = k_\alpha\thinspace \alpha + \tfrac{1}{2}\sin\alpha\cos\alpha \qquad (31)
 $$
 
-Chế độ 2 (căn chỉnh góc hướng). $v_c = 0$, $\omega_c = k_\alpha\,\mathrm{wrap}(\theta_r - \psi)$. Trong mọi chế độ $\lvert v_c\rvert \le v_{max}$, $\lvert\omega_c\rvert \le \omega_{max}$.
+Chế độ 2 (căn chỉnh góc hướng). $v_c = 0$, $\omega_c = k_\alpha\thinspace \mathrm{wrap}(\theta_r - \psi)$. Trong mọi chế độ $\lvert v_c\rvert \le v_{max}$, $\lvert\omega_c\rvert \le \omega_{max}$.
 
 | Ký hiệu | Định nghĩa | Giá trị (tên trong `XY_setup.m`) |
 |---|---|---|
@@ -905,35 +905,35 @@ Chế độ 2 (căn chỉnh góc hướng). $v_c = 0$, $\omega_c = k_\alpha\,\ma
 | $k_\rho,\ k_\alpha$ | Hệ số khuếch đại khoảng cách và hướng | 1.0 s⁻¹, 2.0 s⁻¹ (`K_dist`, `K_yaw`) |
 | $v_{max},\ \omega_{max}$ | Giới hạn lệnh | 0.20 m/s, 45 °/s |
 
-- PT (30b) là dạng Kanayama (Zou PT (38), Sabiha PT (40)) $\omega_c = \omega_r + v_r\,[k_y' e_y + k_\theta \sin e_\theta]$ với $\omega_r = 0$ (đường thẳng) và $v_r$ được gộp vào các hệ số khuếch đại. $k_y = v_r k_y'$, $k_\psi = v_r k_\theta$
+- PT (30b) là dạng Kanayama (Zou PT (38), Sabiha PT (40)) $\omega_c = \omega_r + v_r\thinspace [k_y' e_y + k_\theta \sin e_\theta]$ với $\omega_r = 0$ (đường thẳng) và $v_r$ được gộp vào các hệ số khuếch đại. $k_y = v_r k_y'$, $k_\psi = v_r k_\theta$
 - Điểm tham chiếu dựa theo thời gian, nên nếu robot chậm hoặc nhanh hơn, $e_x$ điều chỉnh $v_c$ (xem chênh lệch tốc độ ở Mục 18.5)
-- PT (31) ở chế độ 1 được tính với ước lượng tâm $\hat c = \hat p - R(\hat\psi)\,r_{tag}$ và tâm xuất phát $c_A = r_A - R(\theta_l)\,r_{tag}$ thay cho thẻ định vị $\hat p$, và điều kiện chuyển `dist_start` cũng dùng $\lVert c_A - \hat c\rVert$. Cùng ý nghĩa với việc 6WP_sim gốc đưa tâm tới điểm mục tiêu; bảo đảm thẻ định vị đến $r_A$ sau lần quay tại chỗ ở chế độ 2 (Mục 8.2). Các chế độ 3·4 vẫn lấy thẻ định vị làm tham chiếu
+- PT (31) ở chế độ 1 được tính với ước lượng tâm $\hat c = \hat p - R(\hat\psi)\thinspace r_{tag}$ và tâm xuất phát $c_A = r_A - R(\theta_l)\thinspace r_{tag}$ thay cho thẻ định vị $\hat p$, và điều kiện chuyển `dist_start` cũng dùng $\lVert c_A - \hat c\rVert$. Cùng ý nghĩa với việc 6WP_sim gốc đưa tâm tới điểm mục tiêu; bảo đảm thẻ định vị đến $r_A$ sau lần quay tại chỗ ở chế độ 2 (Mục 8.2). Các chế độ 3·4 vẫn lấy thẻ định vị làm tham chiếu
 ### 8.6 Bù động học bút (dẫn giải)
 
 Vị trí đầu bút là tổng của thẻ định vị (tag), cánh tay đòn và độ dịch chuyển của con trượt.
 
 $$
-P = p + R(\psi)\,(d + \Delta s) = c_0 + R(\psi)\,\Delta s, \qquad c_0 = p + R(\psi)\,d \qquad (32)
+P = p + R(\psi)\thinspace (d + \Delta s) = c_0 + R(\psi)\thinspace \Delta s, \qquad c_0 = p + R(\psi)\thinspace d \qquad (32)
 $$
 
 - $c_0$ là vị trí bút khi bàn trượt ở giữa
 - Mục tiêu: giữ bút trên đường thẳng, còn chuyển động tiến dọc đường thẳng để robot đảm nhận → đích của bút được đặt tại chân đường vuông góc hạ từ $c_0$ xuống đường thẳng
 
 $$
-p^{\star} = A + \sigma\,u, \quad \sigma = u^{\top}(c_0 - A)
+p^{\star} = A + \sigma\thinspace u, \quad \sigma = u^{\top}(c_0 - A)
 \quad\Rightarrow\quad
 P = p^{\star}
 \ \Leftrightarrow\
-\Delta s = R^{\top}(\psi)\,(p^{\star} - p) - d,
+\Delta s = R^{\top}(\psi)\thinspace (p^{\star} - p) - d,
 \qquad
-s^{\star} = s_c + 1000\,\Delta s \qquad (33)
+s^{\star} = s_c + 1000\thinspace \Delta s \qquad (33)
 $$
 
-Với sai số ngang khi không bù $e_0 = n^{\top}(c_0 - A)$, khi đó $p^{\star} - c_0 = -e_0\,n$, do đó
+Với sai số ngang khi không bù $e_0 = n^{\top}(c_0 - A)$, khi đó $p^{\star} - c_0 = -e_0\thinspace n$, do đó
 
 $$
-\Delta s = -e_0\,R^{\top}(\psi)\,n = -e_0 \begin{bmatrix} \sin(\psi - \theta_l) \\ \cos(\psi - \theta_l) \end{bmatrix},
-\qquad u = \begin{bmatrix}\cos\theta_l \\ \sin\theta_l\end{bmatrix} \qquad (34)
+\Delta s = -e_0\thinspace R^{\top}(\psi)\thinspace n = -e_0 \begin{bmatrix} \sin(\psi - \theta_l) \cr \cos(\psi - \theta_l) \end{bmatrix},
+\qquad u = \begin{bmatrix}\cos\theta_l \cr \sin\theta_l\end{bmatrix} \qquad (34)
 $$
 
 - Bàn trượt chỉ dịch chuyển một lượng $e_0$, theo hướng do độ lệch góc $\psi - \theta_l$ giữa robot và đường thẳng quyết định
@@ -941,8 +941,8 @@ $$
 - $p^{\star}$ không bị giới hạn trong $[A, B]$. Nếu giới hạn, khi bút ở phía trước A, bàn trượt sẽ cố bù khoảng cách tại vùng $\sigma < 0$ và trục X chạm cuối hành trình
 
 $$
-\mathrm{pen\_on} = \mathbb{1}\left[\,0 \le \sigma \le \lVert B - A\rVert\,\right], \qquad
-s^{\star} \leftarrow \mathrm{rate}_{83\,\mathrm{mm/s}}\!\left(\mathrm{sat}_{[0,\,101.6]}(s^{\star})\right) \qquad (35)
+\mathrm{pen\text{_}on} = \mathbb{1}\left[\thinspace 0 \le \sigma \le \lVert B - A\rVert\thinspace \right], \qquad
+s^{\star} \leftarrow \mathrm{rate}_{83\thinspace \mathrm{mm/s}}\negthinspace \left(\mathrm{sat}_{[0,\thinspace 101.6]}(s^{\star})\right) \qquad (35)
 $$
 
 #### 8.6.1 Ý nghĩa từng bước của các PT (32)–(33)
@@ -954,15 +954,15 @@ $$
 
 | Bước | Phương trình | Hệ tọa độ | Ý nghĩa |
 |---|---|---|---|
-| 1 | $R(\hat\psi)\,d$ | thân → tường | Cánh tay đòn gắn cố định với thân (thẻ định vị → bút) được xoay theo hướng hiện tại thành véc-tơ trong hệ tọa độ tường |
-| 2 | $c_0 = \hat p + R(\hat\psi)\,d$ | tường | Điểm trên tường mà bút chạm khi bàn trượt ở giữa |
+| 1 | $R(\hat\psi)\thinspace d$ | thân → tường | Cánh tay đòn gắn cố định với thân (thẻ định vị → bút) được xoay theo hướng hiện tại thành véc-tơ trong hệ tọa độ tường |
+| 2 | $c_0 = \hat p + R(\hat\psi)\thinspace d$ | tường | Điểm trên tường mà bút chạm khi bàn trượt ở giữa |
 | 3 | $\sigma = u^{\top}(c_0 - A)$ | tường | Thành phần dọc đường thẳng của $c_0$ = khoảng cách dọc đường thẳng. Cũng dùng cho kết luận hạ bút (PT (35)) |
 | 4 | $e_0 = n^{\top}(c_0 - A)$ | tường | Sai số ngang của bút khi không có bàn trượt (dấu: + về phía $n$) |
 | 5 | $p^{\star} = A + \sigma u$ | tường | Chân đường vuông góc từ $c_0$ xuống đường thẳng. Đích chỉ hiệu chỉnh theo phương ngang, giữ nguyên hướng di chuyển |
 | 6 | $p^{\star} - \hat p$ | tường | Véc-tơ từ thẻ định vị đến đích của bút |
-| 7 | $R^{\top}(\hat\psi)\,(p^{\star} - \hat p)$ | tường → thân | Cùng véc-tơ đó trong tọa độ thân. Vị trí trên thân mà bút cần đạt tới |
+| 7 | $R^{\top}(\hat\psi)\thinspace (p^{\star} - \hat p)$ | tường → thân | Cùng véc-tơ đó trong tọa độ thân. Vị trí trên thân mà bút cần đạt tới |
 | 8 | $\Delta s = (7) - d$ | thân | Lượng bút cần dịch chuyển từ vị trí giữa ($d$) = độ dịch chuyển của con trượt [m] |
-| 9 | $s^{\star} = s_c + 1000\,\Delta s$ | bàn trượt | Tọa độ bàn trượt [mm]. Gốc ở mép, do đó cộng thêm điểm giữa $s_c$ |
+| 9 | $s^{\star} = s_c + 1000\thinspace \Delta s$ | bàn trượt | Tọa độ bàn trượt [mm]. Gốc ở mép, do đó cộng thêm điểm giữa $s_c$ |
 
 - Kiểm tra: thay bước 8 vào PT (32) được $P = \hat p + R(d + \Delta s) = \hat p + R R^{\top}(p^{\star} - \hat p) = p^{\star}$
 - Lý do chọn chân đường vuông góc: vị trí bút dọc đường thẳng ($u$) do robot quyết định. Nếu bàn trượt cũng cố khớp theo phương dọc đường thẳng, nó sẽ phải bù sai số di chuyển của robot cỡ vài cm, vượt quá hành trình (±50.8 mm)
@@ -975,8 +975,8 @@ Một thời điểm trong quá trình bám đường thẳng. Giá trị đo đ
 
 | Đại lượng | Tính toán | Giá trị [mm] |
 |---|---|---|
-| $R(\hat\psi)$ | $\cos 3^{\circ} = 0.9986$, $\sin 3^{\circ} = 0.0523$ | $[\,0.9986\ \ {-0.0523};\ 0.0523\ \ 0.9986\,]$ |
-| $R\,d$ | $d = (80.0,\ -60.0)$ | $(83.0,\ -55.7)$ |
+| $R(\hat\psi)$ | $\cos 3^{\circ} = 0.9986$, $\sin 3^{\circ} = 0.0523$ | $[\thinspace 0.9986\ \ {-0.0523};\ 0.0523\ \ 0.9986\thinspace]$ |
+| $R\thinspace d$ | $d = (80.0,\ -60.0)$ | $(83.0,\ -55.7)$ |
 | $c_0$ | $\hat p + R d$ | $(-117.0,\ 289.3)$ |
 | $\sigma$ | $u^{\top}(c_0 - A) = -117.0 - (-700)$ | 583.0 (nằm trong khoảng hạ bút $0 \le \sigma \le 1200$) |
 | $e_0$ | $n^{\top}(c_0 - A) = 289.3 - 300$ | $-10.73$ (bút nằm dưới đường thẳng 10.73 mm) |
@@ -984,8 +984,8 @@ Một thời điểm trong quá trình bám đường thẳng. Giá trị đo đ
 | $p^{\star} - \hat p$ | – | $(83.0,\ -45.0)$ |
 | $R^{\top}(p^{\star} - \hat p)$ | – | $(80.6,\ -49.3)$ |
 | $\Delta s$ | $(80.6 - 80.0,\ -49.3 + 60.0)$ | $(0.56,\ 10.72)$ |
-| Kiểm tra PT (34) | $-e_0\,[\sin 3^{\circ},\ \cos 3^{\circ}]$ | $(0.56,\ 10.72)$, khớp |
-| $s^{\star}$ | $50.8 + 1000\,\Delta s$ ($\Delta s$ tính bằng m) | $(51.36,\ 61.52)$ |
+| Kiểm tra PT (34) | $-e_0\thinspace [\sin 3^{\circ},\ \cos 3^{\circ}]$ | $(0.56,\ 10.72)$, khớp |
+| $s^{\star}$ | $50.8 + 1000\thinspace \Delta s$ ($\Delta s$ tính bằng m) | $(51.36,\ 61.52)$ |
 | $P$ | $\hat p + R(d + \Delta s)$ | $(-117.0,\ 300.0) = p^{\star}$ |
 
 - Bàn trượt dịch chuyển 10.72 mm theo Y (bên trái thân = phía trên tường), nâng bút lên đường thẳng. Trục X chỉ dịch chuyển 0.56 mm (thành phần do nghiêng $3^{\circ}$)
@@ -993,7 +993,7 @@ Một thời điểm trong quá trình bám đường thẳng. Giá trị đo đ
 
 #### 8.6.3 Kiểm tra dấu
 
-Tham chiếu $\theta_l = 0^{\circ}$ (đường thẳng hướng sang phải). $\Delta s = -e_0\,[\sin(\psi - \theta_l),\ \cos(\psi - \theta_l)]^{\top}$.
+Tham chiếu $\theta_l = 0^{\circ}$ (đường thẳng hướng sang phải). $\Delta s = -e_0\thinspace [\sin(\psi - \theta_l),\ \cos(\psi - \theta_l)]^{\top}$.
 
 | Tình huống | $\psi - \theta_l$ | $e_0$ | $\Delta s_X$ | $\Delta s_Y$ | Hướng chuyển động của bút trên tường | Kết luận |
 |---|---|---|---|---|---|---|
@@ -1002,7 +1002,7 @@ Tham chiếu $\theta_l = 0^{\circ}$ (đường thẳng hướng sang phải). $\
 | Bút dưới đường thẳng, mũi nghiêng lên $3^{\circ}$ | $+3^{\circ}$ | $< 0$ | $+0.05\lvert e_0\rvert$ | $+\lvert e_0\rvert$ | $y_B$ nghiêng $3^{\circ}$, nên thêm một chút X để nâng theo phương thẳng đứng | về phía đường thẳng |
 | Bút dưới đường thẳng, robot đi ngược ($B \to A$) | $180^{\circ}$ | $< 0$ | 0 | $-\lvert e_0\rvert$ | $y_B$ = xuống, nên $-y_B$ = lên | về phía đường thẳng |
 
-- Trong mọi trường hợp, bút chuyển động theo hướng $-e_0\,n$, tức là về phía đường thẳng. Khi hướng thay đổi, phương trình tự động chuyển đổi giữa các trục
+- Trong mọi trường hợp, bút chuyển động theo hướng $-e_0\thinspace n$, tức là về phía đường thẳng. Khi hướng thay đổi, phương trình tự động chuyển đổi giữa các trục
 
 #### 8.6.4 Ánh xạ từ phương trình sang mã Simulink (`PenCtrl/PenComp`)
 
@@ -1014,7 +1014,7 @@ Tham chiếu $\theta_l = 0^{\circ}$ (đường thẳng hướng sang phải). $\
 | $\sigma = u^{\top}(c_0 - A)$ | `sigma = dot(u, pc - A);` |
 | $p^{\star} = A + \sigma u$ | `p_des = A + sigma * u;` |
 | $\Delta s = R^{\top}(p^{\star} - \hat p) - d$ | `e_b = R' * (p_des - pT) - pen_d;` |
-| $s^{\star} = s_c + 1000\,\Delta s$ | `s_cmd = stage_c + 1000 * e_b;` |
+| $s^{\star} = s_c + 1000\thinspace \Delta s$ | `s_cmd = stage_c + 1000 * e_b;` |
 | pen_on (PT (35)) | `pen_on = double(sigma >= 0 && sigma <= L);` |
 | Các chế độ khác 3 | `s_cmd = [stage_c; stage_c]` (bàn trượt ở giữa, nhấc bút) |
 
@@ -1023,9 +1023,9 @@ Tham chiếu $\theta_l = 0^{\circ}$ (đường thẳng hướng sang phải). $\
 
 #### 8.6.5 Ảnh hưởng của sai số hướng
 
-Vì bộ bù dùng $\hat\psi$, sai số hướng $\delta\psi$ làm bút lệch khỏi đường thẳng một lượng $\ell_u\,\delta\psi$ (PT (40)).
+Vì bộ bù dùng $\hat\psi$, sai số hướng $\delta\psi$ làm bút lệch khỏi đường thẳng một lượng $\ell_u\thinspace \delta\psi$ (PT (40)).
 
-| $\delta\psi$ | Sai số bút (tư thế của ví dụ số, tính chính xác) | Xấp xỉ bậc nhất $\ell_u\,\delta\psi$, $\ell_u$ = 0.083 m |
+| $\delta\psi$ | Sai số bút (tư thế của ví dụ số, tính chính xác) | Xấp xỉ bậc nhất $\ell_u\thinspace \delta\psi$, $\ell_u$ = 0.083 m |
 |---|---|---|
 | $1^{\circ}$ | 1.46 mm | 1.45 mm |
 | $3^{\circ}$ | 4.25 mm | 4.35 mm |
@@ -1037,12 +1037,12 @@ Vì bộ bù dùng $\hat\psi$, sai số hướng $\delta\psi$ làm bút lệch k
 Mỗi trục được mô hình hóa như một servo vị trí đặt sau bộ tạo quỹ đạo hình thang của firmware Zaber.
 
 $$
-m_i\,\ddot x_i + c_s\,\dot x_i = \mathrm{sat}_{F_{max}(\dot x_i)}\!\left(K_{P,i} e_i + K_{D,i}\,\dot e_i + K_{I,i}\!\int e_i\,dt\right) - m_i\,g_{B,i}(\psi), \qquad i \in \{X, Y\} \qquad (36)
+m_i\thinspace \ddot x_i + c_s\thinspace \dot x_i = \mathrm{sat}_{F_{max}(\dot x_i)}\negthinspace \left(K_{P,i} e_i + K_{D,i}\thinspace \dot e_i + K_{I,i}\negthinspace \int e_i\thinspace dt\right) - m_i\thinspace g_{B,i}(\psi), \qquad i \in \lbrace X, Y\rbrace \qquad (36)
 $$
 
 $$
-K_{P,i} = m_i\,\omega_{n,s}^2, \quad K_{D,i} = 2\zeta_s m_i\,\omega_{n,s}, \quad K_{I,i} = K_{P,i}\,\omega_{n,s}/5, \quad
-g_B(\psi) = R^{\top}(\psi)\begin{bmatrix} 0 \\ -g \end{bmatrix} \qquad (37)
+K_{P,i} = m_i\thinspace \omega_{n,s}^2, \quad K_{D,i} = 2\zeta_s m_i\thinspace \omega_{n,s}, \quad K_{I,i} = K_{P,i}\thinspace \omega_{n,s}/5, \quad
+g_B(\psi) = R^{\top}(\psi)\begin{bmatrix} 0 \cr -g \end{bmatrix} \qquad (37)
 $$
 
 | Ký hiệu | Định nghĩa | Giá trị |
@@ -1057,7 +1057,7 @@ $$
 
 $$
 \hat p(t_k) = p(t_k - \tau_{zk}) + \eta_p, \quad \eta_p \sim \mathcal{N}(0, \sigma_p^2 I), \qquad
-\hat\psi(t) = \psi(t) + \eta_\psi + \dot b_\psi\,t, \quad \eta_\psi \sim \mathcal{N}(0, \sigma_\psi^2) \qquad (38)
+\hat\psi(t) = \psi(t) + \eta_\psi + \dot b_\psi\thinspace t, \quad \eta_\psi \sim \mathcal{N}(0, \sigma_\psi^2) \qquad (38)
 $$
 
 | Ký hiệu | Định nghĩa | Giá trị |
@@ -1071,20 +1071,20 @@ Bộ bù giải PT (33) với các giá trị đo được $\hat p,\ \hat\psi$, 
 
 $$
 P = \underbrace{\hat p + R(\hat\psi)(d + \Delta s)}_{\text{trên đường thẳng}} - \delta p + \big(R(\psi) - R(\hat\psi)\big)(d + \Delta s),
-\qquad R(\psi) - R(\hat\psi) \approx -\delta\psi\,J R(\psi) \qquad (39)
+\qquad R(\psi) - R(\hat\psi) \approx -\delta\psi\thinspace J R(\psi) \qquad (39)
 $$
 
 $$
-e = n^{\top}(P - A) \approx -\,n^{\top}\delta p \;-\; \delta\psi\;\ell_u, \qquad
-\ell_u = u^{\top} R(\psi)\,(d + \Delta s) \qquad (40)
+e = n^{\top}(P - A) \approx -\thinspace n^{\top}\delta p \thickspace -\thickspace \delta\psi\thickspace \ell_u, \qquad
+\ell_u = u^{\top} R(\psi)\thinspace (d + \Delta s) \qquad (40)
 $$
 
 - $\delta p = \hat p - p$, $\delta\psi = \hat\psi - \psi$. Vì $n = Ju$ và $J^{\top}J = I$, sử dụng $n^{\top}J = u^{\top}J^{\top}J = u^{\top}$
-- Ở phiên bản trước, số hạng thứ hai của PT (40) mang dấu $+$ (viết nhầm $n^{\top}J = -u^{\top}$). Đã sửa sau khi xác nhận rằng, tại tư thế của ví dụ số với $\delta\psi = +1^{\circ}$, giá trị tính trực tiếp $e = -1.44$ mm khớp với $-\delta\psi\,\ell_u$. Phương sai PT (41) không bị ảnh hưởng vì lấy bình phương
+- Ở phiên bản trước, số hạng thứ hai của PT (40) mang dấu $+$ (viết nhầm $n^{\top}J = -u^{\top}$). Đã sửa sau khi xác nhận rằng, tại tư thế của ví dụ số với $\delta\psi = +1^{\circ}$, giá trị tính trực tiếp $e = -1.44$ mm khớp với $-\delta\psi\thinspace \ell_u$. Phương sai PT (41) không bị ảnh hưởng vì lấy bình phương
 - Sai số vị trí chỉ đóng góp thành phần pháp tuyến với đường thẳng; sai số hướng trở thành sai số bút sau khi nhân với thành phần dọc đường thẳng của cánh tay đòn $\ell_u$. Trong bố trí hiện tại $\ell_u \approx d_x$ = 0.08 m
 
 $$
-\sigma_e^2 \approx \sigma_p^2 + \ell_u^2\,\sigma_\psi^2 + \ell_u^2\,\frac{(\dot b_\psi T)^2}{3}
+\sigma_e^2 \approx \sigma_p^2 + \ell_u^2\thinspace \sigma_\psi^2 + \ell_u^2\thinspace \frac{(\dot b_\psi T)^2}{3}
 = (1.0)^2 + (0.42)^2 + (0.63)^2\ \mathrm{mm}^2
 \ \Rightarrow\ \sigma_e \approx 1.25\ \mathrm{mm} \qquad (41)
 $$
@@ -1096,8 +1096,8 @@ $$
 
 | Tính năng | Vị trí | Phương trình | Tham số |
 |---|---|---|---|
-| Bù trễ ZeroKey | Nav | $\hat p \leftarrow \hat p + \tau_{pred}\,\hat{\dot p}$ | `tau_pred` (mặc định 0) |
-| Giữ bàn trượt ở giữa | RobotCtrl M3 | $e_y \leftarrow e_y + k_c e_s + k_{ci}\int e_s\,dt$, $e_s = (s_{Y,meas} - s_c)/1000$ | `K_c`, `K_ci` (mặc định 0) |
+| Bù trễ ZeroKey | Nav | $\hat p \leftarrow \hat p + \tau_{pred}\thinspace \hat{\dot p}$ | `tau_pred` (mặc định 0) |
+| Giữ bàn trượt ở giữa | RobotCtrl M3 | $e_y \leftarrow e_y + k_c e_s + k_{ci}\int e_s\thinspace dt$, $e_s = (s_{Y,meas} - s_c)/1000$ | `K_c`, `K_ci` (mặc định 0) |
 
 - Hiệu quả: xem so sánh trong Chương 20
 
@@ -1325,7 +1325,7 @@ So sánh với 6WP_sim gốc (`2_시뮬레이션_simulink/6WP_sim/Tracked_UGV_PI
 | Điểm tích phân | Tâm robot | Tâm robot (điểm thẻ định vị trước bản sửa ngày 2026-11-11) | Giống |
 | Đầu ra | Tư thế tâm $q$ | Tư thế thẻ định vị (`TagPoint`, PT (21a)) | Khớp với vị trí cảm biến |
 
-- Số hạng $(u/L)\sin\theta$ ở hai hàng đầu của Kinematics gốc không nhất quán về thứ nguyên khi thành phần vận tốc thứ hai là $\omega$, nhưng không có ảnh hưởng khi $\alpha = 0$ ($u = 0$). Mô hình này viết thành $u\,\omega\sin\psi$ (PT (21))
+- Số hạng $(u/L)\sin\theta$ ở hai hàng đầu của Kinematics gốc không nhất quán về thứ nguyên khi thành phần vận tốc thứ hai là $\omega$, nhưng không có ảnh hưởng khi $\alpha = 0$ ($u = 0$). Mô hình này viết thành $u\thinspace \omega\sin\psi$ (PT (21))
 
 ### 12.2 Bàn trượt Zaber (datasheet + CAD)
 
@@ -1402,9 +1402,9 @@ So sánh với 6WP_sim gốc (`2_시뮬레이션_simulink/6WP_sim/Tracked_UGV_PI
 | NavFcn (Nav) | Vị trí ZeroKey [m], vận tốc [m/s], quaternion IMU, $\psi_0$ [rad], $\tau_{pred}$ [s], `zk_xsign` | `pose` = $[\hat x;\ \hat y;\ \hat\psi]$ [m, m, rad] (phiên bản 2: + $V_{meas}$ [m/s, rad/s]) | $\hat p = [\pm x_{zk};\ z_{zk}]$, $\hat\psi = \mathrm{yaw} - \mathrm{yaw}_0 + \psi_0$ | `plane_project` của robot thật ở dạng REP-103 |
 | Guards (Mission) | `pose`, $A,\ B,\ d$, `line_pre`, `line_post`, $r_{tag}$ [m] | `dist_start` [m], `th_err` [rad], `along_rem` [m] | $\lVert c_A - \hat c\rVert$, $\mathrm{wrap}(\theta_l - \hat\psi)$, $u^{\top}(r_B - \hat p)$ | Chart của robot thật |
 | ModeChart (Mission) | Ba giá trị trên, thời gian $t$ [s] | `mode`, `t_line` [s] | Hình 7 | Chart của 6WP_sim |
-| Waypoints (Mission) | `mode`, hình học đường thẳng [m] | `WP_prev`, `WP_target`, `lineAB` [m] | $r_A = A - R(\theta_l)d - u\,\ell_{pre}$, $c_A = r_A - R(\theta_l) r_{tag}$ | Mục 8.5 |
+| Waypoints (Mission) | `mode`, hình học đường thẳng [m] | `WP_prev`, `WP_target`, `lineAB` [m] | $r_A = A - R(\theta_l)d - u\thinspace \ell_{pre}$, $c_A = r_A - R(\theta_l) r_{tag}$ | Mục 8.5 |
 | Fcn1 Goto_Start (RobotCtrl) | `WP_target` [m], `pose` | $v$ [m/s], $\omega$ [rad/s] | PT (31), dựa trên tâm | 6WP_sim |
-| Fcn2 Turning | `WP_prev`, `WP_target`, `pose` | $v = 0$, $\omega$ [rad/s] | $\omega = k_\alpha\,\mathrm{wrap}(\theta_l - \hat\psi)$ | 6WP_sim |
+| Fcn2 Turning | `WP_prev`, `WP_target`, `pose` | $v = 0$, $\omega$ [rad/s] | $\omega = k_\alpha\thinspace \mathrm{wrap}(\theta_l - \hat\psi)$ | 6WP_sim |
 | Fcn3 Line_Tracking | Đoạn thẳng [m], `t_line` [s], `pose`, `/stage/pos` [mm] | $v$ [m/s], $\omega$ [rad/s], `e_cross` [m] | PT (30) (+ giữ bàn trượt ở giữa theo Mục 8.10) | 6WP_sim, hệ số khuếch đại của robot thật |
 | Fcn4 Stop_Destination | `WP_target`, `pose` | $v$, $\omega$ | PT (31) | 6WP_sim |
 | SpeedErr (InnerPI, phiên bản 2) | $v_c$ [m/s], $\omega_c$ [rad/s], $V_{meas}$, `mode` | $e_v$ [m/s], $e_\omega$ [rad/s], reset | PT (45) | Mô hình Xsens của robot thật |
@@ -1420,7 +1420,7 @@ So sánh với 6WP_sim gốc (`2_시뮬레이션_simulink/6WP_sim/Tracked_UGV_PI
 | ZkWorld, ZkVel, ImuQuat, ZkQuat (Sensors) | `q_true`, `V_true`, nhiễu | Giá trị topic [m], [m/s], quaternion | PT (38) | Mục 12.3 |
 | ZaberTraj (StagePlant) | $s^{\star}$ [mm] | Quỹ đạo [mm, mm/s] | Hình thang (104 mm/s, 500 mm/s²) | Datasheet |
 | ZaberServo | Quỹ đạo, trạng thái con trượt, `q_true` | Gia tốc [m/s²] | Các PT (36)–(37) | Mục 8.7 |
-| Encoder | Vị trí con trượt [m] | `stage_pos` [mm] | $1000\,x$, bão hòa 0–101.6 | `get pos` |
+| Encoder | Vị trí con trượt [m] | `stage_pos` [mm] | $1000\thinspace x$, bão hòa 0–101.6 | `get pos` |
 | PenTraceFcn (đánh giá) | `q_true`, `stage_pos` [mm] | Vị trí bút thật [m], sai số ngang [m] | $P = p + R(\psi)(d + (s - s_c)/1000)$ | Hình 12 (6)–(7) |
 
 ![StagePlant](1_simulation/img/XY_1_pen_sim__StagePlant.png)
@@ -1440,7 +1440,7 @@ Toàn bộ tính toán nằm trong các khối MATLAB Function bên trong mô h�
 | `zerokey_position` [m], `zerokey_vel` [m/s], `imu_quat`, `psi0` [rad], `tau_pred` [s], `zk_xsign` | `pose` = $[\hat x;\ \hat y;\ \hat\psi]$ [m, m, rad] (phiên bản 2: + `V_meas`) |
 
 $$
-\hat p = \begin{bmatrix} z \\ x \end{bmatrix}, \qquad
+\hat p = \begin{bmatrix} z \cr x \end{bmatrix}, \qquad
 \mathrm{yaw} = \mathrm{atan2}\big(2(q_w q_z + q_x q_y),\ 1 - 2(q_y^2 + q_z^2)\big), \qquad
 \hat\psi = \mathrm{wrap}(\mathrm{yaw} - \mathrm{yaw}_0 + \psi_0) \qquad (42)
 $$
@@ -1458,17 +1458,17 @@ Mỗi chế độ kích hoạt một Enabled Subsystem, và Merge chỉ chuyển
 Các chế độ 1 và 4 dùng luật trong tọa độ cực. Từ khoảng cách đến mục tiêu $\rho$ và sai số phương vị $\alpha$, luật này xuất ra
 
 $$
-v = k_\rho\,\rho\,\max(0,\ \cos\alpha), \qquad \omega = k_\alpha\,\alpha + \tfrac12\sin\alpha\cos\alpha \qquad (43)
+v = k_\rho\thinspace \rho\thinspace \max(0,\ \cos\alpha), \qquad \omega = k_\alpha\thinspace \alpha + \tfrac12\sin\alpha\cos\alpha \qquad (43)
 $$
 
-Nhờ $\max(0,\ \cos\alpha)$, robot chỉ quay mà không tiến khi phương vị lệch quá 90°, và di chuyển nhanh hơn khi hướng càng thẳng hàng. Chế độ 1 lái tâm đến mục tiêu, còn chế độ 4 lái thẻ định vị. Chế độ 2 quay tại chỗ với $v = 0$, $\omega = k_\alpha\,\mathrm{wrap}(\theta_l - \hat\psi)$. Chế độ 3 tuân theo các PT (7)–(8). Khi bật tùy chọn giữ bàn trượt ở giữa ($K_c,\ K_{ci} > 0$), độ lệch Y của `/stage/pos`, $e_s = (s_Y - s_c)/1000$ [m], được cộng vào sai số ngang để robot dịch về phía bút và bàn trượt hoạt động ở giữa hành trình.
+Nhờ $\max(0,\ \cos\alpha)$, robot chỉ quay mà không tiến khi phương vị lệch quá 90°, và di chuyển nhanh hơn khi hướng càng thẳng hàng. Chế độ 1 lái tâm đến mục tiêu, còn chế độ 4 lái thẻ định vị. Chế độ 2 quay tại chỗ với $v = 0$, $\omega = k_\alpha\thinspace \mathrm{wrap}(\theta_l - \hat\psi)$. Chế độ 3 tuân theo các PT (7)–(8). Khi bật tùy chọn giữ bàn trượt ở giữa ($K_c,\ K_{ci} > 0$), độ lệch Y của `/stage/pos`, $e_s = (s_Y - s_c)/1000$ [m], được cộng vào sai số ngang để robot dịch về phía bút và bàn trượt hoạt động ở giữa hành trình.
 
 ### 14.4 InnerPI (chỉ phiên bản 2)
 
 $$
 e_v = v_c - u_B, \quad e_\omega = \omega_c - g_\omega r, \qquad
-\bar V = \mathrm{sat}_{[0,\,0.5]}\Big(K_{P,v} e_v + K_{I,v}\sum e_v T_s\Big), \quad
-\bar W = \mathrm{sat}_{[-0.5,\,0.5]}\Big(K_{P,\omega} e_\omega + K_{I,\omega}\sum e_\omega T_s\Big) \qquad (44)
+\bar V = \mathrm{sat}_{[0,\thinspace 0.5]}\Big(K_{P,v} e_v + K_{I,v}\sum e_v T_s\Big), \quad
+\bar W = \mathrm{sat}_{[-0.5,\thinspace 0.5]}\Big(K_{P,\omega} e_\omega + K_{I,\omega}\sum e_\omega T_s\Big) \qquad (44)
 $$
 
 Đây là bộ PI rời rạc giống như trong mô hình Xsens của robot thật (Forward Euler, 0.01 s, kẹp tích phân). Dùng nguyên giá trị của robot thật gây ra hai vấn đề. Hệ số tỷ lệ con quay $g_\omega = 0.1443$ không nhất quán về đơn vị với lệnh rad/s và làm ω dao động, nên được đặt bằng 1; và giá trị tích phân mang sang khi đổi chế độ gây ra chuyển động tiến trong lúc quay, nên các khâu tích phân được reset khi chuyển chế độ. Việc xác nhận nguồn gốc vẫn còn tồn đọng (Mục 21.2).
@@ -1671,7 +1671,7 @@ Dao động vận tốc góc yaw (2 lần chạy mỗi trường hợp)
 |---|---|---|
 | RMS sai số bám ω (khi hạ bút) | 6.3 deg/s | 1.4 deg/s |
 | RMS của bút | 1.19–1.20 mm | 1.18–1.20 mm |
-| Mức khớp giữa $\int\omega\,dt$ và $\Delta\psi$ (kiểm tra ở phiên bản trước) | Không khớp (dao động số) | Trong phạm vi 2.5° |
+| Mức khớp giữa $\int\omega\thinspace dt$ và $\Delta\psi$ (kiểm tra ở phiên bản trước) | Không khớp (dao động số) | Trong phạm vi 2.5° |
 | Nguyên nhân | Bước lớn so với độ dốc của mô-men cản quay $\tanh(\omega/\varepsilon_\omega)$ ($\lambda h \approx 44$, Mục 8.3) | – |
 
 - Dao động là vấn đề tích phân số, không phải vấn đề hệ số khuếch đại. RMS của bút vẫn như nhau ngay cả ở 5 ms (tần số dao động hầu như không xuất hiện trong phép đo góc hướng nằm trong dải bù của bàn trượt)
@@ -1874,8 +1874,8 @@ Các hộp thay đổi so với phiên bản 1
 | Sensors · PlantRosOut | Tư thế và gyro z (vận tốc góc thực + nhiễu 0.1°/s) được xuất bản cùng nhau trong một thông điệp IMU |
 
 $$
-\bar V = \mathrm{sat}_{[0,\,0.5]}\!\Big(K_{P,v}^{in} e_v + K_{I,v}^{in}\!\sum e_v\,T_s\Big),\ e_v = v_c - u_B, \qquad
-\bar W = \mathrm{sat}_{[-0.5,\,0.5]}\!\Big(K_{P,\omega}^{in} e_\omega + K_{I,\omega}^{in}\!\sum e_\omega\,T_s\Big),\ e_\omega = \omega_c - g_\omega\,r \qquad (45)
+\bar V = \mathrm{sat}_{[0,\thinspace 0.5]}\negthinspace \Big(K_{P,v}^{in} e_v + K_{I,v}^{in}\negthinspace \sum e_v\thinspace T_s\Big),\ e_v = v_c - u_B, \qquad
+\bar W = \mathrm{sat}_{[-0.5,\thinspace 0.5]}\negthinspace \Big(K_{P,\omega}^{in} e_\omega + K_{I,\omega}^{in}\negthinspace \sum e_\omega\thinspace T_s\Big),\ e_\omega = \omega_c - g_\omega\thinspace r \qquad (45)
 $$
 
 | Ký hiệu | Định nghĩa | Giá trị (`XY_setup.m` mục 10) |

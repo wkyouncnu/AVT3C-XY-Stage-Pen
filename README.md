@@ -169,7 +169,7 @@ The heading $\psi$ is the angle measured counterclockwise from the $x$ axis to t
 The matrix that transforms a vector $a_B$ written in body coordinates into wall coordinates is the rotation matrix.
 
 $$
-R(\psi) = \begin{bmatrix} \cos\psi & -\sin\psi \\ \sin\psi & \cos\psi \end{bmatrix} = \begin{bmatrix} x_B & y_B \end{bmatrix}, \qquad a_W = R(\psi)\,a_B, \qquad a_B = R^{\top}(\psi)\,a_W \qquad (1)
+R(\psi) = \begin{bmatrix} \cos\psi & -\sin\psi \cr \sin\psi & \cos\psi \end{bmatrix} = \begin{bmatrix} x_B & y_B \end{bmatrix}, \qquad a_W = R(\psi)\thinspace a_B, \qquad a_B = R^{\top}(\psi)\thinspace a_W \qquad (1)
 $$
 
 | Symbol | Pronunciation | Meaning |
@@ -182,7 +182,7 @@ $$
 
 *Figure 5. The columns of the rotation matrix are the body axes written in wall coordinates*
 
-The first column is $x_B$ because substituting the body vector $a_B = (1,\ 0)$, i.e. the unit vector in the $x_B$ direction, makes $R a_B$ equal to the first column. For example, at $\psi = 0$, where the robot faces right, $R = I$, and at $\psi = 90^{\circ}$, where it faces the ceiling, $R = [\,0\ \ {-1};\ 1\ \ 0\,]$. At $\psi = 0$ the first column $(1,\ 0)$ is the $x$ direction, i.e. rightward on the wall, which is correctly the robot's forward direction. The second column $(0,\ 1)$ is the $y$ direction, i.e. upward. The left of a robot facing right is upward, so this is also correct. In this pose, moving the stage Y axis in the + direction moves the pen upward on the wall. This correspondence is used directly in understanding the signs in Chapter 6.
+The first column is $x_B$ because substituting the body vector $a_B = (1,\ 0)$, i.e. the unit vector in the $x_B$ direction, makes $R a_B$ equal to the first column. For example, at $\psi = 0$, where the robot faces right, $R = I$, and at $\psi = 90^{\circ}$, where it faces the ceiling, $R = [\thinspace 0\ \ {-1};\ 1\ \ 0\thinspace]$. At $\psi = 0$ the first column $(1,\ 0)$ is the $x$ direction, i.e. rightward on the wall, which is correctly the robot's forward direction. The second column $(0,\ 1)$ is the $y$ direction, i.e. upward. The left of a robot facing right is upward, so this is also correct. In this pose, moving the stage Y axis in the + direction moves the pen upward on the wall. This correspondence is used directly in understanding the signs in Chapter 6.
 
 ### 3.3 Lever Arm
 
@@ -192,7 +192,7 @@ $$
 d = r_{pen0} - r_{tag} = (0,\ 0) - (-0.08,\ 0.06) = (0.08,\ -0.06)\ \mathrm{m} \qquad (2)
 $$
 
-Since $d$ is fixed to the robot, it is constant in body coordinates, but in wall coordinates it becomes $R(\psi)\,d$, whose direction changes with heading. If the heading is known incorrectly, $R(\hat\psi)\,d$ is wrong, and that difference directly becomes pen position error (Chapter 7).
+Since $d$ is fixed to the robot, it is constant in body coordinates, but in wall coordinates it becomes $R(\psi)\thinspace d$, whose direction changes with heading. If the heading is known incorrectly, $R(\hat\psi)\thinspace d$ is wrong, and that difference directly becomes pen position error (Chapter 7).
 
 ---
 
@@ -207,7 +207,7 @@ Since $d$ is fixed to the robot, it is constant in body coordinates, but in wall
 The pen tip $P$ is the point obtained by starting from the tag position $p$, adding the lever arm $d$ and the stage carriage displacement $\Delta s$ in body coordinates, and rotating the result into the wall frame.
 
 $$
-P = p + R(\psi)\,(d + \Delta s), \qquad \Delta s = \frac{s - s_c}{1000}\ [\mathrm{m}] \qquad (3)
+P = p + R(\psi)\thinspace (d + \Delta s), \qquad \Delta s = \frac{s - s_c}{1000}\ [\mathrm{m}] \qquad (3)
 $$
 
 | Symbol | Meaning | Unit |
@@ -224,7 +224,7 @@ $$
 The pen lying on the line $AB$ means that the distance of the pen in the direction normal to the line, i.e. the cross-track error, is 0.
 
 $$
-e(t) = n^{\top}\big(P(t) - A\big) = 0, \qquad u = \frac{B - A}{\lVert B - A\rVert}, \quad n = J u, \quad J = \begin{bmatrix} 0 & -1 \\ 1 & 0 \end{bmatrix} \qquad (4)
+e(t) = n^{\top}\big(P(t) - A\big) = 0, \qquad u = \frac{B - A}{\lVert B - A\rVert}, \quad n = J u, \quad J = \begin{bmatrix} 0 & -1 \cr 1 & 0 \end{bmatrix} \qquad (4)
 $$
 
 $u$ is the unit vector along the line, and $n$ is the normal obtained by rotating $u$ counterclockwise by 90° (the left of the line; upward for this line). Along the line the pen only needs to pass from $A$ to $B$, so no exact timetable is required. That is, the only quantity to be controlled is the cross-track error $e$, and travel is a loose condition that "it only needs to reach the end eventually".
@@ -234,7 +234,7 @@ $u$ is the unit vector along the line, and $n$ is the normal obtained by rotatin
 The motion of the robot centre $c$ and the heading is as follows (disturbances and shift of the centre of rotation are treated in Section 8.2).
 
 $$
-\dot c = v \begin{bmatrix} \cos\psi \\ \sin\psi \end{bmatrix}, \qquad \dot\psi = \omega \qquad (5)
+\dot c = v \begin{bmatrix} \cos\psi \cr \sin\psi \end{bmatrix}, \qquad \dot\psi = \omega \qquad (5)
 $$
 
 The absence of lateral velocity in Eq. (5) is the nonholonomic constraint. The robot moves only in the $x_B$ direction, and its lateral position changes only by changing heading. The stage, in contrast, moves body X and Y independently and quickly, but cannot exceed $\lvert\Delta s_i\rvert \le 50.8$ mm.
@@ -272,10 +272,10 @@ In mode 3 (Line_Tracking) the robot travels along the line at 30 mm/s while the 
 
 In mode 4 (Stop_Destination) the robot stops at the end point, and 2 s later the simulation ends in mode 5. Within mode 3 the pen is evaluated as lowered only while the pen target lies between $A$ and $B$. The real robot does not yet have a pen lifting mechanism, so this interval decision is for logging only.
 
-The segment followed by the robot is not the same line as the pen line. For the pen to lie on the line when the stage is centred, the tag must follow a parallel line offset from the line by $-R(\theta_l)\,d$. In addition, the robot starts 60 mm ahead so that it settles before the pen reaches $A$, and travels 40 mm past the end.
+The segment followed by the robot is not the same line as the pen line. For the pen to lie on the line when the stage is centred, the tag must follow a parallel line offset from the line by $-R(\theta_l)\thinspace d$. In addition, the robot starts 60 mm ahead so that it settles before the pen reaches $A$, and travels 40 mm past the end.
 
 $$
-r_A = A - R(\theta_l)\,d - 0.06\,u, \qquad r_B = B - R(\theta_l)\,d + 0.04\,u, \qquad c_A = r_A - R(\theta_l)\,r_{tag} \qquad (6)
+r_A = A - R(\theta_l)\thinspace d - 0.06\thinspace u, \qquad r_B = B - R(\theta_l)\thinspace d + 0.04\thinspace u, \qquad c_A = r_A - R(\theta_l)\thinspace r_{tag} \qquad (6)
 $$
 
 ### 5.2 Line-Tracking Law
@@ -283,13 +283,13 @@ $$
 The reference point $x_r$ of mode 3 moves along the segment at a constant speed $v_r$ over time. The robot views its difference from this reference point in body coordinates.
 
 $$
-x_r(t) = r_A + v_r\,(t - t_{line})\,u, \qquad
-\begin{bmatrix} e_x \\ e_y \end{bmatrix} = R^{\top}(\hat\psi)\,(x_r - \hat p), \qquad
+x_r(t) = r_A + v_r\thinspace (t - t_{line})\thinspace u, \qquad
+\begin{bmatrix} e_x \cr e_y \end{bmatrix} = R^{\top}(\hat\psi)\thinspace (x_r - \hat p), \qquad
 e_\theta = \mathrm{wrap}(\theta_l - \hat\psi) \qquad (7)
 $$
 
 $$
-v_c = v_r \cos e_\theta + k_x\,e_x, \qquad \omega_c = k_y\,e_y + k_\psi \sin e_\theta \qquad (8)
+v_c = v_r \cos e_\theta + k_x\thinspace e_x, \qquad \omega_c = k_y\thinspace e_y + k_\psi \sin e_\theta \qquad (8)
 $$
 
 $e_x$ is how far the reference point lies ahead of the robot, and $e_y$ is how far the reference point lies to the robot's left. The robot can reduce the longitudinal error $e_x$ directly with forward speed, but cannot reduce the lateral error $e_y$ directly. $e_y$ therefore enters the turn command $\omega_c$. If the reference point is to the left ($e_y > 0$), the robot turns left, and the lateral error decreases as it advances with the deflected heading.
@@ -297,7 +297,7 @@ $e_x$ is how far the reference point lies ahead of the robot, and $e_y$ is how f
 Why this process is slow becomes apparent by linearising the equations near the line. Let $y_l$ be the lateral position of the robot measured to the left of the line and $\phi = \psi - \theta_l$ the heading difference from the line; then from Eq. (5), $\dot y_l = v\sin\phi \approx v_r\phi$ and $\dot\phi = \omega$. For small errors $e_y \approx -y_l$ and $e_\theta \approx -\phi$, so Eq. (8) becomes $\omega = -k_y y_l - k_\psi\phi$, and the closed loop is as follows.
 
 $$
-\ddot y_l + k_\psi\,\dot y_l + v_r k_y\,y_l = 0, \qquad
+\ddot y_l + k_\psi\thinspace \dot y_l + v_r k_y\thinspace y_l = 0, \qquad
 \lambda = \frac{-k_\psi \pm \sqrt{k_\psi^2 - 4 v_r k_y}}{2} \qquad (9)
 $$
 
@@ -344,7 +344,7 @@ Pen compensation consists of a few lines of MATLAB code in the Simulink block Pe
 | $\hat\psi$ | `pose(3)` | – | rad | Heading measured by the IMU (counter-clockwise from the $x$ axis) | – |
 | $R(\hat\psi)$ | `R` | body → wall | – | Matrix that rotates a body arrow into a wall arrow | grey $x_B$, $y_B$ axes |
 | $d$ | `pen_d` | body frame $\mathcal B$ | m | Lever arm from the tag to the pen at the stage centre; a constant fixed by the mounting | purple arrow |
-| $c_0$ | `pc` | wall | m | Point the pen touches when the stage is at its centre, $\hat p + R(\hat\psi)\,d$ | white circle |
+| $c_0$ | `pc` | wall | m | Point the pen touches when the stage is at its centre, $\hat p + R(\hat\psi)\thinspace d$ | white circle |
 | $A$, $B$, $L$ | `lineAB`, `L` | wall | m | Two endpoints and length of the line to be drawn | navy dots, blue line |
 | $u$, $n$ | `u` | wall | – | Unit vector along the line, normal $n = Ju$ (up is +) | navy arrows |
 | $\sigma$ | `sigma` | – | m | Distance along the line of $c_0$ | dimension line |
@@ -379,7 +379,7 @@ All numerical values in this chapter belong to one and the same instant. During 
 | Figure 8 | Body (viewed riding on the robot) | $d$, $\Delta s$ and the arrow triangle |
 | Figure 9 | Wall (wall viewed head-on) | $u$, $n$, $\sigma$, $c_0$, $p^{\star}$, $e_0$ |
 | Figure 10 | Both frames side by side | How $R^{\top}(\hat\psi)$ changes the scale on which the same arrow is read |
-| Figure 11 | Stage (Zaber scale) | $\times 1000$ and $+\,s_c$ |
+| Figure 11 | Stage (Zaber scale) | $\times 1000$ and $+\thinspace s_c$ |
 | Figure 12 | Computation order | Frame and unit of each step |
 | Figure 13 | The four above on one sheet | All computation steps and the final command |
 
@@ -388,11 +388,11 @@ All numerical values in this chapter belong to one and the same instant. During 
 The pen tip position is given by Eq. (3). When the stage carriage is moved by $\Delta s$ from the centre, the pen lies at the body arrow $d + \Delta s$ from the tag. Once the wall position $p^{\star}$ that the pen must reach is fixed, solving this equation for $\Delta s$ yields the carriage motion.
 
 $$
-p^{\star} = \hat p + R(\hat\psi)\,(d + \Delta s)
+p^{\star} = \hat p + R(\hat\psi)\thinspace (d + \Delta s)
 \quad\Longrightarrow\quad
-\underbrace{d}_{\text{purple}} + \underbrace{\Delta s}_{\text{orange}} = \underbrace{R^{\top}(\hat\psi)\,(p^{\star} - \hat p)}_{\text{green}}
+\underbrace{d}_{\text{purple}} + \underbrace{\Delta s}_{\text{orange}} = \underbrace{R^{\top}(\hat\psi)\thinspace (p^{\star} - \hat p)}_{\text{green}}
 \quad\Longrightarrow\quad
-\Delta s = R^{\top}(\hat\psi)\,(p^{\star} - \hat p) - d \qquad (12)
+\Delta s = R^{\top}(\hat\psi)\thinspace (p^{\star} - \hat p) - d \qquad (12)
 $$
 
 Since $R$ is orthogonal, multiplying both sides by $R^{\top}$ solves the equation directly. The measured values $\hat p$, $\hat\psi$ are used because the measurements are all the controller knows. The middle equation of Eq. (12) is a triangle formed by three arrows in the body frame, and Figure 8 depicts it.
@@ -409,7 +409,7 @@ Figure 8 is a view from on top of the robot. Because the body frame rotates with
 | white circle | $c_0$ | body $(0,\ 0)$ | Pen at the stage centre ($s = s_c$) |
 | teal square | stage travel | $\pm 50.8$ | Range over which the pen can move relative to the body |
 | purple arrow | $d$ | $(80.0,\ -60.0)$ | From $\hat p$ to $c_0$; constant, and the controller cannot change it |
-| green arrow | $R^{\top}(\hat\psi)\,(p^{\star} - \hat p)$ | $(80.6,\ -49.3)$ | From $\hat p$ to the pen target; set by the measurement and the line, and changes every cycle |
+| green arrow | $R^{\top}(\hat\psi)\thinspace (p^{\star} - \hat p)$ | $(80.6,\ -49.3)$ | From $\hat p$ to the pen target; set by the measurement and the line, and changes every cycle |
 | green diamond | $p^{\star}$ | body $(0.56,\ 10.72)$ | Where the pen must go |
 | orange arrow | $\Delta s$ | $(0.56,\ 10.72)$ | From $c_0$ to $p^{\star}$; the amount by which the stage moves the pen |
 
@@ -427,7 +427,7 @@ The subtraction is performed in the body frame because $d$ is a quantity given i
 As seen in Section 4.2, the point on the line where the pen should be is not prescribed. The position along the line is set by the robot as it advances, and the stage only needs to remove the deviation from the line. The target is therefore the foot of the perpendicular dropped onto the line from $c_0$, the pen position with the stage at its centre.
 
 $$
-c_0 = \hat p + R(\hat\psi)\,d, \qquad \sigma = u^{\top}(c_0 - A), \qquad e_0 = n^{\top}(c_0 - A), \qquad p^{\star} = A + \sigma u = c_0 - e_0\,n \qquad (13)
+c_0 = \hat p + R(\hat\psi)\thinspace d, \qquad \sigma = u^{\top}(c_0 - A), \qquad e_0 = n^{\top}(c_0 - A), \qquad p^{\star} = A + \sigma u = c_0 - e_0\thinspace n \qquad (13)
 $$
 
 ![Line and pen target in the wall frame](2_docs/img/fig_pen_wall.png)
@@ -442,13 +442,13 @@ Figure 9 shows the wall viewed head-on. $x$ points right and $y$ points up, and 
 | horizontal arrow at $A$ | $u$ | $(1,\ 0)$ | Unit vector along the line, $(B - A)/L$ |
 | vertical arrow at $A$ | $n = Ju$ | $(0,\ 1)$ | Line normal; the direction in which the cross-track error is measured (up is +) |
 | black square | $\hat p$ | $(-200.0,\ 345.0)$ | ZeroKey measurement |
-| purple arrow (b) | $R(\hat\psi)\,d$ | $(83.0,\ -55.7)$ | $d$ of Figure 8 rotated into the wall frame |
+| purple arrow (b) | $R(\hat\psi)\thinspace d$ | $(83.0,\ -55.7)$ | $d$ of Figure 8 rotated into the wall frame |
 | white circle | $c_0$ | $(-117.0,\ 289.3)$ | Point the pen touches when the stage is at its centre |
 | lower dimension line | $\sigma$ | 583.0 | Distance from $A$ to $c_0$ measured along the line; how far the pen has come along the line |
 | – | $e_0$ | $-10.73$ | $c_0$ lies 10.73 mm below the line |
 | green diamond | $p^{\star}$ | $(-117.0,\ 300.0)$ | Point on the line with the same along-line position as $c_0$ |
 | green arrow (b) | $p^{\star} - \hat p$ | $(83.0,\ -45.0)$ | Wall components of the green arrow in Figure 8 |
-| orange arrow (b) | $R(\hat\psi)\,\Delta s = -e_0\,n$ | $(0.00,\ 10.73)$ | Wall components of the orange arrow in Figure 8 |
+| orange arrow (b) | $R(\hat\psi)\thinspace \Delta s = -e_0\thinspace n$ | $(0.00,\ 10.73)$ | Wall components of the orange arrow in Figure 8 |
 
 $\sigma$ is the inner product with $u$, that is, the projection (shadow) length of the arrow $c_0 - A$ along the line. Likewise, $e_0$ is the projection (shadow) length along the normal $n$. Since $p^{\star}$ is the point obtained by removing only the normal component from $c_0$, the stage moves only perpendicular to the line and only by the magnitude of the cross-track error. The reason for this division of labour is travel. How far along the line the pen has come ($\sigma$) is the robot's share as it advances, so the stage leaves that direction alone. If $p^{\star}$ were set to a specific point on the line (for example a reference point moving in time, or $A$), the stage would try to absorb even the robot's along-line error of several cm, and the 101.6 mm travel would be insufficient. Indeed, when an early version clipped $p^{\star}$ to $A$, the stage X axis went to about 95 mm at the start of mode 3.
 
@@ -465,16 +465,16 @@ The two panels of Figure 10 draw the same three arrows; only the scale differs. 
 | Arrow | (a) Wall components [mm] | (b) Body components [mm] | Conversion |
 |---|---|---|---|
 | green: $\hat p \to p^{\star}$ | $p^{\star} - \hat p = (83.0,\ -45.0)$ | $(80.6,\ -49.3)$ | $R^{\top}(\hat\psi)(p^{\star} - \hat p)$ |
-| purple: $\hat p \to c_0$ | $R(\hat\psi)\,d = (83.0,\ -55.7)$ | $d = (80.0,\ -60.0)$ | $R^{\top}R\,d = d$ |
-| orange: $c_0 \to p^{\star}$ | $R(\hat\psi)\,\Delta s = (0.00,\ 10.73)$ | $\Delta s = (0.56,\ 10.72)$ | $R^{\top}R\,\Delta s = \Delta s$ |
+| purple: $\hat p \to c_0$ | $R(\hat\psi)\thinspace d = (83.0,\ -55.7)$ | $d = (80.0,\ -60.0)$ | $R^{\top}R\thinspace d = d$ |
+| orange: $c_0 \to p^{\star}$ | $R(\hat\psi)\thinspace \Delta s = (0.00,\ 10.73)$ | $\Delta s = (0.56,\ 10.72)$ | $R^{\top}R\thinspace \Delta s = \Delta s$ |
 
 What $R^{\top}(\hat\psi)$ does can be seen from the green dashed lines in Figure 10(a). Dropping perpendiculars from the tip of the green arrow onto the robot axes $x_B$, $y_B$ gives projection lengths on the axes of 80.6 mm and $-49.3$ mm, respectively. As seen in Section 3.2, the two columns of $R$ are $x_B = (\cos\hat\psi,\ \sin\hat\psi)$ and $y_B = (-\sin\hat\psi,\ \cos\hat\psi)$ written in the wall frame, so the two rows of $R^{\top}$ are $x_B^{\top}$, $y_B^{\top}$, and the product with each row is exactly the projection length.
 
 $$
-R^{\top}(\hat\psi)\,(p^{\star} - \hat p) =
-\begin{bmatrix} x_B^{\top}(p^{\star} - \hat p) \\ y_B^{\top}(p^{\star} - \hat p) \end{bmatrix}
-= \begin{bmatrix} 83.0\cos 3^{\circ} - 45.0\sin 3^{\circ} \\ -83.0\sin 3^{\circ} - 45.0\cos 3^{\circ} \end{bmatrix}
-= \begin{bmatrix} 80.6 \\ -49.3 \end{bmatrix}\ \mathrm{mm} \qquad (14)
+R^{\top}(\hat\psi)\thinspace (p^{\star} - \hat p) =
+\begin{bmatrix} x_B^{\top}(p^{\star} - \hat p) \cr y_B^{\top}(p^{\star} - \hat p) \end{bmatrix}
+= \begin{bmatrix} 83.0\cos 3^{\circ} - 45.0\sin 3^{\circ} \cr -83.0\sin 3^{\circ} - 45.0\cos 3^{\circ} \end{bmatrix}
+= \begin{bmatrix} 80.6 \cr -49.3 \end{bmatrix}\ \mathrm{mm} \qquad (14)
 $$
 
 In summary, Eq. (12) reads in three steps.
@@ -483,22 +483,22 @@ In summary, Eq. (12) reads in three steps.
 |---|---|---|
 | 1 | $p^{\star} - \hat p$ | Measure the green arrow of Figure 9(b) on the wall scale |
 | 2 | $R^{\top}(\hat\psi)(\cdot)$ | Re-measure the same arrow on the robot scale (Figure 10(a) → (b)) |
-| 3 | $-\,d$ | Subtract the purple arrow already attached to the robot (Figure 8) |
+| 3 | $-\thinspace d$ | Subtract the purple arrow already attached to the robot (Figure 8) |
 
-The same result can also be obtained more briefly. Since $c_0 = \hat p + R(\hat\psi)\,d$, Eq. (12) is equivalent to $\Delta s = R^{\top}(\hat\psi)(p^{\star} - c_0)$, and substituting $p^{\star} - c_0 = -e_0\,n$ from Eq. (13) gives the following simple form.
+The same result can also be obtained more briefly. Since $c_0 = \hat p + R(\hat\psi)\thinspace d$, Eq. (12) is equivalent to $\Delta s = R^{\top}(\hat\psi)(p^{\star} - c_0)$, and substituting $p^{\star} - c_0 = -e_0\thinspace n$ from Eq. (13) gives the following simple form.
 
 $$
-\Delta s = -e_0\,R^{\top}(\hat\psi)\,n = -e_0 \begin{bmatrix} \sin(\hat\psi - \theta_l) \\ \cos(\hat\psi - \theta_l) \end{bmatrix} \qquad (15)
+\Delta s = -e_0\thinspace R^{\top}(\hat\psi)\thinspace n = -e_0 \begin{bmatrix} \sin(\hat\psi - \theta_l) \cr \cos(\hat\psi - \theta_l) \end{bmatrix} \qquad (15)
 $$
 
-That is, $\Delta s$ is the orange arrow $(0.00,\ 10.73)$ mm of Figure 9(b) re-read on the robot scale, $10.73\,(\sin 3^{\circ},\ \cos 3^{\circ}) = (0.56,\ 10.72)$ mm. When the robot is parallel to the line ($\hat\psi = \theta_l$), $\Delta s = (0,\ -e_0)$; that is, only the Y axis moves, opposite to the cross-track error and by the same amount. When the robot is tilted by 3°, the X axis also moves by $-e_0\sin 3^{\circ}$, so the pen is moved perpendicular to the wall line rather than along the tilted Y axis. In the virtual experiment, the X axis barely moves (51.0–53.8 mm) while the Y axis removes the cross-track error (61.3–72.2 mm), in agreement with this equation. The code computing directly from $\hat p$ without passing through $c_0$ is merely the same equation written in a different order.
+That is, $\Delta s$ is the orange arrow $(0.00,\ 10.73)$ mm of Figure 9(b) re-read on the robot scale, $10.73\thinspace (\sin 3^{\circ},\ \cos 3^{\circ}) = (0.56,\ 10.72)$ mm. When the robot is parallel to the line ($\hat\psi = \theta_l$), $\Delta s = (0,\ -e_0)$; that is, only the Y axis moves, opposite to the cross-track error and by the same amount. When the robot is tilted by 3°, the X axis also moves by $-e_0\sin 3^{\circ}$, so the pen is moved perpendicular to the wall line rather than along the tilted Y axis. In the virtual experiment, the X axis barely moves (51.0–53.8 mm) while the Y axis removes the cross-track error (61.3–72.2 mm), in agreement with this equation. The code computing directly from $\hat p$ without passing through $c_0$ is merely the same equation written in a different order.
 
 ### 6.6 From $\Delta s$ to the Zaber Command: 1000 and $s_c$
 
 $\Delta s$ in Eqs. (12)–(15) is a body-frame vector in m. However, the Zaber firmware and the `/stage/target_pos` topic use mm, and their origin is one end of the travel (home). The stage command therefore passes through two more steps.
 
 $$
-s^{\star} = s_c + 1000\,\Delta s \quad [\mathrm{mm}], \qquad s_c = 50.8\ \mathrm{mm} \qquad (16)
+s^{\star} = s_c + 1000\thinspace \Delta s \quad [\mathrm{mm}], \qquad s_c = 50.8\ \mathrm{mm} \qquad (16)
 $$
 
 ![Converting Delta s into the Zaber command](2_docs/img/fig_pen_stage.png)
@@ -510,7 +510,7 @@ Figure 11(a) enlarges the teal square (stage) of Figure 8. The horizontal $X_s$ 
 | Operation | Why it is needed | What happens if omitted |
 |---|---|---|
 | $\times 1000$ | The controller computes all lengths in the SI unit m internally and converts to mm only at the interface with the stage ($1\ \mathrm{m} = 1000\ \mathrm{mm}$) | Sending 0.0107 makes the Zaber interpret it as 0.0107 mm, so the pen barely moves (grey × at the centre of Figure 11(a)) |
-| $+\,s_c$ | $\Delta s = 0$ in the controller is the stage centre, whereas the Zaber 0 is home (the edge of the travel) | Sending 10.72 drives the carriage near home, 40 mm below the centre (grey × at the lower left of Figure 11(a)) |
+| $+\thinspace s_c$ | $\Delta s = 0$ in the controller is the stage centre, whereas the Zaber 0 is home (the edge of the travel) | Sending 10.72 drives the carriage near home, 40 mm below the centre (grey × at the lower left of Figure 11(a)) |
 
 Figure 11(b) writes the same point on the Y axis on three scales. The value 0.0107 on the controller m scale becomes 10.72 on the controller mm scale after multiplication by 1000, and 61.52 on the Zaber scale after adding 50.8. The centres (0, 0, 50.8) and the ends ($\pm 0.0508$ m, $\pm 50.8$ mm, 0 and 101.6 mm) of the three scales are the same points. $s_c$ translates into a Zaber number the design of "starting with the stage at its centre and keeping a margin of $\pm 50.8$ mm on each side". For the same reason, $s^{\star} = (s_c,\ s_c)$ outside mode 3, so the stage waits at its centre while no line is being drawn. Conversely, when the pen position is computed (PenTrace, for evaluation), $s_c$ is subtracted and the result divided by 1000, as in Eq. (3).
 
@@ -518,7 +518,7 @@ Figure 11(b) writes the same point on the Y axis on three scales. The value 0.01
 
 *Figure 12. PenComp computation order and the frame and unit of each step*
 
-Figure 12 lays out the computation order of Eqs. (12)–(16) as blocks. It starts from wall-frame quantities in m ($\hat p$, $c_0$, $p^{\star}$), becomes body frame after passing through $R^{\top}$, and finally becomes the stage mm scale after passing through $\times 1000$ and $+\,s_c$.
+Figure 12 lays out the computation order of Eqs. (12)–(16) as blocks. It starts from wall-frame quantities in m ($\hat p$, $c_0$, $p^{\star}$), becomes body frame after passing through $R^{\top}$, and finally becomes the stage mm scale after passing through $\times 1000$ and $+\thinspace s_c$.
 
 ### 6.7 Summary of the Numerical Example
 
@@ -530,23 +530,23 @@ Figure 13 gathers the content of Figures 8–11 on one sheet. It is the instant 
 
 | Step | Code | Equation | Value in this example [mm] | In the figure |
 |---|---|---|---|---|
-| 1 | `pc = pT + R*pen_d` | $c_0 = \hat p + R(\hat\psi)\,d$ | $(-200.0,\ 345.0) + (83.0,\ -55.7) = (-117.0,\ 289.3)$ | Figure 9(b) white circle |
+| 1 | `pc = pT + R*pen_d` | $c_0 = \hat p + R(\hat\psi)\thinspace d$ | $(-200.0,\ 345.0) + (83.0,\ -55.7) = (-117.0,\ 289.3)$ | Figure 9(b) white circle |
 | 2 | `sigma = dot(u, pc - A)` | $\sigma = u^{\top}(c_0 - A)$ | 583.0 | Figure 9(a) dimension line |
 | – | – | $e_0 = n^{\top}(c_0 - A)$ | $-10.73$ (pen below the line) | Figure 9(b) |
 | 3 | `p_des = A + sigma*u` | $p^{\star} = A + \sigma u$ | $(-117.0,\ 300.0)$ | Figure 9(b) green diamond |
 | 4 | `p_des - pT` | $p^{\star} - \hat p$ | $(83.0,\ -45.0)$ | Figure 10(a) green arrow |
 | 5 | `R'*(p_des - pT)` | $R^{\top}(\hat\psi)(p^{\star} - \hat p)$ | $(80.6,\ -49.3)$ | Figure 10(b), Figure 8 green arrow |
 | 6 | `e_b = ... - pen_d` | $\Delta s$ | $(80.6,\ -49.3) - (80.0,\ -60.0) = (0.56,\ 10.72)$ | Figure 8(b) orange arrow |
-| 7 | `s_cmd = stage_c + 1000*e_b` | $s^{\star} = s_c + 1000\,\Delta s$ | $(51.36,\ 61.52)$ | Figure 11(a) red circle |
+| 7 | `s_cmd = stage_c + 1000*e_b` | $s^{\star} = s_c + 1000\thinspace \Delta s$ | $(51.36,\ 61.52)$ | Figure 11(a) red circle |
 | 8 | `pen_on` | $0 \le \sigma \le L$ | 1 (pen down) | Figure 9(a) |
 
-Checking with Eq. (15) gives $-e_0\,(\sin 3^{\circ},\ \cos 3^{\circ}) = 10.73\,(0.0523,\ 0.9986) = (0.56,\ 10.72)$ mm, identical to step 6. The result is verified as follows.
+Checking with Eq. (15) gives $-e_0\thinspace (\sin 3^{\circ},\ \cos 3^{\circ}) = 10.73\thinspace (0.0523,\ 0.9986) = (0.56,\ 10.72)$ mm, identical to step 6. The result is verified as follows.
 
 | Check item | Computation | Result |
 |---|---|---|
 | Y-axis motion | $61.52 - 50.8$ | 10.72 mm. In this attitude $y_B$ points almost straight up, so the pen moves upward on the wall |
 | X-axis motion | $51.36 - 50.8$ | 0.56 mm. "Up on the wall" and "left of the robot" differ by $3^{\circ}$, so the pen must also be moved forward by $10.73\sin 3^{\circ}$ to go straight up |
-| Pen tip | $P = \hat p + R(\hat\psi)\,(d + \Delta s)$ | $(-117.0,\ 300.0) = p^{\star}$ |
+| Pen tip | $P = \hat p + R(\hat\psi)\thinspace (d + \Delta s)$ | $(-117.0,\ 300.0) = p^{\star}$ |
 | Cross-track error | $n^{\top}(P - A)$ | 0. Since $c_0$ was 10.73 mm below the line, the pen lands exactly on $p^{\star}$, that is, on the line |
 | Along-line direction | $u^{\top}(P - c_0)$ | 0. The stage does not move the pen along the line |
 
@@ -574,7 +574,7 @@ Whether the stage is fast enough can be judged by comparison with the speed of t
 The compensation of Chapter 6 does not measure the pen; it computes the pen position from the measured robot pose, so the pen departs from the line by as much as the measurement is wrong. Defining the position measurement error as $\delta p = \hat p - p$ and the heading measurement error as $\delta\psi = \hat\psi - \psi$, the pen cross-track error to first order is as follows (Eqs. (39)–(41)).
 
 $$
-e \approx -\,n^{\top}\delta p \;-\; \ell_u\,\delta\psi, \qquad \ell_u = u^{\top}R(\psi)(d + \Delta s) \approx 0.08\ \mathrm{m} \qquad (17)
+e \approx -\thinspace n^{\top}\delta p \thickspace -\thickspace \ell_u\thinspace \delta\psi, \qquad \ell_u = u^{\top}R(\psi)(d + \Delta s) \approx 0.08\ \mathrm{m} \qquad (17)
 $$
 
 $$
@@ -598,10 +598,10 @@ Since ZeroKey is the dominant factor, adding one more tag is considered. There a
 (b) A second tag $T_2$ is mounted on the robot body so that the pen lies exactly midway between the two tags. In the current layout, $T_2 = -r_{tag} = (0.08,\ -0.06)$ m. When three points on a rigid body lie on one straight line, the position of the middle point is the average of the other two, independent of heading.
 
 $$
-c_0 = \tfrac12(p_1 + p_2) \quad\Rightarrow\quad \hat P = \tfrac12(\hat p_1 + \hat p_2) + R(\hat\psi)\,\Delta s, \qquad \sigma_e^2 \approx \tfrac12\sigma_p^2 + \lvert\Delta s\rvert^2\sigma_\psi^2 \qquad (19)
+c_0 = \tfrac12(p_1 + p_2) \quad\Rightarrow\quad \hat P = \tfrac12(\hat p_1 + \hat p_2) + R(\hat\psi)\thinspace \Delta s, \qquad \sigma_e^2 \approx \tfrac12\sigma_p^2 + \lvert\Delta s\rvert^2\sigma_\psi^2 \qquad (19)
 $$
 
-If the noise of the two tags is independent, the variance of the average is halved, and the heading error multiplies only the carriage displacement $\lvert\Delta s\rvert \approx$ 15 mm, shrinking to 0.1 mm or less. That is, the effect of heading drift almost disappears. In addition, heading can be obtained directly from the baseline $b = 0.2$ m joining the two tags. Its noise, $\sqrt2\,\sigma_p/b \approx 0.41^{\circ}$, is larger than that of the IMU, but since it has no drift it can be blended with the IMU in a complementary filter to remove drift.
+If the noise of the two tags is independent, the variance of the average is halved, and the heading error multiplies only the carriage displacement $\lvert\Delta s\rvert \approx$ 15 mm, shrinking to 0.1 mm or less. That is, the effect of heading drift almost disappears. In addition, heading can be obtained directly from the baseline $b = 0.2$ m joining the two tags. Its noise, $\sqrt2\thinspace \sigma_p/b \approx 0.41^{\circ}$, is larger than that of the IMU, but since it has no drift it can be blended with the IMU in a complementary filter to remove drift.
 
 (c) A second tag $T_3$ is mounted on the stage carriage (next to the pen). Because it measures the pen position almost directly, it has the advantage that lever arm calibration error, stage error and robot pose error all enter the measurement. However, the tag noise $\sigma_p$ remains as is, and the moment the stage is driven by the measured pen position, a feedback loop containing a 50 ms delay is formed, requiring loop design. The tag mass adds to the moving mass of the Y carriage (0.16 kg), and radio signals may be blocked near the marker and the wall.
 
@@ -613,7 +613,7 @@ The predictions and approximate simulations for the three options are as follows
 | (b) 2 on robot, pen in the middle | 0.71 mm | 0.82 mm | 0.84 mm | 2.5 mm |
 | (c) 1 on robot + 1 on carriage | 1.0 mm | 1.08 mm | 1.07 mm | 3.3 mm |
 
-(b) is the most accurate, and since it creates no new feedback loop on the stage side, it is also simple to implement. The second tag is therefore better mounted on the robot body, with the pen exactly midway between the two tags, rather than on the pen. A tag on the pen (carriage) is better suited to calibrating the lever arm $d$ or verifying results. This comparison, however, relies on the assumption that the noise of the two tags is independent. If the two tags are close together and suffer the same multipath error, the gain of (b) shrinks, so the noise correlation should first be measured on the real robot (hardware) with both tags stationary. If the pen is not exactly in the middle, the weighted average $(1-\lambda)\hat p_1 + \lambda\hat p_2$ is used instead of the average of Eq. (19), with variance $((1-\lambda)^2 + \lambda^2)\,\sigma_p^2$. Using this feature requires adding a second tag input to Nav and PenComp (the current model has one tag).
+(b) is the most accurate, and since it creates no new feedback loop on the stage side, it is also simple to implement. The second tag is therefore better mounted on the robot body, with the pen exactly midway between the two tags, rather than on the pen. A tag on the pen (carriage) is better suited to calibrating the lever arm $d$ or verifying results. This comparison, however, relies on the assumption that the noise of the two tags is independent. If the two tags are close together and suffer the same multipath error, the gain of (b) shrinks, so the noise correlation should first be measured on the real robot (hardware) with both tags stationary. If the pen is not exactly in the middle, the weighted average $(1-\lambda)\hat p_1 + \lambda\hat p_2$ is used instead of the average of Eq. (19), with variance $((1-\lambda)^2 + \lambda^2)\thinspace \sigma_p^2$. Using this feature requires adding a second tag input to Nav and PenComp (the current model has one tag).
 
 ---
 
@@ -637,9 +637,9 @@ The predictions and approximate simulations for the three options are as follows
 | Horizontal direction | Right side of the figure is $+x$. Line $A \to B$ runs in the $+x$ direction |
 | Grey rectangle, $x_B$, $y_B$ | Robot body and body axes. Robot in this figure at $\psi \approx -6^{\circ}$ (facing right, nose slightly down) |
 | Black square $p$ | ZeroKey tag. The measured point is this point, not the robot centre |
-| Purple arrow $R(\psi)\,d$ | Lever arm from the tag to "the pen with the stage centred" $c_0$ (white circle), expressed in wall coordinates |
+| Purple arrow $R(\psi)\thinspace d$ | Lever arm from the tag to "the pen with the stage centred" $c_0$ (white circle), expressed in wall coordinates |
 | Green dashed rectangle | Stage travel (centred on $c_0$, aligned with the body axes) |
-| Orange arrow $R(\psi)\,\Delta s$ | Displacement of the pen on the wall caused by stage carriage motion |
+| Orange arrow $R(\psi)\thinspace \Delta s$ | Displacement of the pen on the wall caused by stage carriage motion |
 | Red circle $P$ | Actual pen tip |
 | Navy diamond $p^{\star}$ | Foot of the perpendicular from $c_0$ to the line = pen target |
 | Red arrow $e$ | Pen cross-track error. Distance from the line measured in the $n$ (upward) direction |
@@ -682,37 +682,37 @@ The predictions and approximate simulations for the three options are as follows
 $x_B$ is the unit vector obtained by rotating the $x$ axis counterclockwise by $\psi$, and $y_B$ is $x_B$ rotated by a further $+90^{\circ}$.
 
 $$
-x_B^{\mathcal{W}} = \begin{bmatrix} \cos\psi \\ \sin\psi \end{bmatrix}, \qquad
-y_B^{\mathcal{W}} = \begin{bmatrix} \cos(\psi + 90^{\circ}) \\ \sin(\psi + 90^{\circ}) \end{bmatrix} = \begin{bmatrix} -\sin\psi \\ \cos\psi \end{bmatrix}
+x_B^{\mathcal{W}} = \begin{bmatrix} \cos\psi \cr \sin\psi \end{bmatrix}, \qquad
+y_B^{\mathcal{W}} = \begin{bmatrix} \cos(\psi + 90^{\circ}) \cr \sin(\psi + 90^{\circ}) \end{bmatrix} = \begin{bmatrix} -\sin\psi \cr \cos\psi \end{bmatrix}
 $$
 
 A vector $v^{\mathcal{B}} = [a,\ b]^{\top}$ in body coordinates means "$a$ forward, $b$ to the left", so in wall coordinates it is the sum of the two axis vectors.
 
 $$
-v^{\mathcal{W}} = a\,x_B^{\mathcal{W}} + b\,y_B^{\mathcal{W}}
-= \underbrace{\begin{bmatrix} x_B^{\mathcal{W}} & y_B^{\mathcal{W}} \end{bmatrix}}_{R(\psi)} \begin{bmatrix} a \\ b \end{bmatrix},
+v^{\mathcal{W}} = a\thinspace x_B^{\mathcal{W}} + b\thinspace y_B^{\mathcal{W}}
+= \underbrace{\begin{bmatrix} x_B^{\mathcal{W}} & y_B^{\mathcal{W}} \end{bmatrix}}_{R(\psi)} \begin{bmatrix} a \cr b \end{bmatrix},
 \qquad
-R(\psi) = \begin{bmatrix} \cos\psi & -\sin\psi \\ \sin\psi & \cos\psi \end{bmatrix}, \qquad
-J = R(90^{\circ}) = \begin{bmatrix} 0 & -1 \\ 1 & 0 \end{bmatrix} \qquad (20)
+R(\psi) = \begin{bmatrix} \cos\psi & -\sin\psi \cr \sin\psi & \cos\psi \end{bmatrix}, \qquad
+J = R(90^{\circ}) = \begin{bmatrix} 0 & -1 \cr 1 & 0 \end{bmatrix} \qquad (20)
 $$
 
 *(Same figure: Figure 5)*
 
 | Property | Equation | Used for |
 |---|---|---|
-| Body → wall | $v^{\mathcal{W}} = R(\psi)\,v^{\mathcal{B}}$ | Lever arm $R d$, carriage displacement $R\,\Delta s$ (Eq. (32)) |
-| Wall → body | $v^{\mathcal{B}} = R^{\top}(\psi)\,v^{\mathcal{W}}$ ($R^{\top}R = I$, $\det R = 1$) | Stage command $\Delta s$ (Eq. (33)), body errors $e_x, e_y$ (Eq. (30a)) |
-| Angle composition | $R(\alpha)R(\beta) = R(\alpha + \beta)$, $R^{\top}(\psi) = R(-\psi)$ | $R^{\top}(\psi)\,n = R(\theta_l + 90^{\circ} - \psi)\,e_1$ in Eq. (34) |
-| Derivative | $\dot R = \dot\psi\,\partial R/\partial\psi = \omega\,J R$ | Error propagation (Eq. (39)) |
+| Body → wall | $v^{\mathcal{W}} = R(\psi)\thinspace v^{\mathcal{B}}$ | Lever arm $R d$, carriage displacement $R\thinspace \Delta s$ (Eq. (32)) |
+| Wall → body | $v^{\mathcal{B}} = R^{\top}(\psi)\thinspace v^{\mathcal{W}}$ ($R^{\top}R = I$, $\det R = 1$) | Stage command $\Delta s$ (Eq. (33)), body errors $e_x, e_y$ (Eq. (30a)) |
+| Angle composition | $R(\alpha)R(\beta) = R(\alpha + \beta)$, $R^{\top}(\psi) = R(-\psi)$ | $R^{\top}(\psi)\thinspace n = R(\theta_l + 90^{\circ} - \psi)\thinspace e_1$ in Eq. (34) |
+| Derivative | $\dot R = \dot\psi\thinspace \partial R/\partial\psi = \omega\thinspace J R$ | Error propagation (Eq. (39)) |
 | $+90^{\circ}$ rotation | $J v$ = $v$ rotated to the left, $J^{\top}J = I$, $J^2 = -I$ | Left normal of the line $n = Ju$ |
 
 Check ($\psi = 0^{\circ}$, during line following / $\psi = 90^{\circ}$, start pose)
 
 $$
 R(0^{\circ}) = I:\quad
-R\begin{bmatrix} 1 \\ 0 \end{bmatrix} = \begin{bmatrix} 1 \\ 0 \end{bmatrix}\ (\text{forward} = \text{right}), \qquad
-R(90^{\circ}) = \begin{bmatrix} 0 & -1 \\ 1 & 0 \end{bmatrix}:\quad
-R\begin{bmatrix} 1 \\ 0 \end{bmatrix} = \begin{bmatrix} 0 \\ 1 \end{bmatrix}\ (\text{forward} = \text{up})
+R\begin{bmatrix} 1 \cr 0 \end{bmatrix} = \begin{bmatrix} 1 \cr 0 \end{bmatrix}\ (\text{forward} = \text{right}), \qquad
+R(90^{\circ}) = \begin{bmatrix} 0 & -1 \cr 1 & 0 \end{bmatrix}:\quad
+R\begin{bmatrix} 1 \cr 0 \end{bmatrix} = \begin{bmatrix} 0 \cr 1 \end{bmatrix}\ (\text{forward} = \text{up})
 $$
 
 - During line following, a carriage displacement of 1 mm to the body left ($\Delta s_Y = +0.001$) moves the pen on the wall 1 mm upward ($+y$)
@@ -726,7 +726,7 @@ $$
 | $\psi$ | psi | Heading. Angle from the $x$ axis to the $x_B$ axis (right 0, counterclockwise +) | rad |
 | $R(\psi)$ | R of psi | Body → wall rotation matrix (Eq. (20)). $\dot R = \omega J R$ | – |
 | $c$ | c | Robot centre position | m |
-| $p$ | p | ZeroKey tag position $p = c + R(\psi)\,r_{tag}$ (Eq. (21a)) | m |
+| $p$ | p | ZeroKey tag position $p = c + R(\psi)\thinspace r_{tag}$ (Eq. (21a)) | m |
 | $r_{tag},\ r_{pen,0}$ | – | Tag position in body coordinates, pen position with the stage centred | $(-0.08,\ 0.06)$, $(0,\ 0)$ m |
 | $q = [c^{\top},\ \psi]^{\top}$ | q | Robot pose | m, rad |
 | $V = [v,\ \omega]^{\top}$ | V | Forward speed, yaw rate | m/s, rad/s |
@@ -741,18 +741,18 @@ $$
 ### 8.2 Tracked robot kinematics
 
 $$
-\dot q = S(q)\,V + w(t), \qquad
-S(q) = \begin{bmatrix} \cos\psi & u_c \sin\psi \\ \sin\psi & -u_c\cos\psi \\ 0 & 1 \end{bmatrix} \qquad (21)
+\dot q = S(q)\thinspace V + w(t), \qquad
+S(q) = \begin{bmatrix} \cos\psi & u_c \sin\psi \cr \sin\psi & -u_c\cos\psi \cr 0 & 1 \end{bmatrix} \qquad (21)
 $$
 
 $$
-w(t) = \begin{bmatrix} -k_s\,\lvert v\rvert \\ 0 \\ \dot\psi_w(t) \end{bmatrix}, \qquad
-\psi_w(t) = a_w \sin(2\pi f_w t) + \tfrac{1}{2} a_w \sin(2\pi\,2.3 f_w t + 1) \qquad (22)
+w(t) = \begin{bmatrix} -k_s\thinspace \lvert v\rvert \cr 0 \cr \dot\psi_w(t) \end{bmatrix}, \qquad
+\psi_w(t) = a_w \sin(2\pi f_w t) + \tfrac{1}{2} a_w \sin(2\pi\thinspace 2.3 f_w t + 1) \qquad (22)
 $$
 
 | Symbol | Definition | Value |
 |---|---|---|
-| $u_c$ | Longitudinal shift of the instantaneous centre of rotation (ICR). Zou [1] Eq. (34) $u_c = -\mathrm{sgn}(\omega)\,R_t \sin\alpha$, $R_t = \lvert v/\omega\rvert$ | 0 when $\alpha = 0$ |
+| $u_c$ | Longitudinal shift of the instantaneous centre of rotation (ICR). Zou [1] Eq. (34) $u_c = -\mathrm{sgn}(\omega)\thinspace R_t \sin\alpha$, $R_t = \lvert v/\omega\rvert$ | 0 when $\alpha = 0$ |
 | $\alpha$ | Slip angle | `alpha_s` = 0 |
 | $k_s$ | Magnetic track creep: slip in the direction of gravity proportional to travel speed | 0.08 [to be measured] |
 | $a_w,\ f_w$ | Amplitude and frequency of heading oscillation due to track bumps | 1.5°, 0.35 Hz [to be measured] |
@@ -764,20 +764,20 @@ Integration point and tag (revised 2026-11-11)
 
 $$
 \dot c = \text{position components of Eq. (21)}, \qquad
-p = c + R(\psi)\,r_{tag}, \qquad
-\dot p = \dot c + \omega\,J R(\psi)\,r_{tag} \qquad (21a)
+p = c + R(\psi)\thinspace r_{tag}, \qquad
+\dot p = \dot c + \omega\thinspace J R(\psi)\thinspace r_{tag} \qquad (21a)
 $$
 
 | Item | Previous version | Current version |
 |---|---|---|
 | `RobotPlant` integration state | Tag point $p$ (tag as centre of rotation) | Robot centre $c$ (same as original 6WP_sim), initial value `q0c` |
 | Output `q_true` | Tag pose | Tag pose (block `TagPoint` converts with Eq. (21a)) |
-| ZeroKey velocity (`ZkVel`) | $v\,[\cos\psi,\ \sin\psi]^{\top}$ | $\dot p$ of Eq. (21a) (including the rotational component) |
+| ZeroKey velocity (`ZkVel`) | $v\thinspace [\cos\psi,\ \sin\psi]^{\top}$ | $\dot p$ of Eq. (21a) (including the rotational component) |
 | Tag during in-place turn | Nearly stationary | Arc of radius $\lVert r_{tag}\rVert$ = 0.1 m (same as the real robot) |
 
 - Pen compensation (Eqs. (32)–(34)) uses only the measurements $\hat p,\ \hat\psi$ and $d$, so it is unaffected by this revision
 - Immediately after the revision, pen error grew to RMS 3.46 mm, maximum 25.9 mm. After mode 1 placed the tag at the start point, the roughly 70° turn in mode 2 moved the tag about 11 cm off the line, and the pen went down while heading was still swinging to −115° as mode 3 corrected this. The same phenomenon occurs on the real robot
-- Remedy: mode 1 sends the robot centre estimate $\hat c = \hat p - R(\hat\psi)\,r_{tag}$, instead of the tag, to the start centre $c_A = r_A - R(\theta_l)\,r_{tag}$ (Section 8.5). After the turn the tag lands exactly at the start point $r_A$ → tag height at the start of mode 3 $y$ = 0.343 m (target 0.360 m). The remaining 17 mm is the creep slip during the turn, reduced from about 110 mm before the revision
+- Remedy: mode 1 sends the robot centre estimate $\hat c = \hat p - R(\hat\psi)\thinspace r_{tag}$, instead of the tag, to the start centre $c_A = r_A - R(\theta_l)\thinspace r_{tag}$ (Section 8.5). After the turn the tag lands exactly at the start point $r_A$ → tag height at the start of mode 3 $y$ = 0.343 m (target 0.360 m). The remaining 17 mm is the creep slip during the turn, reduced from about 110 mm before the revision
 - Results after the remedy in Section 18.3 (pen RMS 1.17–1.20 mm)
 
 ### 8.3 Dynamics (wall version)
@@ -785,26 +785,26 @@ $$
 Reduced dynamics of the two papers (Zou Eq. (33b), Sabiha Eq. (29)) with wall adhesion and gravity added. Second velocity component written as $L\omega$ for dimensional consistency.
 
 $$
-\tilde M\,\dot\nu + \tilde C\,\nu + S^{\top}(f_1 + f_2) = \tilde B\,\tau + S^{\top} f_g, \qquad
-\nu = \begin{bmatrix} v \\ L\omega \end{bmatrix},\quad \tau = \begin{bmatrix} F_r \\ F_l \end{bmatrix} \qquad (23)
+\tilde M\thinspace \dot\nu + \tilde C\thinspace \nu + S^{\top}(f_1 + f_2) = \tilde B\thinspace \tau + S^{\top} f_g, \qquad
+\nu = \begin{bmatrix} v \cr L\omega \end{bmatrix},\quad \tau = \begin{bmatrix} F_r \cr F_l \end{bmatrix} \qquad (23)
 $$
 
 $$
-\tilde M = S^{\top} M S = m\begin{bmatrix} 1 & 0 \\ 0 & 1 + u_c^2/L^2 \end{bmatrix}, \quad
+\tilde M = S^{\top} M S = m\begin{bmatrix} 1 & 0 \cr 0 & 1 + u_c^2/L^2 \end{bmatrix}, \quad
 \tilde C = S^{\top} M \dot S, \quad
-\tilde B = \begin{bmatrix} 1 & 1 \\ b/2L & -b/2L \end{bmatrix}, \quad
+\tilde B = \begin{bmatrix} 1 & 1 \cr b/2L & -b/2L \end{bmatrix}, \quad
 L = \sqrt{(l^2 + b^2)/12} \qquad (24)
 $$
 
 $$
-f_1 = \mu_l N \begin{bmatrix} \cos\psi \\ \sin\psi \\ 0 \end{bmatrix} \tanh\!\frac{v}{\varepsilon_v}, \qquad
-f_2 = \begin{bmatrix} F_y \sin\psi \\ -F_y\cos\psi \\ M_r / L \end{bmatrix}, \qquad
-f_g = \begin{bmatrix} 0 \\ -m g \\ 0 \end{bmatrix} \qquad (25)
+f_1 = \mu_l N \begin{bmatrix} \cos\psi \cr \sin\psi \cr 0 \end{bmatrix} \tanh\negthinspace \frac{v}{\varepsilon_v}, \qquad
+f_2 = \begin{bmatrix} F_y \sin\psi \cr -F_y\cos\psi \cr M_r / L \end{bmatrix}, \qquad
+f_g = \begin{bmatrix} 0 \cr -m g \cr 0 \end{bmatrix} \qquad (25)
 $$
 
 $$
-F_y = 2\mu_t \frac{N}{l}\,u_c \tanh\!\frac{\omega}{\varepsilon_\omega}, \qquad
-M_r = \mu_t \frac{N}{l}\left(\frac{l^2}{4} - u_c^2\right) \tanh\!\frac{\omega}{\varepsilon_\omega} \qquad (26)
+F_y = 2\mu_t \frac{N}{l}\thinspace u_c \tanh\negthinspace \frac{\omega}{\varepsilon_\omega}, \qquad
+M_r = \mu_t \frac{N}{l}\left(\frac{l^2}{4} - u_c^2\right) \tanh\negthinspace \frac{\omega}{\varepsilon_\omega} \qquad (26)
 $$
 
 | Symbol | Definition | Value |
@@ -823,39 +823,39 @@ Differences from the original paper's equations
 |---|---|---|---|
 | 1 | Normal load $W = mg$ (Zou Eqs. (24)–(27)) | Adhesion force $N$ | On the wall, the normal force producing friction is the magnetic adhesion force, not gravity |
 | 2 | No gravity term | $f_g$ (Eq. (25)) | Plane of travel is vertical, so gravity lies in the plane of motion |
-| 3 | $M_r = \mathrm{sgn}(\omega)\,\mu_t \frac{W}{l}\left(u_c^2 - \frac{l^2}{4}\right)$ (Zou Eq. (27), Sabiha Eq. (24)) | $\frac{l^2}{4} - u_c^2$ | With the original equation, for $\lvert u_c\rvert < l/2$, $M_r$ takes the opposite sign to $\omega$, so the turning resistance assists the turn. Corrected so that the sign agrees with Wong's magnitude $\mu_t W l / 4$ ($u_c = 0$) |
+| 3 | $M_r = \mathrm{sgn}(\omega)\thinspace \mu_t \frac{W}{l}\left(u_c^2 - \frac{l^2}{4}\right)$ (Zou Eq. (27), Sabiha Eq. (24)) | $\frac{l^2}{4} - u_c^2$ | With the original equation, for $\lvert u_c\rvert < l/2$, $M_r$ takes the opposite sign to $\omega$, so the turning resistance assists the turn. Corrected so that the sign agrees with Wong's magnitude $\mu_t W l / 4$ ($u_c = 0$) |
 | 4 | $\upsilon = [v,\ \dot\theta]^{\top}$ (Zou Eq. (19), Sabiha Eq. (18)) | $\nu = [v,\ L\omega]^{\top}$ | With $q_3 = L\theta$, the second component must be $L\dot\theta$ for the third row $[0\ \ 1]$ of $S$ and the first-row term $u_c\sin\psi/L$ to be dimensionally consistent |
-| 5 | $M = (F_l + F_r)\,b/2$ (Sabiha Eq. (23)) | $(F_l - F_r)\,b/2$ | Typo. The same paper's Eq. (26c) and $\bar B$ use the difference |
+| 5 | $M = (F_l + F_r)\thinspace b/2$ (Sabiha Eq. (23)) | $(F_l - F_r)\thinspace b/2$ | Typo. The same paper's Eq. (26c) and $\bar B$ use the difference |
 | 6 | $\mathrm{sgn}(\cdot)$ | $\tanh(\cdot/\varepsilon)$ | Prevents numerical chatter near standstill |
 
 Numerical integration step
 
 - Near $\omega = 0$, slope of the turning resistance $\partial M_r/\partial\omega = \mu_t N l / (4\varepsilon_\omega)$ = 1500 N·m·s; divided by the yaw inertia $mL^2$ = 0.168 kg·m², eigenvalue $\lambda \approx 8.9\times10^{3}\ \mathrm{s^{-1}}$
 - Against the stability condition $\lvert\lambda h\rvert \lesssim 2.8$ of fixed-step RK4 (ode4), $h$ = 5 ms gives $\lambda h$ = 44 → $\omega$ oscillates numerically (confirmed in Section 18.5)
-- At $h$ = 0.5 ms, $\lambda h$ = 4.5 still exceeds the linear criterion, but the slope is large only for $\lvert\omega\rvert < \varepsilon_\omega$, so the oscillation disappears. Difference between $\int\omega\,dt$ and $\Delta\psi$ within 2.5° (measured)
+- At $h$ = 0.5 ms, $\lambda h$ = 4.5 still exceeds the linear criterion, but the slope is large only for $\lvert\omega\rvert < \varepsilon_\omega$, so the oscillation disappears. Difference between $\int\omega\thinspace dt$ and $\Delta\psi$ within 2.5° (measured)
 
 ### 8.4 Drive train and inner speed loop
 
 The $(v_c, \omega_c)$ output by the controller is converted to PWM and sent to the ESC, and the speed PI inside the motion model produces the track traction forces.
 
 $$
-\bar V = \mathrm{sat}_{0.5}\!\left(\frac{v_c}{2v_{full}}\right), \quad
-\bar W = \mathrm{sat}_{0.5}\!\left(\frac{\omega_c}{2\omega_{full}}\right), \quad
+\bar V = \mathrm{sat}_{0.5}\negthinspace \left(\frac{v_c}{2v_{full}}\right), \quad
+\bar W = \mathrm{sat}_{0.5}\negthinspace \left(\frac{\omega_c}{2\omega_{full}}\right), \quad
 \begin{aligned}
-u_L &= 1500 + T(\bar V) - T_s(\bar W) \\
+u_L &= 1500 + T(\bar V) - T_s(\bar W) \cr
 u_R &= 1500 - T(\bar V) - T_s(\bar W)
 \end{aligned} \qquad (27)
 $$
 
 $$
-T(\bar V) = d_v \tanh\!\frac{\bar V}{0.02} + (400 - d_v)\,\frac{\bar V}{0.5}, \qquad
-T_s(\bar W) = d_\omega \tanh\!\frac{\bar W}{0.10} + (400 - d_\omega)\,\frac{\bar W}{0.5} \qquad (28)
+T(\bar V) = d_v \tanh\negthinspace \frac{\bar V}{0.02} + (400 - d_v)\thinspace \frac{\bar V}{0.5}, \qquad
+T_s(\bar W) = d_\omega \tanh\negthinspace \frac{\bar W}{0.10} + (400 - d_\omega)\thinspace \frac{\bar W}{0.5} \qquad (28)
 $$
 
 $$
-\tau_X = K_{P,v}\,e_v + K_{I,v}\!\int e_v\,dt, \quad
-\tau_N = K_{P,\omega}\,L e_\omega + K_{I,\omega}\!\int L e_\omega\,dt, \quad
-\tau = \tilde B^{-1}\begin{bmatrix} \tau_X \\ \tau_N \end{bmatrix} \qquad (29)
+\tau_X = K_{P,v}\thinspace e_v + K_{I,v}\negthinspace \int e_v\thinspace dt, \quad
+\tau_N = K_{P,\omega}\thinspace L e_\omega + K_{I,\omega}\negthinspace \int L e_\omega\thinspace dt, \quad
+\tau = \tilde B^{-1}\begin{bmatrix} \tau_X \cr \tau_N \end{bmatrix} \qquad (29)
 $$
 
 | Symbol | Definition | Value |
@@ -875,8 +875,8 @@ $$
 Mode 3 (line following). Tracks a time-varying reference point using body-frame errors.
 
 $$
-x_r(t) = W_{prev} + v_r\,(t - t_{line})\,u_r, \qquad
-\begin{bmatrix} e_x \\ e_y \end{bmatrix} = R^{\top}(\psi)\,(x_r - p), \qquad
+x_r(t) = W_{prev} + v_r\thinspace (t - t_{line})\thinspace u_r, \qquad
+\begin{bmatrix} e_x \cr e_y \end{bmatrix} = R^{\top}(\psi)\thinspace (x_r - p), \qquad
 e_\theta = \mathrm{wrap}(\theta_r - \psi) \qquad (30a)
 $$
 
@@ -889,12 +889,12 @@ Mode 1 (to the start point), mode 4 (stop at the end point). Polar-form law.
 
 $$
 \rho = \lVert W - p\rVert, \quad
-\alpha = \mathrm{wrap}\!\left(\mathrm{atan2}(W - p) - \psi\right), \quad
-v_c = k_\rho\,\rho \max(0, \cos\alpha), \quad
-\omega_c = k_\alpha\,\alpha + \tfrac{1}{2}\sin\alpha\cos\alpha \qquad (31)
+\alpha = \mathrm{wrap}\negthinspace \left(\mathrm{atan2}(W - p) - \psi\right), \quad
+v_c = k_\rho\thinspace \rho \max(0, \cos\alpha), \quad
+\omega_c = k_\alpha\thinspace \alpha + \tfrac{1}{2}\sin\alpha\cos\alpha \qquad (31)
 $$
 
-Mode 2 (heading alignment). $v_c = 0$, $\omega_c = k_\alpha\,\mathrm{wrap}(\theta_r - \psi)$. In all modes $\lvert v_c\rvert \le v_{max}$, $\lvert\omega_c\rvert \le \omega_{max}$.
+Mode 2 (heading alignment). $v_c = 0$, $\omega_c = k_\alpha\thinspace \mathrm{wrap}(\theta_r - \psi)$. In all modes $\lvert v_c\rvert \le v_{max}$, $\lvert\omega_c\rvert \le \omega_{max}$.
 
 | Symbol | Definition | Value (`XY_setup.m` name) |
 |---|---|---|
@@ -905,35 +905,35 @@ Mode 2 (heading alignment). $v_c = 0$, $\omega_c = k_\alpha\,\mathrm{wrap}(\thet
 | $k_\rho,\ k_\alpha$ | Distance and direction gains | 1.0 s⁻¹, 2.0 s⁻¹ (`K_dist`, `K_yaw`) |
 | $v_{max},\ \omega_{max}$ | Command limits | 0.20 m/s, 45 °/s |
 
-- Eq. (30b) is the Kanayama form (Zou Eq. (38), Sabiha Eq. (40)) $\omega_c = \omega_r + v_r\,[k_y' e_y + k_\theta \sin e_\theta]$ with $\omega_r = 0$ (straight line) and $v_r$ absorbed into the gains. $k_y = v_r k_y'$, $k_\psi = v_r k_\theta$
+- Eq. (30b) is the Kanayama form (Zou Eq. (38), Sabiha Eq. (40)) $\omega_c = \omega_r + v_r\thinspace [k_y' e_y + k_\theta \sin e_\theta]$ with $\omega_r = 0$ (straight line) and $v_r$ absorbed into the gains. $k_y = v_r k_y'$, $k_\psi = v_r k_\theta$
 - Reference point is time-based, so if the robot lags or leads, $e_x$ adjusts $v_c$ (see the speed difference in Section 18.5)
-- Eq. (31) in mode 1 is computed with the centre estimate $\hat c = \hat p - R(\hat\psi)\,r_{tag}$ and the start centre $c_A = r_A - R(\theta_l)\,r_{tag}$ instead of the tag $\hat p$, and the transition condition `dist_start` also uses $\lVert c_A - \hat c\rVert$. Same meaning as the original 6WP_sim sending the centre to the target point; ensures the tag arrives at $r_A$ after the in-place turn of mode 2 (Section 8.2). Modes 3·4 remain tag-referenced
+- Eq. (31) in mode 1 is computed with the centre estimate $\hat c = \hat p - R(\hat\psi)\thinspace r_{tag}$ and the start centre $c_A = r_A - R(\theta_l)\thinspace r_{tag}$ instead of the tag $\hat p$, and the transition condition `dist_start` also uses $\lVert c_A - \hat c\rVert$. Same meaning as the original 6WP_sim sending the centre to the target point; ensures the tag arrives at $r_A$ after the in-place turn of mode 2 (Section 8.2). Modes 3·4 remain tag-referenced
 ### 8.6 Pen kinematic compensation (derivation)
 
 Pen tip position is the sum of the tag, the lever arm and the carriage displacement.
 
 $$
-P = p + R(\psi)\,(d + \Delta s) = c_0 + R(\psi)\,\Delta s, \qquad c_0 = p + R(\psi)\,d \qquad (32)
+P = p + R(\psi)\thinspace (d + \Delta s) = c_0 + R(\psi)\thinspace \Delta s, \qquad c_0 = p + R(\psi)\thinspace d \qquad (32)
 $$
 
 - $c_0$ is the pen position with the stage at centre
 - Goal: keep the pen on the line while leaving progress along the line to the robot → pen target set to the foot of the perpendicular dropped from $c_0$ onto the line
 
 $$
-p^{\star} = A + \sigma\,u, \quad \sigma = u^{\top}(c_0 - A)
+p^{\star} = A + \sigma\thinspace u, \quad \sigma = u^{\top}(c_0 - A)
 \quad\Rightarrow\quad
 P = p^{\star}
 \ \Leftrightarrow\
-\Delta s = R^{\top}(\psi)\,(p^{\star} - p) - d,
+\Delta s = R^{\top}(\psi)\thinspace (p^{\star} - p) - d,
 \qquad
-s^{\star} = s_c + 1000\,\Delta s \qquad (33)
+s^{\star} = s_c + 1000\thinspace \Delta s \qquad (33)
 $$
 
-With the uncompensated cross-track error $e_0 = n^{\top}(c_0 - A)$, $p^{\star} - c_0 = -e_0\,n$, hence
+With the uncompensated cross-track error $e_0 = n^{\top}(c_0 - A)$, $p^{\star} - c_0 = -e_0\thinspace n$, hence
 
 $$
-\Delta s = -e_0\,R^{\top}(\psi)\,n = -e_0 \begin{bmatrix} \sin(\psi - \theta_l) \\ \cos(\psi - \theta_l) \end{bmatrix},
-\qquad u = \begin{bmatrix}\cos\theta_l \\ \sin\theta_l\end{bmatrix} \qquad (34)
+\Delta s = -e_0\thinspace R^{\top}(\psi)\thinspace n = -e_0 \begin{bmatrix} \sin(\psi - \theta_l) \cr \cos(\psi - \theta_l) \end{bmatrix},
+\qquad u = \begin{bmatrix}\cos\theta_l \cr \sin\theta_l\end{bmatrix} \qquad (34)
 $$
 
 - Stage moves only by $e_0$, in a direction set by the angle difference $\psi - \theta_l$ between the robot and the line
@@ -941,8 +941,8 @@ $$
 - $p^{\star}$ not clipped to $[A, B]$. If clipped, with the pen ahead of A the stage tries to cover the distance where $\sigma < 0$, and X hits the end of travel
 
 $$
-\mathrm{pen\_on} = \mathbb{1}\left[\,0 \le \sigma \le \lVert B - A\rVert\,\right], \qquad
-s^{\star} \leftarrow \mathrm{rate}_{83\,\mathrm{mm/s}}\!\left(\mathrm{sat}_{[0,\,101.6]}(s^{\star})\right) \qquad (35)
+\mathrm{pen\text{_}on} = \mathbb{1}\left[\thinspace 0 \le \sigma \le \lVert B - A\rVert\thinspace \right], \qquad
+s^{\star} \leftarrow \mathrm{rate}_{83\thinspace \mathrm{mm/s}}\negthinspace \left(\mathrm{sat}_{[0,\thinspace 101.6]}(s^{\star})\right) \qquad (35)
 $$
 
 #### 8.6.1 Step-by-step meaning of Eqs. (32)–(33)
@@ -954,15 +954,15 @@ $$
 
 | Step | Equation | Frame | Meaning |
 |---|---|---|---|
-| 1 | $R(\hat\psi)\,d$ | body → wall | Lever arm fixed to the body (tag → pen) rotated by the current heading into a wall vector |
-| 2 | $c_0 = \hat p + R(\hat\psi)\,d$ | wall | Point on the wall touched by the pen with the stage at centre |
+| 1 | $R(\hat\psi)\thinspace d$ | body → wall | Lever arm fixed to the body (tag → pen) rotated by the current heading into a wall vector |
+| 2 | $c_0 = \hat p + R(\hat\psi)\thinspace d$ | wall | Point on the wall touched by the pen with the stage at centre |
 | 3 | $\sigma = u^{\top}(c_0 - A)$ | wall | Along-line component of $c_0$ = distance along the line. Also used for the pen down verdict (Eq. (35)) |
 | 4 | $e_0 = n^{\top}(c_0 - A)$ | wall | Pen cross-track error without the stage (sign: + towards $n$) |
 | 5 | $p^{\star} = A + \sigma u$ | wall | Foot of the perpendicular from $c_0$ onto the line. Target correcting only the cross-track direction, leaving the direction of travel unchanged |
 | 6 | $p^{\star} - \hat p$ | wall | Vector from the tag to the pen target |
-| 7 | $R^{\top}(\hat\psi)\,(p^{\star} - \hat p)$ | wall → body | Same vector in body coordinates. Body position where the pen must be |
+| 7 | $R^{\top}(\hat\psi)\thinspace (p^{\star} - \hat p)$ | wall → body | Same vector in body coordinates. Body position where the pen must be |
 | 8 | $\Delta s = (7) - d$ | body | Quantity the pen must move from the centre position ($d$) = carriage displacement [m] |
-| 9 | $s^{\star} = s_c + 1000\,\Delta s$ | stage | Stage coordinates [mm]. Origin at the edge, hence the centre $s_c$ added |
+| 9 | $s^{\star} = s_c + 1000\thinspace \Delta s$ | stage | Stage coordinates [mm]. Origin at the edge, hence the centre $s_c$ added |
 
 - Check: substituting step 8 into Eq. (32) gives $P = \hat p + R(d + \Delta s) = \hat p + R R^{\top}(p^{\star} - \hat p) = p^{\star}$
 - Reason for the foot of the perpendicular: the pen position along the line ($u$) is set by the robot. If the stage also tried to match the along-line direction, it would have to cover robot travel errors of several cm, exceeding the travel (±50.8 mm)
@@ -975,8 +975,8 @@ One instant during line following. Measured $\hat p = (-200.0,\ 345.0)$ mm, $\ha
 
 | Quantity | Calculation | Value [mm] |
 |---|---|---|
-| $R(\hat\psi)$ | $\cos 3^{\circ} = 0.9986$, $\sin 3^{\circ} = 0.0523$ | $[\,0.9986\ \ {-0.0523};\ 0.0523\ \ 0.9986\,]$ |
-| $R\,d$ | $d = (80.0,\ -60.0)$ | $(83.0,\ -55.7)$ |
+| $R(\hat\psi)$ | $\cos 3^{\circ} = 0.9986$, $\sin 3^{\circ} = 0.0523$ | $[\thinspace 0.9986\ \ {-0.0523};\ 0.0523\ \ 0.9986\thinspace]$ |
+| $R\thinspace d$ | $d = (80.0,\ -60.0)$ | $(83.0,\ -55.7)$ |
 | $c_0$ | $\hat p + R d$ | $(-117.0,\ 289.3)$ |
 | $\sigma$ | $u^{\top}(c_0 - A) = -117.0 - (-700)$ | 583.0 (within the pen down interval $0 \le \sigma \le 1200$) |
 | $e_0$ | $n^{\top}(c_0 - A) = 289.3 - 300$ | $-10.73$ (pen 10.73 mm below the line) |
@@ -984,8 +984,8 @@ One instant during line following. Measured $\hat p = (-200.0,\ 345.0)$ mm, $\ha
 | $p^{\star} - \hat p$ | – | $(83.0,\ -45.0)$ |
 | $R^{\top}(p^{\star} - \hat p)$ | – | $(80.6,\ -49.3)$ |
 | $\Delta s$ | $(80.6 - 80.0,\ -49.3 + 60.0)$ | $(0.56,\ 10.72)$ |
-| Eq. (34) check | $-e_0\,[\sin 3^{\circ},\ \cos 3^{\circ}]$ | $(0.56,\ 10.72)$, match |
-| $s^{\star}$ | $50.8 + 1000\,\Delta s$ ($\Delta s$ in m) | $(51.36,\ 61.52)$ |
+| Eq. (34) check | $-e_0\thinspace [\sin 3^{\circ},\ \cos 3^{\circ}]$ | $(0.56,\ 10.72)$, match |
+| $s^{\star}$ | $50.8 + 1000\thinspace \Delta s$ ($\Delta s$ in m) | $(51.36,\ 61.52)$ |
 | $P$ | $\hat p + R(d + \Delta s)$ | $(-117.0,\ 300.0) = p^{\star}$ |
 
 - Stage moves 10.72 mm in Y (body left = wall up), raising the pen onto the line. X moves only 0.56 mm ($3^{\circ}$ tilt component)
@@ -993,7 +993,7 @@ One instant during line following. Measured $\hat p = (-200.0,\ 345.0)$ mm, $\ha
 
 #### 8.6.3 Sign check
 
-Reference $\theta_l = 0^{\circ}$ (line to the right). $\Delta s = -e_0\,[\sin(\psi - \theta_l),\ \cos(\psi - \theta_l)]^{\top}$.
+Reference $\theta_l = 0^{\circ}$ (line to the right). $\Delta s = -e_0\thinspace [\sin(\psi - \theta_l),\ \cos(\psi - \theta_l)]^{\top}$.
 
 | Situation | $\psi - \theta_l$ | $e_0$ | $\Delta s_X$ | $\Delta s_Y$ | Direction of pen motion on the wall | Verdict |
 |---|---|---|---|---|---|---|
@@ -1002,7 +1002,7 @@ Reference $\theta_l = 0^{\circ}$ (line to the right). $\Delta s = -e_0\,[\sin(\p
 | Pen below the line, nose $3^{\circ}$ up | $+3^{\circ}$ | $< 0$ | $+0.05\lvert e_0\rvert$ | $+\lvert e_0\rvert$ | $y_B$ tilted by $3^{\circ}$, so a little X added to raise vertically | towards the line |
 | Pen below the line, robot reversed ($B \to A$) | $180^{\circ}$ | $< 0$ | 0 | $-\lvert e_0\rvert$ | $y_B$ = down, so $-y_B$ = up | towards the line |
 
-- In all cases the pen moves in the $-e_0\,n$ direction, i.e. towards the line. When the heading changes, the equation switches axes automatically
+- In all cases the pen moves in the $-e_0\thinspace n$ direction, i.e. towards the line. When the heading changes, the equation switches axes automatically
 
 #### 8.6.4 Equation to Simulink code mapping (`PenCtrl/PenComp`)
 
@@ -1014,7 +1014,7 @@ Reference $\theta_l = 0^{\circ}$ (line to the right). $\Delta s = -e_0\,[\sin(\p
 | $\sigma = u^{\top}(c_0 - A)$ | `sigma = dot(u, pc - A);` |
 | $p^{\star} = A + \sigma u$ | `p_des = A + sigma * u;` |
 | $\Delta s = R^{\top}(p^{\star} - \hat p) - d$ | `e_b = R' * (p_des - pT) - pen_d;` |
-| $s^{\star} = s_c + 1000\,\Delta s$ | `s_cmd = stage_c + 1000 * e_b;` |
+| $s^{\star} = s_c + 1000\thinspace \Delta s$ | `s_cmd = stage_c + 1000 * e_b;` |
 | pen_on (Eq. (35)) | `pen_on = double(sigma >= 0 && sigma <= L);` |
 | Modes other than 3 | `s_cmd = [stage_c; stage_c]` (stage at centre, pen up) |
 
@@ -1023,9 +1023,9 @@ Reference $\theta_l = 0^{\circ}$ (line to the right). $\Delta s = -e_0\,[\sin(\p
 
 #### 8.6.5 Effect of heading error
 
-Since the compensator uses $\hat\psi$, a heading error of $\delta\psi$ moves the pen off the line by $\ell_u\,\delta\psi$ (Eq. (40)).
+Since the compensator uses $\hat\psi$, a heading error of $\delta\psi$ moves the pen off the line by $\ell_u\thinspace \delta\psi$ (Eq. (40)).
 
-| $\delta\psi$ | Pen error (pose of the numerical example, exact calculation) | First-order approximation $\ell_u\,\delta\psi$, $\ell_u$ = 0.083 m |
+| $\delta\psi$ | Pen error (pose of the numerical example, exact calculation) | First-order approximation $\ell_u\thinspace \delta\psi$, $\ell_u$ = 0.083 m |
 |---|---|---|
 | $1^{\circ}$ | 1.46 mm | 1.45 mm |
 | $3^{\circ}$ | 4.25 mm | 4.35 mm |
@@ -1037,12 +1037,12 @@ Since the compensator uses $\hat\psi$, a heading error of $\delta\psi$ moves the
 Modelled as a position servo per axis behind the trapezoidal trajectory generator of the Zaber firmware.
 
 $$
-m_i\,\ddot x_i + c_s\,\dot x_i = \mathrm{sat}_{F_{max}(\dot x_i)}\!\left(K_{P,i} e_i + K_{D,i}\,\dot e_i + K_{I,i}\!\int e_i\,dt\right) - m_i\,g_{B,i}(\psi), \qquad i \in \{X, Y\} \qquad (36)
+m_i\thinspace \ddot x_i + c_s\thinspace \dot x_i = \mathrm{sat}_{F_{max}(\dot x_i)}\negthinspace \left(K_{P,i} e_i + K_{D,i}\thinspace \dot e_i + K_{I,i}\negthinspace \int e_i\thinspace dt\right) - m_i\thinspace g_{B,i}(\psi), \qquad i \in \lbrace X, Y\rbrace \qquad (36)
 $$
 
 $$
-K_{P,i} = m_i\,\omega_{n,s}^2, \quad K_{D,i} = 2\zeta_s m_i\,\omega_{n,s}, \quad K_{I,i} = K_{P,i}\,\omega_{n,s}/5, \quad
-g_B(\psi) = R^{\top}(\psi)\begin{bmatrix} 0 \\ -g \end{bmatrix} \qquad (37)
+K_{P,i} = m_i\thinspace \omega_{n,s}^2, \quad K_{D,i} = 2\zeta_s m_i\thinspace \omega_{n,s}, \quad K_{I,i} = K_{P,i}\thinspace \omega_{n,s}/5, \quad
+g_B(\psi) = R^{\top}(\psi)\begin{bmatrix} 0 \cr -g \end{bmatrix} \qquad (37)
 $$
 
 | Symbol | Definition | Value |
@@ -1057,7 +1057,7 @@ $$
 
 $$
 \hat p(t_k) = p(t_k - \tau_{zk}) + \eta_p, \quad \eta_p \sim \mathcal{N}(0, \sigma_p^2 I), \qquad
-\hat\psi(t) = \psi(t) + \eta_\psi + \dot b_\psi\,t, \quad \eta_\psi \sim \mathcal{N}(0, \sigma_\psi^2) \qquad (38)
+\hat\psi(t) = \psi(t) + \eta_\psi + \dot b_\psi\thinspace t, \quad \eta_\psi \sim \mathcal{N}(0, \sigma_\psi^2) \qquad (38)
 $$
 
 | Symbol | Definition | Value |
@@ -1071,20 +1071,20 @@ The compensator solves Eq. (33) with the measurements $\hat p,\ \hat\psi$, so $\
 
 $$
 P = \underbrace{\hat p + R(\hat\psi)(d + \Delta s)}_{\text{on the line}} - \delta p + \big(R(\psi) - R(\hat\psi)\big)(d + \Delta s),
-\qquad R(\psi) - R(\hat\psi) \approx -\delta\psi\,J R(\psi) \qquad (39)
+\qquad R(\psi) - R(\hat\psi) \approx -\delta\psi\thinspace J R(\psi) \qquad (39)
 $$
 
 $$
-e = n^{\top}(P - A) \approx -\,n^{\top}\delta p \;-\; \delta\psi\;\ell_u, \qquad
-\ell_u = u^{\top} R(\psi)\,(d + \Delta s) \qquad (40)
+e = n^{\top}(P - A) \approx -\thinspace n^{\top}\delta p \thickspace -\thickspace \delta\psi\thickspace \ell_u, \qquad
+\ell_u = u^{\top} R(\psi)\thinspace (d + \Delta s) \qquad (40)
 $$
 
 - $\delta p = \hat p - p$, $\delta\psi = \hat\psi - \psi$. Since $n = Ju$ and $J^{\top}J = I$, $n^{\top}J = u^{\top}J^{\top}J = u^{\top}$ used
-- In the previous version, the second term of Eq. (40) had a $+$ sign ($n^{\top}J = -u^{\top}$ written by mistake). Corrected after confirming that, at the numerical-example pose with $\delta\psi = +1^{\circ}$, the directly computed $e = -1.44$ mm matches $-\delta\psi\,\ell_u$. Variance Eq. (41) unaffected since squared
+- In the previous version, the second term of Eq. (40) had a $+$ sign ($n^{\top}J = -u^{\top}$ written by mistake). Corrected after confirming that, at the numerical-example pose with $\delta\psi = +1^{\circ}$, the directly computed $e = -1.44$ mm matches $-\delta\psi\thinspace \ell_u$. Variance Eq. (41) unaffected since squared
 - Position error contributes only its line-normal component; heading error becomes pen error multiplied by the along-line component of the lever arm $\ell_u$. In the current layout $\ell_u \approx d_x$ = 0.08 m
 
 $$
-\sigma_e^2 \approx \sigma_p^2 + \ell_u^2\,\sigma_\psi^2 + \ell_u^2\,\frac{(\dot b_\psi T)^2}{3}
+\sigma_e^2 \approx \sigma_p^2 + \ell_u^2\thinspace \sigma_\psi^2 + \ell_u^2\thinspace \frac{(\dot b_\psi T)^2}{3}
 = (1.0)^2 + (0.42)^2 + (0.63)^2\ \mathrm{mm}^2
 \ \Rightarrow\ \sigma_e \approx 1.25\ \mathrm{mm} \qquad (41)
 $$
@@ -1096,8 +1096,8 @@ $$
 
 | Feature | Location | Equation | Parameter |
 |---|---|---|---|
-| ZeroKey latency compensation | Nav | $\hat p \leftarrow \hat p + \tau_{pred}\,\hat{\dot p}$ | `tau_pred` (default 0) |
-| Stage centring | RobotCtrl M3 | $e_y \leftarrow e_y + k_c e_s + k_{ci}\int e_s\,dt$, $e_s = (s_{Y,meas} - s_c)/1000$ | `K_c`, `K_ci` (default 0) |
+| ZeroKey latency compensation | Nav | $\hat p \leftarrow \hat p + \tau_{pred}\thinspace \hat{\dot p}$ | `tau_pred` (default 0) |
+| Stage centring | RobotCtrl M3 | $e_y \leftarrow e_y + k_c e_s + k_{ci}\int e_s\thinspace dt$, $e_s = (s_{Y,meas} - s_c)/1000$ | `K_c`, `K_ci` (default 0) |
 
 - Effect: see comparison in Chapter 20
 
@@ -1325,7 +1325,7 @@ Comparison with the original 6WP_sim (`2_시뮬레이션_simulink/6WP_sim/Tracke
 | Integration point | Robot centre | Robot centre (tag point before the 2026-11-11 fix) | Same |
 | Output | Centre pose $q$ | Tag pose (`TagPoint`, Eq. (21a)) | Matched to sensor location |
 
-- The $(u/L)\sin\theta$ term in the first two rows of the original Kinematics is dimensionally inconsistent when the second velocity component is $\omega$, but has no effect at $\alpha = 0$ ($u = 0$). This model writes it as $u\,\omega\sin\psi$ (Eq. (21))
+- The $(u/L)\sin\theta$ term in the first two rows of the original Kinematics is dimensionally inconsistent when the second velocity component is $\omega$, but has no effect at $\alpha = 0$ ($u = 0$). This model writes it as $u\thinspace \omega\sin\psi$ (Eq. (21))
 
 ### 12.2 Zaber stage (datasheet + CAD)
 
@@ -1402,9 +1402,9 @@ Input/output of each MATLAB Function block (each block's code header carries com
 | NavFcn (Nav) | ZeroKey position [m], velocity [m/s], IMU quaternion, $\psi_0$ [rad], $\tau_{pred}$ [s], `zk_xsign` | `pose` = $[\hat x;\ \hat y;\ \hat\psi]$ [m, m, rad] (version 2: + $V_{meas}$ [m/s, rad/s]) | $\hat p = [\pm x_{zk};\ z_{zk}]$, $\hat\psi = \mathrm{yaw} - \mathrm{yaw}_0 + \psi_0$ | Real robot `plane_project` in REP-103 form |
 | Guards (Mission) | `pose`, $A,\ B,\ d$, `line_pre`, `line_post`, $r_{tag}$ [m] | `dist_start` [m], `th_err` [rad], `along_rem` [m] | $\lVert c_A - \hat c\rVert$, $\mathrm{wrap}(\theta_l - \hat\psi)$, $u^{\top}(r_B - \hat p)$ | Real robot Chart |
 | ModeChart (Mission) | The three above, time $t$ [s] | `mode`, `t_line` [s] | Figure 7 | 6WP_sim Chart |
-| Waypoints (Mission) | `mode`, line geometry [m] | `WP_prev`, `WP_target`, `lineAB` [m] | $r_A = A - R(\theta_l)d - u\,\ell_{pre}$, $c_A = r_A - R(\theta_l) r_{tag}$ | Section 8.5 |
+| Waypoints (Mission) | `mode`, line geometry [m] | `WP_prev`, `WP_target`, `lineAB` [m] | $r_A = A - R(\theta_l)d - u\thinspace \ell_{pre}$, $c_A = r_A - R(\theta_l) r_{tag}$ | Section 8.5 |
 | Fcn1 Goto_Start (RobotCtrl) | `WP_target` [m], `pose` | $v$ [m/s], $\omega$ [rad/s] | Eq. (31), centre-based | 6WP_sim |
-| Fcn2 Turning | `WP_prev`, `WP_target`, `pose` | $v = 0$, $\omega$ [rad/s] | $\omega = k_\alpha\,\mathrm{wrap}(\theta_l - \hat\psi)$ | 6WP_sim |
+| Fcn2 Turning | `WP_prev`, `WP_target`, `pose` | $v = 0$, $\omega$ [rad/s] | $\omega = k_\alpha\thinspace \mathrm{wrap}(\theta_l - \hat\psi)$ | 6WP_sim |
 | Fcn3 Line_Tracking | Segment [m], `t_line` [s], `pose`, `/stage/pos` [mm] | $v$ [m/s], $\omega$ [rad/s], `e_cross` [m] | Eq. (30) (+ Section 8.10 stage centring) | 6WP_sim, real robot gains |
 | Fcn4 Stop_Destination | `WP_target`, `pose` | $v$, $\omega$ | Eq. (31) | 6WP_sim |
 | SpeedErr (InnerPI, version 2) | $v_c$ [m/s], $\omega_c$ [rad/s], $V_{meas}$, `mode` | $e_v$ [m/s], $e_\omega$ [rad/s], reset | Eq. (45) | Real robot Xsens model |
@@ -1420,7 +1420,7 @@ Input/output of each MATLAB Function block (each block's code header carries com
 | ZkWorld, ZkVel, ImuQuat, ZkQuat (Sensors) | `q_true`, `V_true`, noise | Topic values [m], [m/s], quaternion | Eq. (38) | Section 12.3 |
 | ZaberTraj (StagePlant) | $s^{\star}$ [mm] | Trajectory [mm, mm/s] | Trapezoidal (104 mm/s, 500 mm/s²) | Datasheet |
 | ZaberServo | Trajectory, carriage state, `q_true` | Acceleration [m/s²] | Eqs. (36)–(37) | Section 8.7 |
-| Encoder | Carriage position [m] | `stage_pos` [mm] | $1000\,x$, 0–101.6 saturation | `get pos` |
+| Encoder | Carriage position [m] | `stage_pos` [mm] | $1000\thinspace x$, 0–101.6 saturation | `get pos` |
 | PenTraceFcn (evaluation) | `q_true`, `stage_pos` [mm] | True pen position [m], cross-track error [m] | $P = p + R(\psi)(d + (s - s_c)/1000)$ | Figure 12 (6)–(7) |
 
 ![StagePlant](1_simulation/img/XY_1_pen_sim__StagePlant.png)
@@ -1440,7 +1440,7 @@ All computation resides in MATLAB Function blocks inside the model, and the head
 | `zerokey_position` [m], `zerokey_vel` [m/s], `imu_quat`, `psi0` [rad], `tau_pred` [s], `zk_xsign` | `pose` = $[\hat x;\ \hat y;\ \hat\psi]$ [m, m, rad] (version 2: + `V_meas`) |
 
 $$
-\hat p = \begin{bmatrix} z \\ x \end{bmatrix}, \qquad
+\hat p = \begin{bmatrix} z \cr x \end{bmatrix}, \qquad
 \mathrm{yaw} = \mathrm{atan2}\big(2(q_w q_z + q_x q_y),\ 1 - 2(q_y^2 + q_z^2)\big), \qquad
 \hat\psi = \mathrm{wrap}(\mathrm{yaw} - \mathrm{yaw}_0 + \psi_0) \qquad (42)
 $$
@@ -1458,17 +1458,17 @@ One Enabled Subsystem is enabled for each mode, and Merge passes on only the out
 Modes 1 and 4 use a polar-coordinate law. From the distance to the target $\rho$ and the bearing error $\alpha$, the law outputs
 
 $$
-v = k_\rho\,\rho\,\max(0,\ \cos\alpha), \qquad \omega = k_\alpha\,\alpha + \tfrac12\sin\alpha\cos\alpha \qquad (43)
+v = k_\rho\thinspace \rho\thinspace \max(0,\ \cos\alpha), \qquad \omega = k_\alpha\thinspace \alpha + \tfrac12\sin\alpha\cos\alpha \qquad (43)
 $$
 
-Owing to $\max(0,\ \cos\alpha)$, the robot only rotates without advancing when the bearing is off by more than 90°, and it moves faster as the heading becomes aligned. Mode 1 steers the centre to the target, and mode 4 steers the tag. Mode 2 rotates in place with $v = 0$, $\omega = k_\alpha\,\mathrm{wrap}(\theta_l - \hat\psi)$. Mode 3 follows Eqs. (7)–(8). When the optional stage centring ($K_c,\ K_{ci} > 0$) is enabled, the Y deviation of `/stage/pos`, $e_s = (s_Y - s_c)/1000$ [m], is added to the cross-track error so that the robot moves toward the pen side and the stage operates in the middle of its travel.
+Owing to $\max(0,\ \cos\alpha)$, the robot only rotates without advancing when the bearing is off by more than 90°, and it moves faster as the heading becomes aligned. Mode 1 steers the centre to the target, and mode 4 steers the tag. Mode 2 rotates in place with $v = 0$, $\omega = k_\alpha\thinspace \mathrm{wrap}(\theta_l - \hat\psi)$. Mode 3 follows Eqs. (7)–(8). When the optional stage centring ($K_c,\ K_{ci} > 0$) is enabled, the Y deviation of `/stage/pos`, $e_s = (s_Y - s_c)/1000$ [m], is added to the cross-track error so that the robot moves toward the pen side and the stage operates in the middle of its travel.
 
 ### 14.4 InnerPI (version 2 only)
 
 $$
 e_v = v_c - u_B, \quad e_\omega = \omega_c - g_\omega r, \qquad
-\bar V = \mathrm{sat}_{[0,\,0.5]}\Big(K_{P,v} e_v + K_{I,v}\sum e_v T_s\Big), \quad
-\bar W = \mathrm{sat}_{[-0.5,\,0.5]}\Big(K_{P,\omega} e_\omega + K_{I,\omega}\sum e_\omega T_s\Big) \qquad (44)
+\bar V = \mathrm{sat}_{[0,\thinspace 0.5]}\Big(K_{P,v} e_v + K_{I,v}\sum e_v T_s\Big), \quad
+\bar W = \mathrm{sat}_{[-0.5,\thinspace 0.5]}\Big(K_{P,\omega} e_\omega + K_{I,\omega}\sum e_\omega T_s\Big) \qquad (44)
 $$
 
 This is the same discrete PI as in the real robot Xsens model (Forward Euler, 0.01 s, integrator clamping). Using the real robot values unchanged causes two problems. The gyro scale factor $g_\omega = 0.1443$ is inconsistent in units with the rad/s command and makes ω oscillate, so it is set to 1; and the integrator value carried over at a mode change causes forward motion during rotation, so the integrators are reset at mode transitions. Confirmation of the source remains outstanding (Section 21.2).
@@ -1671,7 +1671,7 @@ Yaw-rate jitter (2 runs per case)
 |---|---|---|
 | ω tracking error RMS (pen down) | 6.3 deg/s | 1.4 deg/s |
 | Pen RMS | 1.19–1.20 mm | 1.18–1.20 mm |
-| Agreement of $\int\omega\,dt$ and $\Delta\psi$ (checked in previous version) | No agreement (numerical oscillation) | Within 2.5° |
+| Agreement of $\int\omega\thinspace dt$ and $\Delta\psi$ (checked in previous version) | No agreement (numerical oscillation) | Within 2.5° |
 | Cause | Step large relative to the slope of the turning resistance $\tanh(\omega/\varepsilon_\omega)$ ($\lambda h \approx 44$, Section 8.3) | – |
 
 - The jitter was a numerical-integration problem, not a gain problem. Pen RMS is the same even at 5 ms (the jitter frequency barely appears in the heading measurement within the stage compensation band)
@@ -1874,8 +1874,8 @@ Boxes changed from version 1
 | Sensors · PlantRosOut | Attitude and gyro z (true angular rate + noise 0.1°/s) published together in one IMU message |
 
 $$
-\bar V = \mathrm{sat}_{[0,\,0.5]}\!\Big(K_{P,v}^{in} e_v + K_{I,v}^{in}\!\sum e_v\,T_s\Big),\ e_v = v_c - u_B, \qquad
-\bar W = \mathrm{sat}_{[-0.5,\,0.5]}\!\Big(K_{P,\omega}^{in} e_\omega + K_{I,\omega}^{in}\!\sum e_\omega\,T_s\Big),\ e_\omega = \omega_c - g_\omega\,r \qquad (45)
+\bar V = \mathrm{sat}_{[0,\thinspace 0.5]}\negthinspace \Big(K_{P,v}^{in} e_v + K_{I,v}^{in}\negthinspace \sum e_v\thinspace T_s\Big),\ e_v = v_c - u_B, \qquad
+\bar W = \mathrm{sat}_{[-0.5,\thinspace 0.5]}\negthinspace \Big(K_{P,\omega}^{in} e_\omega + K_{I,\omega}^{in}\negthinspace \sum e_\omega\thinspace T_s\Big),\ e_\omega = \omega_c - g_\omega\thinspace r \qquad (45)
 $$
 
 | Symbol | Definition | Value (`XY_setup.m` section 10) |

@@ -169,7 +169,7 @@ heading $\psi$ 는 $x$ 축에서 $x_B$ 축까지 반시계로 잰 각이다. 로
 바디 좌표로 쓴 벡터 $a_B$ 를 벽면 좌표로 옮기는 행렬이 회전행렬이다.
 
 $$
-R(\psi) = \begin{bmatrix} \cos\psi & -\sin\psi \\ \sin\psi & \cos\psi \end{bmatrix} = \begin{bmatrix} x_B & y_B \end{bmatrix}, \qquad a_W = R(\psi)\,a_B, \qquad a_B = R^{\top}(\psi)\,a_W \qquad (1)
+R(\psi) = \begin{bmatrix} \cos\psi & -\sin\psi \cr \sin\psi & \cos\psi \end{bmatrix} = \begin{bmatrix} x_B & y_B \end{bmatrix}, \qquad a_W = R(\psi)\thinspace a_B, \qquad a_B = R^{\top}(\psi)\thinspace a_W \qquad (1)
 $$
 
 | 기호 | 읽는 법 | 의미 |
@@ -182,7 +182,7 @@ $$
 
 *그림 5. 회전행렬의 열은 벽면 좌표로 쓴 바디 축이다*
 
-첫 열이 $x_B$ 인 이유는 바디 벡터 $a_B = (1,\ 0)$, 즉 $x_B$ 방향 단위 벡터를 넣으면 $R a_B$ 가 첫 열이 되기 때문이다. 예를 들어 로봇이 오른쪽을 보는 $\psi = 0$ 에서 $R = I$ 이고, 천장을 보는 $\psi = 90^{\circ}$ 에서 $R = [\,0\ \ {-1};\ 1\ \ 0\,]$ 이다. $\psi = 0$ 에서 첫 열 $(1,\ 0)$ 은 $x$ 방향, 즉 벽에서 오른쪽이므로 로봇의 전진 방향이 맞다. 둘째 열 $(0,\ 1)$ 은 $y$ 방향, 즉 위쪽이다. 오른쪽을 보는 로봇의 왼쪽은 위쪽이므로 이것도 맞다. 이 자세에서 스테이지 Y 축을 + 로 움직이면 펜은 벽에서 위로 올라간다. 이 대응은 6 장의 부호를 이해하는 데 그대로 쓰인다.
+첫 열이 $x_B$ 인 이유는 바디 벡터 $a_B = (1,\ 0)$, 즉 $x_B$ 방향 단위 벡터를 넣으면 $R a_B$ 가 첫 열이 되기 때문이다. 예를 들어 로봇이 오른쪽을 보는 $\psi = 0$ 에서 $R = I$ 이고, 천장을 보는 $\psi = 90^{\circ}$ 에서 $R = [\thinspace 0\ \ {-1};\ 1\ \ 0\thinspace]$ 이다. $\psi = 0$ 에서 첫 열 $(1,\ 0)$ 은 $x$ 방향, 즉 벽에서 오른쪽이므로 로봇의 전진 방향이 맞다. 둘째 열 $(0,\ 1)$ 은 $y$ 방향, 즉 위쪽이다. 오른쪽을 보는 로봇의 왼쪽은 위쪽이므로 이것도 맞다. 이 자세에서 스테이지 Y 축을 + 로 움직이면 펜은 벽에서 위로 올라간다. 이 대응은 6 장의 부호를 이해하는 데 그대로 쓰인다.
 
 ### 3.3 레버암
 
@@ -192,7 +192,7 @@ $$
 d = r_{pen0} - r_{tag} = (0,\ 0) - (-0.08,\ 0.06) = (0.08,\ -0.06)\ \mathrm{m} \qquad (2)
 $$
 
-$d$ 는 로봇에 고정된 값이므로 바디 좌표에서는 상수이지만, 벽면 좌표에서는 $R(\psi)\,d$ 로 heading 에 따라 방향이 바뀐다. heading 을 틀리게 알면 $R(\hat\psi)\,d$ 가 틀리고, 그 차이가 곧 펜 위치 오차가 된다(7 장).
+$d$ 는 로봇에 고정된 값이므로 바디 좌표에서는 상수이지만, 벽면 좌표에서는 $R(\psi)\thinspace d$ 로 heading 에 따라 방향이 바뀐다. heading 을 틀리게 알면 $R(\hat\psi)\thinspace d$ 가 틀리고, 그 차이가 곧 펜 위치 오차가 된다(7 장).
 
 ---
 
@@ -207,7 +207,7 @@ $d$ 는 로봇에 고정된 값이므로 바디 좌표에서는 상수이지만,
 펜 끝 $P$ 는 태그 위치 $p$ 에서 출발해 레버암 $d$ 와 스테이지 캐리지 이동 $\Delta s$ 를 바디 좌표에서 더한 뒤 벽면으로 돌린 점이다.
 
 $$
-P = p + R(\psi)\,(d + \Delta s), \qquad \Delta s = \frac{s - s_c}{1000}\ [\mathrm{m}] \qquad (3)
+P = p + R(\psi)\thinspace (d + \Delta s), \qquad \Delta s = \frac{s - s_c}{1000}\ [\mathrm{m}] \qquad (3)
 $$
 
 | 기호 | 의미 | 단위 |
@@ -224,7 +224,7 @@ $$
 펜이 직선 $AB$ 위에 있다는 것은 펜의 직선 법선 방향 거리, 즉 횡오차가 0 이라는 뜻이다.
 
 $$
-e(t) = n^{\top}\big(P(t) - A\big) = 0, \qquad u = \frac{B - A}{\lVert B - A\rVert}, \quad n = J u, \quad J = \begin{bmatrix} 0 & -1 \\ 1 & 0 \end{bmatrix} \qquad (4)
+e(t) = n^{\top}\big(P(t) - A\big) = 0, \qquad u = \frac{B - A}{\lVert B - A\rVert}, \quad n = J u, \quad J = \begin{bmatrix} 0 & -1 \cr 1 & 0 \end{bmatrix} \qquad (4)
 $$
 
 $u$ 는 직선 방향 단위 벡터, $n$ 은 $u$ 를 반시계로 90° 돌린 법선(직선의 왼쪽, 이 직선에서는 위쪽)이다. 직선 방향으로는 펜이 $A$ 에서 $B$ 까지 지나가기만 하면 되므로 정확한 시각표는 요구하지 않는다. 즉 제어해야 할 것은 횡오차 $e$ 하나이고, 진행은 "언젠가 끝까지 가면 되는" 느슨한 조건이다.
@@ -234,7 +234,7 @@ $u$ 는 직선 방향 단위 벡터, $n$ 은 $u$ 를 반시계로 90° 돌린 �
 로봇 중심 $c$ 와 heading 의 운동은 다음과 같다(외란과 회전 중심 이동은 8.2 절).
 
 $$
-\dot c = v \begin{bmatrix} \cos\psi \\ \sin\psi \end{bmatrix}, \qquad \dot\psi = \omega \qquad (5)
+\dot c = v \begin{bmatrix} \cos\psi \cr \sin\psi \end{bmatrix}, \qquad \dot\psi = \omega \qquad (5)
 $$
 
 식 (5) 에 옆 방향 속도가 없다는 것이 비홀로노믹 구속이다. 로봇은 $x_B$ 방향으로만 움직이고 옆 방향 위치는 heading 을 바꿔야만 바뀐다. 반면 스테이지는 바디 좌표의 X, Y 를 독립적으로, 빠르게 움직이지만 $\lvert\Delta s_i\rvert \le 50.8$ mm 를 넘을 수 없다.
@@ -272,10 +272,10 @@ $$
 
 모드 4(Stop_Destination)에서 로봇은 끝점에 서고, 2 s 뒤 모드 5 에서 시뮬레이션이 끝난다. 펜은 모드 3 안에서 펜 목표가 $A$ 와 $B$ 사이에 있을 때만 내리는 것으로 평가한다. 실기에는 아직 펜 승강 장치가 없으므로 이 구간 판정은 기록용이다.
 
-로봇이 따라가는 선분은 펜 직선과 같은 선이 아니다. 스테이지가 가운데 있을 때 펜이 직선 위에 오려면 태그는 직선에서 $-R(\theta_l)\,d$ 만큼 떨어진 평행선을 따라가야 한다. 또 펜이 $A$ 에 닿기 전에 로봇이 안정되도록 앞쪽으로 60 mm, 끝을 지나 40 mm 더 간다.
+로봇이 따라가는 선분은 펜 직선과 같은 선이 아니다. 스테이지가 가운데 있을 때 펜이 직선 위에 오려면 태그는 직선에서 $-R(\theta_l)\thinspace d$ 만큼 떨어진 평행선을 따라가야 한다. 또 펜이 $A$ 에 닿기 전에 로봇이 안정되도록 앞쪽으로 60 mm, 끝을 지나 40 mm 더 간다.
 
 $$
-r_A = A - R(\theta_l)\,d - 0.06\,u, \qquad r_B = B - R(\theta_l)\,d + 0.04\,u, \qquad c_A = r_A - R(\theta_l)\,r_{tag} \qquad (6)
+r_A = A - R(\theta_l)\thinspace d - 0.06\thinspace u, \qquad r_B = B - R(\theta_l)\thinspace d + 0.04\thinspace u, \qquad c_A = r_A - R(\theta_l)\thinspace r_{tag} \qquad (6)
 $$
 
 ### 5.2 직선 추종 법칙
@@ -283,13 +283,13 @@ $$
 모드 3 의 기준점 $x_r$ 은 시간에 따라 선분 위를 일정한 속도 $v_r$ 로 움직인다. 로봇은 이 기준점과의 차이를 바디 좌표로 본다.
 
 $$
-x_r(t) = r_A + v_r\,(t - t_{line})\,u, \qquad
-\begin{bmatrix} e_x \\ e_y \end{bmatrix} = R^{\top}(\hat\psi)\,(x_r - \hat p), \qquad
+x_r(t) = r_A + v_r\thinspace (t - t_{line})\thinspace u, \qquad
+\begin{bmatrix} e_x \cr e_y \end{bmatrix} = R^{\top}(\hat\psi)\thinspace (x_r - \hat p), \qquad
 e_\theta = \mathrm{wrap}(\theta_l - \hat\psi) \qquad (7)
 $$
 
 $$
-v_c = v_r \cos e_\theta + k_x\,e_x, \qquad \omega_c = k_y\,e_y + k_\psi \sin e_\theta \qquad (8)
+v_c = v_r \cos e_\theta + k_x\thinspace e_x, \qquad \omega_c = k_y\thinspace e_y + k_\psi \sin e_\theta \qquad (8)
 $$
 
 $e_x$ 는 기준점이 로봇 앞쪽으로 얼마나 앞서 있는가이고, $e_y$ 는 기준점이 로봇 왼쪽으로 얼마나 떨어져 있는가이다. 로봇은 앞뒤 오차 $e_x$ 는 전진 속도로 직접 줄일 수 있지만, 옆 오차 $e_y$ 는 직접 줄일 수 없다. 그래서 $e_y$ 는 회전 명령 $\omega_c$ 로 들어간다. 기준점이 왼쪽에 있으면($e_y > 0$) 왼쪽으로 돌고, 방향이 틀어진 채로 전진하면서 옆 오차가 줄어든다.
@@ -297,7 +297,7 @@ $e_x$ 는 기준점이 로봇 앞쪽으로 얼마나 앞서 있는가이고, $e_
 이 과정이 왜 느린지는 직선 근처에서 식을 선형화하면 보인다. 직선에서 왼쪽으로 잰 로봇의 옆 위치를 $y_l$, 직선과의 방향 차를 $\phi = \psi - \theta_l$ 라 하면, 식 (5) 로부터 $\dot y_l = v\sin\phi \approx v_r\phi$, $\dot\phi = \omega$ 이다. 작은 오차에서 $e_y \approx -y_l$, $e_\theta \approx -\phi$ 이므로 식 (8) 은 $\omega = -k_y y_l - k_\psi\phi$ 가 되고, 닫힌 루프는 다음과 같다.
 
 $$
-\ddot y_l + k_\psi\,\dot y_l + v_r k_y\,y_l = 0, \qquad
+\ddot y_l + k_\psi\thinspace \dot y_l + v_r k_y\thinspace y_l = 0, \qquad
 \lambda = \frac{-k_\psi \pm \sqrt{k_\psi^2 - 4 v_r k_y}}{2} \qquad (9)
 $$
 
@@ -344,7 +344,7 @@ $T$ 의 첫 항은 0 근처에서 $d_v$ = 47 count 만큼 계단처럼 뛰어 ES
 | $\hat\psi$ | `pose(3)` | – | rad | IMU 로 잰 heading ($x$ 축에서 반시계) | – |
 | $R(\hat\psi)$ | `R` | 바디 → 벽면 | – | 바디 화살표를 벽면 화살표로 돌리는 행렬 | 회색 $x_B$, $y_B$ 축 |
 | $d$ | `pen_d` | 바디 $\mathcal B$ | m | 태그에서 스테이지 가운데의 펜까지 레버암. 장착으로 정해지는 상수 | 보라 화살표 |
-| $c_0$ | `pc` | 벽면 | m | 스테이지를 가운데에 두었을 때 펜이 닿는 점, $\hat p + R(\hat\psi)\,d$ | 흰 원 |
+| $c_0$ | `pc` | 벽면 | m | 스테이지를 가운데에 두었을 때 펜이 닿는 점, $\hat p + R(\hat\psi)\thinspace d$ | 흰 원 |
 | $A$, $B$, $L$ | `lineAB`, `L` | 벽면 | m | 그어야 할 직선의 양 끝과 길이 | 남색 점, 파란 선 |
 | $u$, $n$ | `u` | 벽면 | – | 직선 방향 단위 벡터, 법선 $n = Ju$ (위가 +) | 남색 화살표 |
 | $\sigma$ | `sigma` | – | m | $c_0$ 의 직선 위 진행 거리 | 치수선 |
@@ -379,7 +379,7 @@ end
 | 그림 8 | 바디 (로봇에 올라타서 봄) | $d$, $\Delta s$ 와 화살표 삼각형 |
 | 그림 9 | 벽면 (벽을 정면에서 봄) | $u$, $n$, $\sigma$, $c_0$, $p^{\star}$, $e_0$ |
 | 그림 10 | 두 좌표를 나란히 | $R^{\top}(\hat\psi)$ 가 같은 화살표의 눈금을 바꾸는 일 |
-| 그림 11 | 스테이지 (Zaber 눈금) | $\times 1000$ 과 $+\,s_c$ |
+| 그림 11 | 스테이지 (Zaber 눈금) | $\times 1000$ 과 $+\thinspace s_c$ |
 | 그림 12 | 계산 순서 | 각 단계의 좌표계와 단위 |
 | 그림 13 | 위 넷을 한 장에 | 계산 단계 전체와 최종 명령 |
 
@@ -388,11 +388,11 @@ end
 펜 끝의 위치는 식 (3) 과 같다. 스테이지 캐리지를 가운데에서 $\Delta s$ 만큼 옮기면 펜은 태그에서 바디 화살표 $d + \Delta s$ 만큼 떨어진 곳에 있다. 펜이 가야 할 벽면 위치 $p^{\star}$ 가 정해지면 이 식을 $\Delta s$ 에 대해 풀어 캐리지 이동을 얻는다.
 
 $$
-p^{\star} = \hat p + R(\hat\psi)\,(d + \Delta s)
+p^{\star} = \hat p + R(\hat\psi)\thinspace (d + \Delta s)
 \quad\Longrightarrow\quad
-\underbrace{d}_{\text{보라}} + \underbrace{\Delta s}_{\text{주황}} = \underbrace{R^{\top}(\hat\psi)\,(p^{\star} - \hat p)}_{\text{초록}}
+\underbrace{d}_{\text{보라}} + \underbrace{\Delta s}_{\text{주황}} = \underbrace{R^{\top}(\hat\psi)\thinspace (p^{\star} - \hat p)}_{\text{초록}}
 \quad\Longrightarrow\quad
-\Delta s = R^{\top}(\hat\psi)\,(p^{\star} - \hat p) - d \qquad (12)
+\Delta s = R^{\top}(\hat\psi)\thinspace (p^{\star} - \hat p) - d \qquad (12)
 $$
 
 $R$ 이 직교행렬이므로 양변에 $R^{\top}$ 을 곱하면 바로 풀린다. 측정값 $\hat p$, $\hat\psi$ 를 쓰는 이유는 제어기가 아는 것이 측정값뿐이기 때문이다. 식 (12) 의 가운데 식은 바디 좌표에서 세 화살표가 이루는 삼각형이며, 그림 8 가 이를 그린 것이다.
@@ -409,7 +409,7 @@ $R$ 이 직교행렬이므로 양변에 $R^{\top}$ 을 곱하면 바로 풀린�
 | 흰 원 | $c_0$ | 바디 $(0,\ 0)$ | 스테이지 가운데 ($s = s_c$) 의 펜 |
 | 청록 사각형 | 스테이지 행정 | $\pm 50.8$ | 펜이 바디에 대해 움직일 수 있는 범위 |
 | 보라 화살표 | $d$ | $(80.0,\ -60.0)$ | $\hat p$ 에서 $c_0$ 까지. 상수이며 제어기가 바꿀 수 없다 |
-| 초록 화살표 | $R^{\top}(\hat\psi)\,(p^{\star} - \hat p)$ | $(80.6,\ -49.3)$ | $\hat p$ 에서 펜 목표까지. 측정과 직선으로 정해지며 매 주기 바뀐다 |
+| 초록 화살표 | $R^{\top}(\hat\psi)\thinspace (p^{\star} - \hat p)$ | $(80.6,\ -49.3)$ | $\hat p$ 에서 펜 목표까지. 측정과 직선으로 정해지며 매 주기 바뀐다 |
 | 초록 마름모 | $p^{\star}$ | 바디 $(0.56,\ 10.72)$ | 펜이 가야 할 곳 |
 | 주황 화살표 | $\Delta s$ | $(0.56,\ 10.72)$ | $c_0$ 에서 $p^{\star}$ 까지. 스테이지가 펜을 옮길 양 |
 
@@ -427,7 +427,7 @@ $\hat p$ 에서 펜 목표까지 가는 길은 두 가지이다. 초록 화살�
 펜이 직선 위의 어느 점에 있어야 하는지는 4.2 절에서 보았듯 정해져 있지 않다. 직선 방향 위치는 로봇이 진행하며 정하고, 스테이지는 직선과의 어긋남만 지우면 된다. 그러므로 스테이지가 가운데일 때의 펜 위치 $c_0$ 에서 직선에 수선을 내린 발을 목표로 한다.
 
 $$
-c_0 = \hat p + R(\hat\psi)\,d, \qquad \sigma = u^{\top}(c_0 - A), \qquad e_0 = n^{\top}(c_0 - A), \qquad p^{\star} = A + \sigma u = c_0 - e_0\,n \qquad (13)
+c_0 = \hat p + R(\hat\psi)\thinspace d, \qquad \sigma = u^{\top}(c_0 - A), \qquad e_0 = n^{\top}(c_0 - A), \qquad p^{\star} = A + \sigma u = c_0 - e_0\thinspace n \qquad (13)
 $$
 
 ![벽면 좌표의 직선과 펜 목표](2_docs/img/fig_pen_wall.png)
@@ -442,13 +442,13 @@ $$
 | $A$ 의 가로 화살표 | $u$ | $(1,\ 0)$ | 직선 방향 단위 벡터 $(B - A)/L$ |
 | $A$ 의 세로 화살표 | $n = Ju$ | $(0,\ 1)$ | 직선 법선. 횡오차를 재는 방향 (위가 +) |
 | 검은 사각형 | $\hat p$ | $(-200.0,\ 345.0)$ | ZeroKey 측정 |
-| 보라 화살표 (b) | $R(\hat\psi)\,d$ | $(83.0,\ -55.7)$ | 그림 8 의 $d$ 를 벽면 좌표로 돌린 것 |
+| 보라 화살표 (b) | $R(\hat\psi)\thinspace d$ | $(83.0,\ -55.7)$ | 그림 8 의 $d$ 를 벽면 좌표로 돌린 것 |
 | 흰 원 | $c_0$ | $(-117.0,\ 289.3)$ | 스테이지가 가운데일 때 펜이 닿는 점 |
 | 아래 치수선 | $\sigma$ | 583.0 | $A$ 에서 $c_0$ 까지를 직선 방향으로 잰 거리. 펜이 직선을 따라 얼마나 왔는지 |
 | – | $e_0$ | $-10.73$ | $c_0$ 가 직선보다 10.73 mm 아래 |
 | 초록 마름모 | $p^{\star}$ | $(-117.0,\ 300.0)$ | $c_0$ 와 직선 방향 위치가 같고 직선 위에 있는 점 |
 | 초록 화살표 (b) | $p^{\star} - \hat p$ | $(83.0,\ -45.0)$ | 그림 8 초록 화살표의 벽면 성분 |
-| 주황 화살표 (b) | $R(\hat\psi)\,\Delta s = -e_0\,n$ | $(0.00,\ 10.73)$ | 그림 8 주황 화살표의 벽면 성분 |
+| 주황 화살표 (b) | $R(\hat\psi)\thinspace \Delta s = -e_0\thinspace n$ | $(0.00,\ 10.73)$ | 그림 8 주황 화살표의 벽면 성분 |
 
 $\sigma$ 는 $u$ 와의 내적, 곧 화살표 $c_0 - A$ 의 직선 방향 그림자 길이이다. 같은 방식으로 $e_0$ 는 법선 $n$ 방향 그림자 길이이다. $p^{\star}$ 는 $c_0$ 에서 법선 방향 성분만 지운 점이므로, 스테이지는 직선에 수직한 방향으로만, 횡오차의 크기만큼만 움직인다. 이렇게 일을 나누는 이유는 행정 때문이다. 직선을 따라 어디까지 왔는지($\sigma$)는 로봇이 진행하며 정하는 몫이므로 스테이지는 그 방향을 건드리지 않는다. 만약 $p^{\star}$ 를 직선 위의 특정 점(예를 들어 시간에 따라 움직이는 기준점이나 $A$)으로 두면 로봇의 진행 오차 수 cm 까지 스테이지가 메우려 해서 행정 101.6 mm 가 모자란다. 실제로 초기 판에서 $p^{\star}$ 를 $A$ 로 자르자 모드 3 시작 때 스테이지 X 가 95 mm 근처까지 갔다.
 
@@ -465,16 +465,16 @@ $\sigma$ 는 $u$ 와의 내적, 곧 화살표 $c_0 - A$ 의 직선 방향 그림
 | 화살표 | (a) 벽면 성분 [mm] | (b) 바디 성분 [mm] | 바꾸는 식 |
 |---|---|---|---|
 | 초록: $\hat p \to p^{\star}$ | $p^{\star} - \hat p = (83.0,\ -45.0)$ | $(80.6,\ -49.3)$ | $R^{\top}(\hat\psi)(p^{\star} - \hat p)$ |
-| 보라: $\hat p \to c_0$ | $R(\hat\psi)\,d = (83.0,\ -55.7)$ | $d = (80.0,\ -60.0)$ | $R^{\top}R\,d = d$ |
-| 주황: $c_0 \to p^{\star}$ | $R(\hat\psi)\,\Delta s = (0.00,\ 10.73)$ | $\Delta s = (0.56,\ 10.72)$ | $R^{\top}R\,\Delta s = \Delta s$ |
+| 보라: $\hat p \to c_0$ | $R(\hat\psi)\thinspace d = (83.0,\ -55.7)$ | $d = (80.0,\ -60.0)$ | $R^{\top}R\thinspace d = d$ |
+| 주황: $c_0 \to p^{\star}$ | $R(\hat\psi)\thinspace \Delta s = (0.00,\ 10.73)$ | $\Delta s = (0.56,\ 10.72)$ | $R^{\top}R\thinspace \Delta s = \Delta s$ |
 
 $R^{\top}(\hat\psi)$ 가 하는 일은 그림 10(a) 의 초록 점선으로 볼 수 있다. 초록 화살표의 끝에서 로봇 축 $x_B$, $y_B$ 에 수직선을 내리면 축 위에 생기는 그림자의 길이가 각각 80.6 mm 와 $-49.3$ mm 이다. 3.2 절에서 본 대로 $R$ 의 두 열이 벽면 좌표로 쓴 $x_B = (\cos\hat\psi,\ \sin\hat\psi)$, $y_B = (-\sin\hat\psi,\ \cos\hat\psi)$ 이므로 $R^{\top}$ 의 두 행은 $x_B^{\top}$, $y_B^{\top}$ 이고, 행과의 곱이 곧 그림자 길이이다.
 
 $$
-R^{\top}(\hat\psi)\,(p^{\star} - \hat p) =
-\begin{bmatrix} x_B^{\top}(p^{\star} - \hat p) \\ y_B^{\top}(p^{\star} - \hat p) \end{bmatrix}
-= \begin{bmatrix} 83.0\cos 3^{\circ} - 45.0\sin 3^{\circ} \\ -83.0\sin 3^{\circ} - 45.0\cos 3^{\circ} \end{bmatrix}
-= \begin{bmatrix} 80.6 \\ -49.3 \end{bmatrix}\ \mathrm{mm} \qquad (14)
+R^{\top}(\hat\psi)\thinspace (p^{\star} - \hat p) =
+\begin{bmatrix} x_B^{\top}(p^{\star} - \hat p) \cr y_B^{\top}(p^{\star} - \hat p) \end{bmatrix}
+= \begin{bmatrix} 83.0\cos 3^{\circ} - 45.0\sin 3^{\circ} \cr -83.0\sin 3^{\circ} - 45.0\cos 3^{\circ} \end{bmatrix}
+= \begin{bmatrix} 80.6 \cr -49.3 \end{bmatrix}\ \mathrm{mm} \qquad (14)
 $$
 
 정리하면 식 (12) 는 세 단계로 읽힌다.
@@ -483,22 +483,22 @@ $$
 |---|---|---|
 | 1 | $p^{\star} - \hat p$ | 그림 9(b) 의 초록 화살표를 벽 눈금으로 잰다 |
 | 2 | $R^{\top}(\hat\psi)(\cdot)$ | 같은 화살표를 로봇 눈금으로 다시 잰다 (그림 10(a) → (b)) |
-| 3 | $-\,d$ | 로봇에 원래 붙어 있는 보라 화살표를 뺀다 (그림 8) |
+| 3 | $-\thinspace d$ | 로봇에 원래 붙어 있는 보라 화살표를 뺀다 (그림 8) |
 
-같은 결과를 더 짧게 얻을 수도 있다. $c_0 = \hat p + R(\hat\psi)\,d$ 이므로 식 (12) 는 $\Delta s = R^{\top}(\hat\psi)(p^{\star} - c_0)$ 와 같고, 식 (13) 의 $p^{\star} - c_0 = -e_0\,n$ 을 넣으면 다음 간단한 형태가 나온다.
+같은 결과를 더 짧게 얻을 수도 있다. $c_0 = \hat p + R(\hat\psi)\thinspace d$ 이므로 식 (12) 는 $\Delta s = R^{\top}(\hat\psi)(p^{\star} - c_0)$ 와 같고, 식 (13) 의 $p^{\star} - c_0 = -e_0\thinspace n$ 을 넣으면 다음 간단한 형태가 나온다.
 
 $$
-\Delta s = -e_0\,R^{\top}(\hat\psi)\,n = -e_0 \begin{bmatrix} \sin(\hat\psi - \theta_l) \\ \cos(\hat\psi - \theta_l) \end{bmatrix} \qquad (15)
+\Delta s = -e_0\thinspace R^{\top}(\hat\psi)\thinspace n = -e_0 \begin{bmatrix} \sin(\hat\psi - \theta_l) \cr \cos(\hat\psi - \theta_l) \end{bmatrix} \qquad (15)
 $$
 
-곧 $\Delta s$ 는 그림 9(b) 의 주황 화살표 $(0.00,\ 10.73)$ mm 를 로봇 눈금으로 다시 읽은 것이며, $10.73\,(\sin 3^{\circ},\ \cos 3^{\circ}) = (0.56,\ 10.72)$ mm 이다. 로봇이 직선과 나란하면($\hat\psi = \theta_l$) $\Delta s = (0,\ -e_0)$ 이다. 즉 Y 축만 횡오차만큼 반대로 움직인다. 로봇이 3° 기울어 있으면 X 축이 $-e_0\sin 3^{\circ}$ 만큼 함께 움직여, 기울어진 Y 축 대신 벽에 수직한 방향으로 펜을 옮긴다. 가상 실험에서 X 축은 51.0–53.8 mm 로 거의 움직이지 않고 Y 축이 61.3–72.2 mm 로 횡오차를 지운 것이 이 식과 맞는다. 코드가 $c_0$ 를 거치지 않고 $\hat p$ 에서 바로 계산하는 것은 같은 식을 다른 순서로 쓴 것일 뿐이다.
+곧 $\Delta s$ 는 그림 9(b) 의 주황 화살표 $(0.00,\ 10.73)$ mm 를 로봇 눈금으로 다시 읽은 것이며, $10.73\thinspace (\sin 3^{\circ},\ \cos 3^{\circ}) = (0.56,\ 10.72)$ mm 이다. 로봇이 직선과 나란하면($\hat\psi = \theta_l$) $\Delta s = (0,\ -e_0)$ 이다. 즉 Y 축만 횡오차만큼 반대로 움직인다. 로봇이 3° 기울어 있으면 X 축이 $-e_0\sin 3^{\circ}$ 만큼 함께 움직여, 기울어진 Y 축 대신 벽에 수직한 방향으로 펜을 옮긴다. 가상 실험에서 X 축은 51.0–53.8 mm 로 거의 움직이지 않고 Y 축이 61.3–72.2 mm 로 횡오차를 지운 것이 이 식과 맞는다. 코드가 $c_0$ 를 거치지 않고 $\hat p$ 에서 바로 계산하는 것은 같은 식을 다른 순서로 쓴 것일 뿐이다.
 
 ### 6.6 $\Delta s$ 를 Zaber 명령으로: 1000 과 $s_c$
 
 식 (12)–(15) 의 $\Delta s$ 는 바디 좌표의 m 단위 벡터이다. 그런데 Zaber 펌웨어와 `/stage/target_pos` 토픽은 mm 를 쓰고, 원점이 행정의 한쪽 끝(홈)이다. 그래서 스테이지 명령은 두 단계를 더 거친다.
 
 $$
-s^{\star} = s_c + 1000\,\Delta s \quad [\mathrm{mm}], \qquad s_c = 50.8\ \mathrm{mm} \qquad (16)
+s^{\star} = s_c + 1000\thinspace \Delta s \quad [\mathrm{mm}], \qquad s_c = 50.8\ \mathrm{mm} \qquad (16)
 $$
 
 ![Delta s 를 Zaber 명령으로 바꾸기](2_docs/img/fig_pen_stage.png)
@@ -510,7 +510,7 @@ $$
 | 연산 | 필요한 이유 | 빠지면 생기는 일 |
 |---|---|---|
 | $\times 1000$ | 제어기 안은 모든 길이를 SI 단위 m 로 계산하고, 스테이지와 주고받는 경계에서만 mm 로 바꾼다 ($1\ \mathrm{m} = 1000\ \mathrm{mm}$) | 0.0107 을 보내면 Zaber 는 0.0107 mm 로 받아들여 펜이 거의 움직이지 않는다 (그림 11(a) 가운데 회색 ×) |
-| $+\,s_c$ | 제어기의 $\Delta s = 0$ 은 스테이지 가운데이고, Zaber 의 0 은 홈(행정의 모서리)이다 | 10.72 를 보내면 캐리지가 가운데보다 40 mm 아래인 홈 근처로 간다 (그림 11(a) 왼쪽 아래 회색 ×) |
+| $+\thinspace s_c$ | 제어기의 $\Delta s = 0$ 은 스테이지 가운데이고, Zaber 의 0 은 홈(행정의 모서리)이다 | 10.72 를 보내면 캐리지가 가운데보다 40 mm 아래인 홈 근처로 간다 (그림 11(a) 왼쪽 아래 회색 ×) |
 
 그림 11(b) 는 Y 축의 같은 점을 세 가지 눈금으로 쓴 것이다. 제어기 m 눈금의 0.0107 은 1000 을 곱해 제어기 mm 눈금의 10.72 가 되고, 50.8 을 더해 Zaber 눈금의 61.52 가 된다. 세 눈금의 가운데(0, 0, 50.8)와 양 끝($\pm 0.0508$ m, $\pm 50.8$ mm, 0 과 101.6 mm)은 모두 같은 점이다. $s_c$ 는 "스테이지를 가운데에 두고 출발하여 양쪽으로 $\pm 50.8$ mm 씩 움직일 여유를 가진다" 는 설계를 Zaber 숫자로 옮긴 값이다. 모드 3 이 아닐 때 $s^{\star} = (s_c,\ s_c)$ 인 것도 같은 이유로, 직선을 긋지 않는 동안 스테이지를 가운데에 대기시킨다. 반대로 펜 위치를 계산할 때(평가용 PenTrace)는 식 (3) 처럼 $s_c$ 를 빼고 1000 으로 나눈다.
 
@@ -518,7 +518,7 @@ $$
 
 *그림 12. PenComp 계산 순서와 각 단계의 좌표계·단위*
 
-그림 12 은 식 (12)–(16) 의 계산 순서를 블록으로 늘어놓은 것이다. 벽면 좌표의 m 단위 양($\hat p$, $c_0$, $p^{\star}$)에서 시작하여 $R^{\top}$ 을 지나며 바디 좌표가 되고, 마지막에 $\times 1000$ 과 $+\,s_c$ 를 지나며 스테이지 mm 눈금이 된다.
+그림 12 은 식 (12)–(16) 의 계산 순서를 블록으로 늘어놓은 것이다. 벽면 좌표의 m 단위 양($\hat p$, $c_0$, $p^{\star}$)에서 시작하여 $R^{\top}$ 을 지나며 바디 좌표가 되고, 마지막에 $\times 1000$ 과 $+\thinspace s_c$ 를 지나며 스테이지 mm 눈금이 된다.
 
 ### 6.7 수치 예 종합
 
@@ -530,23 +530,23 @@ $$
 
 | 단계 | 코드 | 식 | 이 예의 값 [mm] | 그림에서 |
 |---|---|---|---|---|
-| 1 | `pc = pT + R*pen_d` | $c_0 = \hat p + R(\hat\psi)\,d$ | $(-200.0,\ 345.0) + (83.0,\ -55.7) = (-117.0,\ 289.3)$ | 그림 9(b) 흰 원 |
+| 1 | `pc = pT + R*pen_d` | $c_0 = \hat p + R(\hat\psi)\thinspace d$ | $(-200.0,\ 345.0) + (83.0,\ -55.7) = (-117.0,\ 289.3)$ | 그림 9(b) 흰 원 |
 | 2 | `sigma = dot(u, pc - A)` | $\sigma = u^{\top}(c_0 - A)$ | 583.0 | 그림 9(a) 치수선 |
 | – | – | $e_0 = n^{\top}(c_0 - A)$ | $-10.73$ (펜이 직선보다 아래) | 그림 9(b) |
 | 3 | `p_des = A + sigma*u` | $p^{\star} = A + \sigma u$ | $(-117.0,\ 300.0)$ | 그림 9(b) 초록 마름모 |
 | 4 | `p_des - pT` | $p^{\star} - \hat p$ | $(83.0,\ -45.0)$ | 그림 10(a) 초록 화살표 |
 | 5 | `R'*(p_des - pT)` | $R^{\top}(\hat\psi)(p^{\star} - \hat p)$ | $(80.6,\ -49.3)$ | 그림 10(b), 그림 8 초록 화살표 |
 | 6 | `e_b = ... - pen_d` | $\Delta s$ | $(80.6,\ -49.3) - (80.0,\ -60.0) = (0.56,\ 10.72)$ | 그림 8(b) 주황 화살표 |
-| 7 | `s_cmd = stage_c + 1000*e_b` | $s^{\star} = s_c + 1000\,\Delta s$ | $(51.36,\ 61.52)$ | 그림 11(a) 빨간 원 |
+| 7 | `s_cmd = stage_c + 1000*e_b` | $s^{\star} = s_c + 1000\thinspace \Delta s$ | $(51.36,\ 61.52)$ | 그림 11(a) 빨간 원 |
 | 8 | `pen_on` | $0 \le \sigma \le L$ | 1 (펜 다운) | 그림 9(a) |
 
-식 (15) 로 검산하면 $-e_0\,(\sin 3^{\circ},\ \cos 3^{\circ}) = 10.73\,(0.0523,\ 0.9986) = (0.56,\ 10.72)$ mm 로 단계 6 과 같다. 결과는 다음과 같이 확인한다.
+식 (15) 로 검산하면 $-e_0\thinspace (\sin 3^{\circ},\ \cos 3^{\circ}) = 10.73\thinspace (0.0523,\ 0.9986) = (0.56,\ 10.72)$ mm 로 단계 6 과 같다. 결과는 다음과 같이 확인한다.
 
 | 확인 항목 | 계산 | 결과 |
 |---|---|---|
 | Y 축 이동 | $61.52 - 50.8$ | 10.72 mm. 이 자세의 $y_B$ 는 거의 위쪽이므로 펜이 벽에서 위로 올라간다 |
 | X 축 이동 | $51.36 - 50.8$ | 0.56 mm. "벽의 위쪽" 과 "로봇의 왼쪽" 이 $3^{\circ}$ 어긋나므로 $10.73\sin 3^{\circ}$ 만큼 앞으로도 옮겨야 펜이 똑바로 위로 간다 |
-| 펜 끝 | $P = \hat p + R(\hat\psi)\,(d + \Delta s)$ | $(-117.0,\ 300.0) = p^{\star}$ |
+| 펜 끝 | $P = \hat p + R(\hat\psi)\thinspace (d + \Delta s)$ | $(-117.0,\ 300.0) = p^{\star}$ |
 | 횡오차 | $n^{\top}(P - A)$ | 0. $c_0$ 가 직선보다 10.73 mm 아래였으므로 펜이 정확히 $p^{\star}$, 곧 직선 위에 놓인다 |
 | 진행 방향 | $u^{\top}(P - c_0)$ | 0. 스테이지는 직선 방향으로는 펜을 옮기지 않는다 |
 
@@ -574,7 +574,7 @@ Zaber 스테이지는 내부 위치 서보(스테퍼 구동과 엔코더 보정)
 6 장의 보상은 펜을 측정하지 않고 측정된 로봇 자세로 펜 위치를 계산하므로, 측정이 틀린 만큼 펜이 직선에서 벗어난다. 위치 측정 오차를 $\delta p = \hat p - p$, heading 측정 오차를 $\delta\psi = \hat\psi - \psi$ 라 하면, 1 차 근사로 펜 횡오차는 다음과 같다(식 (39)–(41)).
 
 $$
-e \approx -\,n^{\top}\delta p \;-\; \ell_u\,\delta\psi, \qquad \ell_u = u^{\top}R(\psi)(d + \Delta s) \approx 0.08\ \mathrm{m} \qquad (17)
+e \approx -\thinspace n^{\top}\delta p \thickspace -\thickspace \ell_u\thinspace \delta\psi, \qquad \ell_u = u^{\top}R(\psi)(d + \Delta s) \approx 0.08\ \mathrm{m} \qquad (17)
 $$
 
 $$
@@ -598,10 +598,10 @@ $$
 (b) 로봇 몸체에 두 번째 태그 $T_2$ 를 펜이 두 태그의 한가운데에 오도록 단다. 현재 배치에서는 $T_2 = -r_{tag} = (0.08,\ -0.06)$ m 이다. 강체 위 세 점이 한 직선 위에 있으면, 가운데 점의 위치는 heading 과 무관하게 두 점의 평균이다.
 
 $$
-c_0 = \tfrac12(p_1 + p_2) \quad\Rightarrow\quad \hat P = \tfrac12(\hat p_1 + \hat p_2) + R(\hat\psi)\,\Delta s, \qquad \sigma_e^2 \approx \tfrac12\sigma_p^2 + \lvert\Delta s\rvert^2\sigma_\psi^2 \qquad (19)
+c_0 = \tfrac12(p_1 + p_2) \quad\Rightarrow\quad \hat P = \tfrac12(\hat p_1 + \hat p_2) + R(\hat\psi)\thinspace \Delta s, \qquad \sigma_e^2 \approx \tfrac12\sigma_p^2 + \lvert\Delta s\rvert^2\sigma_\psi^2 \qquad (19)
 $$
 
-두 태그의 잡음이 독립이면 평균의 분산은 절반이 되고, heading 오차는 캐리지 이동 $\lvert\Delta s\rvert \approx$ 15 mm 에만 곱해지므로 0.1 mm 이하로 작아진다. 즉 heading 드리프트의 영향이 거의 사라진다. 더불어 두 태그를 잇는 기선 $b = 0.2$ m 로부터 heading 을 직접 얻을 수 있다. 그 잡음은 $\sqrt2\,\sigma_p/b \approx 0.41^{\circ}$ 로 IMU 보다 크지만 드리프트가 없으므로, IMU 와 상보 필터로 섞어 드리프트를 지우는 데 쓸 수 있다.
+두 태그의 잡음이 독립이면 평균의 분산은 절반이 되고, heading 오차는 캐리지 이동 $\lvert\Delta s\rvert \approx$ 15 mm 에만 곱해지므로 0.1 mm 이하로 작아진다. 즉 heading 드리프트의 영향이 거의 사라진다. 더불어 두 태그를 잇는 기선 $b = 0.2$ m 로부터 heading 을 직접 얻을 수 있다. 그 잡음은 $\sqrt2\thinspace \sigma_p/b \approx 0.41^{\circ}$ 로 IMU 보다 크지만 드리프트가 없으므로, IMU 와 상보 필터로 섞어 드리프트를 지우는 데 쓸 수 있다.
 
 (c) 두 번째 태그 $T_3$ 를 스테이지 캐리지(펜 옆)에 단다. 펜 위치를 거의 직접 측정하므로 레버암 보정 오차, 스테이지 오차, 로봇 자세 오차가 모두 측정에 들어간다는 장점이 있다. 그러나 태그 잡음 $\sigma_p$ 가 그대로 남고, 측정한 펜 위치로 스테이지를 움직이는 순간 50 ms 지연을 품은 되먹임 루프가 생겨 루프 설계가 필요하다. 태그 무게가 Y 캐리지의 이동 질량(0.16 kg)에 더해지고, 마커와 벽 가까이에서 전파가 가려질 수도 있다.
 
@@ -613,7 +613,7 @@ $$
 | (b) 로봇 2 개, 펜을 가운데에 | 0.71 mm | 0.82 mm | 0.84 mm | 2.5 mm |
 | (c) 로봇 1 개 + 캐리지 1 개 | 1.0 mm | 1.08 mm | 1.07 mm | 3.3 mm |
 
-(b) 가 가장 정확하고 스테이지 쪽에 새로운 되먹임 루프를 만들지 않으므로 구현도 간단하다. 따라서 두 번째 태그는 펜 위가 아니라 로봇 몸체에, 펜을 두 태그 사이 한가운데에 두도록 다는 것이 낫다. 펜 위(캐리지) 태그는 레버암 $d$ 의 보정이나 결과 검증용으로 쓰는 것이 알맞다. 다만 이 비교는 두 태그의 잡음이 독립이라는 가정에 기댄다. 두 태그가 가까이 붙어 같은 다중 경로 오차를 받으면 (b) 의 이득은 줄어들므로, 실기에서 두 태그를 정지시켜 놓고 잡음의 상관을 먼저 재야 한다. 펜이 정확히 가운데가 아니면 식 (19) 의 평균 대신 가중 평균 $(1-\lambda)\hat p_1 + \lambda\hat p_2$ 를 쓰고, 그 분산은 $((1-\lambda)^2 + \lambda^2)\,\sigma_p^2$ 이다. 이 기능을 쓰려면 Nav 와 PenComp 에 두 번째 태그 입력을 추가해야 한다(현재 모델은 태그 1 개).
+(b) 가 가장 정확하고 스테이지 쪽에 새로운 되먹임 루프를 만들지 않으므로 구현도 간단하다. 따라서 두 번째 태그는 펜 위가 아니라 로봇 몸체에, 펜을 두 태그 사이 한가운데에 두도록 다는 것이 낫다. 펜 위(캐리지) 태그는 레버암 $d$ 의 보정이나 결과 검증용으로 쓰는 것이 알맞다. 다만 이 비교는 두 태그의 잡음이 독립이라는 가정에 기댄다. 두 태그가 가까이 붙어 같은 다중 경로 오차를 받으면 (b) 의 이득은 줄어들므로, 실기에서 두 태그를 정지시켜 놓고 잡음의 상관을 먼저 재야 한다. 펜이 정확히 가운데가 아니면 식 (19) 의 평균 대신 가중 평균 $(1-\lambda)\hat p_1 + \lambda\hat p_2$ 를 쓰고, 그 분산은 $((1-\lambda)^2 + \lambda^2)\thinspace \sigma_p^2$ 이다. 이 기능을 쓰려면 Nav 와 PenComp 에 두 번째 태그 입력을 추가해야 한다(현재 모델은 태그 1 개).
 
 ---
 
@@ -637,9 +637,9 @@ $$
 | 가로축 방향 | 그림의 오른쪽이 $+x$. 직선 $A \to B$ 는 $+x$ 방향으로 진행 |
 | 회색 사각형, $x_B$, $y_B$ | 로봇 차체와 바디 축. 이 그림의 로봇은 $\psi \approx -6^{\circ}$ (오른쪽을 보고 코가 약간 아래) |
 | 검은 사각형 $p$ | ZeroKey 태그. 측정되는 점은 로봇 중심이 아니라 이 점 |
-| 보라 화살표 $R(\psi)\,d$ | 태그에서 "스테이지가 중앙일 때의 펜" $c_0$ (흰 원) 까지의 레버암을 벽면 좌표로 쓴 것 |
+| 보라 화살표 $R(\psi)\thinspace d$ | 태그에서 "스테이지가 중앙일 때의 펜" $c_0$ (흰 원) 까지의 레버암을 벽면 좌표로 쓴 것 |
 | 초록 점선 사각형 | 스테이지 행정 ($c_0$ 를 중심으로 바디 축에 정렬) |
-| 주황 화살표 $R(\psi)\,\Delta s$ | 스테이지 캐리지 이동이 벽면에서 펜을 옮기는 양 |
+| 주황 화살표 $R(\psi)\thinspace \Delta s$ | 스테이지 캐리지 이동이 벽면에서 펜을 옮기는 양 |
 | 빨간 원 $P$ | 실제 펜 끝 |
 | 남색 마름모 $p^{\star}$ | $c_0$ 를 직선에 내린 수선의 발 = 펜 목표 |
 | 빨간 화살표 $e$ | 펜 횡오차. 직선에서 $n$ (위쪽) 방향으로 잰 거리 |
@@ -682,37 +682,37 @@ $$
 $x_B$ 는 $x$ 축을 $\psi$ 만큼 반시계로 돌린 단위벡터이고, $y_B$ 는 $x_B$ 를 다시 $+90^{\circ}$ 돌린 벡터.
 
 $$
-x_B^{\mathcal{W}} = \begin{bmatrix} \cos\psi \\ \sin\psi \end{bmatrix}, \qquad
-y_B^{\mathcal{W}} = \begin{bmatrix} \cos(\psi + 90^{\circ}) \\ \sin(\psi + 90^{\circ}) \end{bmatrix} = \begin{bmatrix} -\sin\psi \\ \cos\psi \end{bmatrix}
+x_B^{\mathcal{W}} = \begin{bmatrix} \cos\psi \cr \sin\psi \end{bmatrix}, \qquad
+y_B^{\mathcal{W}} = \begin{bmatrix} \cos(\psi + 90^{\circ}) \cr \sin(\psi + 90^{\circ}) \end{bmatrix} = \begin{bmatrix} -\sin\psi \cr \cos\psi \end{bmatrix}
 $$
 
 바디 좌표로 $v^{\mathcal{B}} = [a,\ b]^{\top}$ 인 벡터는 "앞으로 $a$, 왼쪽으로 $b$" 이므로 벽면 좌표로는 두 축벡터의 합.
 
 $$
-v^{\mathcal{W}} = a\,x_B^{\mathcal{W}} + b\,y_B^{\mathcal{W}}
-= \underbrace{\begin{bmatrix} x_B^{\mathcal{W}} & y_B^{\mathcal{W}} \end{bmatrix}}_{R(\psi)} \begin{bmatrix} a \\ b \end{bmatrix},
+v^{\mathcal{W}} = a\thinspace x_B^{\mathcal{W}} + b\thinspace y_B^{\mathcal{W}}
+= \underbrace{\begin{bmatrix} x_B^{\mathcal{W}} & y_B^{\mathcal{W}} \end{bmatrix}}_{R(\psi)} \begin{bmatrix} a \cr b \end{bmatrix},
 \qquad
-R(\psi) = \begin{bmatrix} \cos\psi & -\sin\psi \\ \sin\psi & \cos\psi \end{bmatrix}, \qquad
-J = R(90^{\circ}) = \begin{bmatrix} 0 & -1 \\ 1 & 0 \end{bmatrix} \qquad (20)
+R(\psi) = \begin{bmatrix} \cos\psi & -\sin\psi \cr \sin\psi & \cos\psi \end{bmatrix}, \qquad
+J = R(90^{\circ}) = \begin{bmatrix} 0 & -1 \cr 1 & 0 \end{bmatrix} \qquad (20)
 $$
 
 *(같은 그림: 그림 5)*
 
 | 성질 | 식 | 쓰는 곳 |
 |---|---|---|
-| 바디 → 벽면 | $v^{\mathcal{W}} = R(\psi)\,v^{\mathcal{B}}$ | 레버암 $R d$, 캐리지 이동 $R\,\Delta s$ (식 (32)) |
-| 벽면 → 바디 | $v^{\mathcal{B}} = R^{\top}(\psi)\,v^{\mathcal{W}}$ ($R^{\top}R = I$, $\det R = 1$) | 스테이지 명령 $\Delta s$ (식 (33)), 바디 오차 $e_x, e_y$ (식 (30a)) |
-| 각 합성 | $R(\alpha)R(\beta) = R(\alpha + \beta)$, $R^{\top}(\psi) = R(-\psi)$ | 식 (34) 의 $R^{\top}(\psi)\,n = R(\theta_l + 90^{\circ} - \psi)\,e_1$ |
-| 미분 | $\dot R = \dot\psi\,\partial R/\partial\psi = \omega\,J R$ | 오차 전파 (식 (39)) |
+| 바디 → 벽면 | $v^{\mathcal{W}} = R(\psi)\thinspace v^{\mathcal{B}}$ | 레버암 $R d$, 캐리지 이동 $R\thinspace \Delta s$ (식 (32)) |
+| 벽면 → 바디 | $v^{\mathcal{B}} = R^{\top}(\psi)\thinspace v^{\mathcal{W}}$ ($R^{\top}R = I$, $\det R = 1$) | 스테이지 명령 $\Delta s$ (식 (33)), 바디 오차 $e_x, e_y$ (식 (30a)) |
+| 각 합성 | $R(\alpha)R(\beta) = R(\alpha + \beta)$, $R^{\top}(\psi) = R(-\psi)$ | 식 (34) 의 $R^{\top}(\psi)\thinspace n = R(\theta_l + 90^{\circ} - \psi)\thinspace e_1$ |
+| 미분 | $\dot R = \dot\psi\thinspace \partial R/\partial\psi = \omega\thinspace J R$ | 오차 전파 (식 (39)) |
 | $+90^{\circ}$ 회전 | $J v$ = $v$ 를 왼쪽으로 돌린 벡터, $J^{\top}J = I$, $J^2 = -I$ | 직선의 왼쪽 법선 $n = Ju$ |
 
 검산 ($\psi = 0^{\circ}$, 직선 추종 중 / $\psi = 90^{\circ}$, 출발 자세)
 
 $$
 R(0^{\circ}) = I:\quad
-R\begin{bmatrix} 1 \\ 0 \end{bmatrix} = \begin{bmatrix} 1 \\ 0 \end{bmatrix}\ (\text{앞} = \text{오른쪽}), \qquad
-R(90^{\circ}) = \begin{bmatrix} 0 & -1 \\ 1 & 0 \end{bmatrix}:\quad
-R\begin{bmatrix} 1 \\ 0 \end{bmatrix} = \begin{bmatrix} 0 \\ 1 \end{bmatrix}\ (\text{앞} = \text{위})
+R\begin{bmatrix} 1 \cr 0 \end{bmatrix} = \begin{bmatrix} 1 \cr 0 \end{bmatrix}\ (\text{앞} = \text{오른쪽}), \qquad
+R(90^{\circ}) = \begin{bmatrix} 0 & -1 \cr 1 & 0 \end{bmatrix}:\quad
+R\begin{bmatrix} 1 \cr 0 \end{bmatrix} = \begin{bmatrix} 0 \cr 1 \end{bmatrix}\ (\text{앞} = \text{위})
 $$
 
 - 직선 추종 중 바디 왼쪽 1 mm 의 캐리지 이동 ($\Delta s_Y = +0.001$) 은 벽에서 펜을 위 ($+y$) 로 1 mm 옮김
@@ -726,7 +726,7 @@ $$
 | $\psi$ | 프사이 | heading. $x$ 축에서 $x_B$ 축까지의 각 (오른쪽 0, 반시계 +) | rad |
 | $R(\psi)$ | 알 프사이 | 바디 → 벽면 회전행렬 (식 (20)). $\dot R = \omega J R$ | – |
 | $c$ | 씨 | 로봇 중심 위치 | m |
-| $p$ | 피 | ZeroKey 태그 위치 $p = c + R(\psi)\,r_{tag}$ (식 (21a)) | m |
+| $p$ | 피 | ZeroKey 태그 위치 $p = c + R(\psi)\thinspace r_{tag}$ (식 (21a)) | m |
 | $r_{tag},\ r_{pen,0}$ | – | 바디 좌표의 태그 위치, 스테이지 중앙일 때의 펜 위치 | $(-0.08,\ 0.06)$, $(0,\ 0)$ m |
 | $q = [c^{\top},\ \psi]^{\top}$ | 큐 | 로봇 자세 | m, rad |
 | $V = [v,\ \omega]^{\top}$ | 브이 | 전진 속도, 요 각속도 | m/s, rad/s |
@@ -741,18 +741,18 @@ $$
 ### 8.2 궤도 로봇 기구학
 
 $$
-\dot q = S(q)\,V + w(t), \qquad
-S(q) = \begin{bmatrix} \cos\psi & u_c \sin\psi \\ \sin\psi & -u_c\cos\psi \\ 0 & 1 \end{bmatrix} \qquad (21)
+\dot q = S(q)\thinspace V + w(t), \qquad
+S(q) = \begin{bmatrix} \cos\psi & u_c \sin\psi \cr \sin\psi & -u_c\cos\psi \cr 0 & 1 \end{bmatrix} \qquad (21)
 $$
 
 $$
-w(t) = \begin{bmatrix} -k_s\,\lvert v\rvert \\ 0 \\ \dot\psi_w(t) \end{bmatrix}, \qquad
-\psi_w(t) = a_w \sin(2\pi f_w t) + \tfrac{1}{2} a_w \sin(2\pi\,2.3 f_w t + 1) \qquad (22)
+w(t) = \begin{bmatrix} -k_s\thinspace \lvert v\rvert \cr 0 \cr \dot\psi_w(t) \end{bmatrix}, \qquad
+\psi_w(t) = a_w \sin(2\pi f_w t) + \tfrac{1}{2} a_w \sin(2\pi\thinspace 2.3 f_w t + 1) \qquad (22)
 $$
 
 | 기호 | 정의 | 값 |
 |---|---|---|
-| $u_c$ | 순간 회전 중심 (ICR) 의 길이방향 이동량. Zou [1] 식 (34) $u_c = -\mathrm{sgn}(\omega)\,R_t \sin\alpha$, $R_t = \lvert v/\omega\rvert$ | $\alpha = 0$ 이면 0 |
+| $u_c$ | 순간 회전 중심 (ICR) 의 길이방향 이동량. Zou [1] 식 (34) $u_c = -\mathrm{sgn}(\omega)\thinspace R_t \sin\alpha$, $R_t = \lvert v/\omega\rvert$ | $\alpha = 0$ 이면 0 |
 | $\alpha$ | 미끄럼각 (slip angle) | `alpha_s` = 0 |
 | $k_s$ | 자석 궤도 크리프: 이동 속도에 비례한 중력 방향 미끄러짐 | 0.08 [실측 필요] |
 | $a_w,\ f_w$ | 궤도 요철에 의한 heading 흔들림 진폭·주파수 | 1.5°, 0.35 Hz [실측 필요] |
@@ -764,20 +764,20 @@ $$
 
 $$
 \dot c = \text{식 (21) 의 위치 성분}, \qquad
-p = c + R(\psi)\,r_{tag}, \qquad
-\dot p = \dot c + \omega\,J R(\psi)\,r_{tag} \qquad (21a)
+p = c + R(\psi)\thinspace r_{tag}, \qquad
+\dot p = \dot c + \omega\thinspace J R(\psi)\thinspace r_{tag} \qquad (21a)
 $$
 
 | 항목 | 이전 판 | 현재 판 |
 |---|---|---|
 | `RobotPlant` 적분 상태 | 태그 점 $p$ (태그가 회전 중심) | 로봇 중심 $c$ (원본 6WP_sim 과 같음), 초기값 `q0c` |
 | 출력 `q_true` | 태그 자세 | 태그 자세 (블록 `TagPoint` 가 식 (21a) 로 변환) |
-| ZeroKey 속도 (`ZkVel`) | $v\,[\cos\psi,\ \sin\psi]^{\top}$ | 식 (21a) 의 $\dot p$ (회전 성분 포함) |
+| ZeroKey 속도 (`ZkVel`) | $v\thinspace [\cos\psi,\ \sin\psi]^{\top}$ | 식 (21a) 의 $\dot p$ (회전 성분 포함) |
 | 제자리 회전 시 태그 | 거의 제자리 | 반경 $\lVert r_{tag}\rVert$ = 0.1 m 원호 (실기와 같음) |
 
 - 펜 보상 (식 (32)–(34)) 은 측정 $\hat p,\ \hat\psi$ 와 $d$ 만 쓰므로 이 수정과 무관함
 - 수정 직후 펜 오차가 RMS 3.46 mm, 최대 25.9 mm 로 커짐. 모드 1 이 태그를 출발점에 맞춘 뒤 모드 2 에서 약 70° 돌면 태그가 직선에서 약 11 cm 벗어나고, 모드 3 이 이를 고치는 동안 heading 이 −115° 까지 흔들린 채 펜이 내려갔기 때문. 실기에서도 같은 현상이 생김
-- 대책: 모드 1 이 태그 대신 로봇 중심 추정 $\hat c = \hat p - R(\hat\psi)\,r_{tag}$ 을 출발 중심 $c_A = r_A - R(\theta_l)\,r_{tag}$ 로 보냄 (8.5 절). 회전 뒤 태그가 정확히 출발점 $r_A$ 에 옴 → 모드 3 시작 시 태그 높이 $y$ = 0.343 m (목표 0.360 m). 남은 17 mm 는 회전 중 크리프로 미끄러진 양이며, 수정 전 약 110 mm 에서 줄어듦
+- 대책: 모드 1 이 태그 대신 로봇 중심 추정 $\hat c = \hat p - R(\hat\psi)\thinspace r_{tag}$ 을 출발 중심 $c_A = r_A - R(\theta_l)\thinspace r_{tag}$ 로 보냄 (8.5 절). 회전 뒤 태그가 정확히 출발점 $r_A$ 에 옴 → 모드 3 시작 시 태그 높이 $y$ = 0.343 m (목표 0.360 m). 남은 17 mm 는 회전 중 크리프로 미끄러진 양이며, 수정 전 약 110 mm 에서 줄어듦
 - 대책 후 결과는 18.3 절 (펜 RMS 1.17–1.20 mm)
 
 ### 8.3 동역학 (벽면판)
@@ -785,26 +785,26 @@ $$
 두 논문의 축약 동역학 (Zou 식 (33b), Sabiha 식 (29)) 에 벽면 흡착과 중력을 넣은 식. 제 2 속도 성분은 차원을 맞추기 위해 $L\omega$ 로 씀.
 
 $$
-\tilde M\,\dot\nu + \tilde C\,\nu + S^{\top}(f_1 + f_2) = \tilde B\,\tau + S^{\top} f_g, \qquad
-\nu = \begin{bmatrix} v \\ L\omega \end{bmatrix},\quad \tau = \begin{bmatrix} F_r \\ F_l \end{bmatrix} \qquad (23)
+\tilde M\thinspace \dot\nu + \tilde C\thinspace \nu + S^{\top}(f_1 + f_2) = \tilde B\thinspace \tau + S^{\top} f_g, \qquad
+\nu = \begin{bmatrix} v \cr L\omega \end{bmatrix},\quad \tau = \begin{bmatrix} F_r \cr F_l \end{bmatrix} \qquad (23)
 $$
 
 $$
-\tilde M = S^{\top} M S = m\begin{bmatrix} 1 & 0 \\ 0 & 1 + u_c^2/L^2 \end{bmatrix}, \quad
+\tilde M = S^{\top} M S = m\begin{bmatrix} 1 & 0 \cr 0 & 1 + u_c^2/L^2 \end{bmatrix}, \quad
 \tilde C = S^{\top} M \dot S, \quad
-\tilde B = \begin{bmatrix} 1 & 1 \\ b/2L & -b/2L \end{bmatrix}, \quad
+\tilde B = \begin{bmatrix} 1 & 1 \cr b/2L & -b/2L \end{bmatrix}, \quad
 L = \sqrt{(l^2 + b^2)/12} \qquad (24)
 $$
 
 $$
-f_1 = \mu_l N \begin{bmatrix} \cos\psi \\ \sin\psi \\ 0 \end{bmatrix} \tanh\!\frac{v}{\varepsilon_v}, \qquad
-f_2 = \begin{bmatrix} F_y \sin\psi \\ -F_y\cos\psi \\ M_r / L \end{bmatrix}, \qquad
-f_g = \begin{bmatrix} 0 \\ -m g \\ 0 \end{bmatrix} \qquad (25)
+f_1 = \mu_l N \begin{bmatrix} \cos\psi \cr \sin\psi \cr 0 \end{bmatrix} \tanh\negthinspace \frac{v}{\varepsilon_v}, \qquad
+f_2 = \begin{bmatrix} F_y \sin\psi \cr -F_y\cos\psi \cr M_r / L \end{bmatrix}, \qquad
+f_g = \begin{bmatrix} 0 \cr -m g \cr 0 \end{bmatrix} \qquad (25)
 $$
 
 $$
-F_y = 2\mu_t \frac{N}{l}\,u_c \tanh\!\frac{\omega}{\varepsilon_\omega}, \qquad
-M_r = \mu_t \frac{N}{l}\left(\frac{l^2}{4} - u_c^2\right) \tanh\!\frac{\omega}{\varepsilon_\omega} \qquad (26)
+F_y = 2\mu_t \frac{N}{l}\thinspace u_c \tanh\negthinspace \frac{\omega}{\varepsilon_\omega}, \qquad
+M_r = \mu_t \frac{N}{l}\left(\frac{l^2}{4} - u_c^2\right) \tanh\negthinspace \frac{\omega}{\varepsilon_\omega} \qquad (26)
 $$
 
 | 기호 | 정의 | 값 |
@@ -823,39 +823,39 @@ $$
 |---|---|---|---|
 | 1 | 수직 하중 $W = mg$ (Zou 식 (24)–(27)) | 흡착력 $N$ | 벽에서는 마찰을 만드는 수직력이 중력이 아니라 자석 흡착력 |
 | 2 | 중력 항 없음 | $f_g$ (식 (25)) | 진행 평면이 수직이므로 중력이 운동 평면 안에 있음 |
-| 3 | $M_r = \mathrm{sgn}(\omega)\,\mu_t \frac{W}{l}\left(u_c^2 - \frac{l^2}{4}\right)$ (Zou 식 (27), Sabiha 식 (24)) | $\frac{l^2}{4} - u_c^2$ | 원식은 $\lvert u_c\rvert < l/2$ 에서 $M_r$ 이 $\omega$ 와 반대 부호가 되어 회전 저항이 회전을 도움. Wong 의 크기 $\mu_t W l / 4$ ($u_c = 0$) 와 부호가 맞도록 수정 |
+| 3 | $M_r = \mathrm{sgn}(\omega)\thinspace \mu_t \frac{W}{l}\left(u_c^2 - \frac{l^2}{4}\right)$ (Zou 식 (27), Sabiha 식 (24)) | $\frac{l^2}{4} - u_c^2$ | 원식은 $\lvert u_c\rvert < l/2$ 에서 $M_r$ 이 $\omega$ 와 반대 부호가 되어 회전 저항이 회전을 도움. Wong 의 크기 $\mu_t W l / 4$ ($u_c = 0$) 와 부호가 맞도록 수정 |
 | 4 | $\upsilon = [v,\ \dot\theta]^{\top}$ (Zou 식 (19), Sabiha 식 (18)) | $\nu = [v,\ L\omega]^{\top}$ | $q_3 = L\theta$ 일 때 $S$ 의 제 3 행 $[0\ \ 1]$ 과 제 1 행 $u_c\sin\psi/L$ 의 차원이 맞으려면 제 2 성분이 $L\dot\theta$ 여야 함 |
-| 5 | $M = (F_l + F_r)\,b/2$ (Sabiha 식 (23)) | $(F_l - F_r)\,b/2$ | 오타. 같은 논문 식 (26c), $\bar B$ 는 차이로 씀 |
+| 5 | $M = (F_l + F_r)\thinspace b/2$ (Sabiha 식 (23)) | $(F_l - F_r)\thinspace b/2$ | 오타. 같은 논문 식 (26c), $\bar B$ 는 차이로 씀 |
 | 6 | $\mathrm{sgn}(\cdot)$ | $\tanh(\cdot/\varepsilon)$ | 정지 근처 수치 떨림 방지 |
 
 수치 적분 스텝
 
 - $\omega = 0$ 근처에서 회전 저항의 기울기는 $\partial M_r/\partial\omega = \mu_t N l / (4\varepsilon_\omega)$ = 1500 N·m·s, 이를 요 관성 $mL^2$ = 0.168 kg·m² 로 나눈 고유값 $\lambda \approx 8.9\times10^{3}\ \mathrm{s^{-1}}$
 - 고정 스텝 RK4 (ode4) 의 안정 조건 $\lvert\lambda h\rvert \lesssim 2.8$ 에 대해 $h$ = 5 ms 는 $\lambda h$ = 44 → $\omega$ 가 수치적으로 진동 (18.5 절에서 확인)
-- $h$ = 0.5 ms 에서 $\lambda h$ = 4.5 로 선형 기준은 아직 넘지만 기울기가 $\lvert\omega\rvert < \varepsilon_\omega$ 에서만 크므로 진동이 사라짐. $\int\omega\,dt$ 와 $\Delta\psi$ 의 차이 2.5° 이내 (실측)
+- $h$ = 0.5 ms 에서 $\lambda h$ = 4.5 로 선형 기준은 아직 넘지만 기울기가 $\lvert\omega\rvert < \varepsilon_\omega$ 에서만 크므로 진동이 사라짐. $\int\omega\thinspace dt$ 와 $\Delta\psi$ 의 차이 2.5° 이내 (실측)
 
 ### 8.4 구동계와 내부 속도 루프
 
 제어기가 내는 $(v_c, \omega_c)$ 는 PWM 으로 바뀌어 ESC 로 가고, 운동모델 안의 속도 PI 가 궤도 구동력을 만듦.
 
 $$
-\bar V = \mathrm{sat}_{0.5}\!\left(\frac{v_c}{2v_{full}}\right), \quad
-\bar W = \mathrm{sat}_{0.5}\!\left(\frac{\omega_c}{2\omega_{full}}\right), \quad
+\bar V = \mathrm{sat}_{0.5}\negthinspace \left(\frac{v_c}{2v_{full}}\right), \quad
+\bar W = \mathrm{sat}_{0.5}\negthinspace \left(\frac{\omega_c}{2\omega_{full}}\right), \quad
 \begin{aligned}
-u_L &= 1500 + T(\bar V) - T_s(\bar W) \\
+u_L &= 1500 + T(\bar V) - T_s(\bar W) \cr
 u_R &= 1500 - T(\bar V) - T_s(\bar W)
 \end{aligned} \qquad (27)
 $$
 
 $$
-T(\bar V) = d_v \tanh\!\frac{\bar V}{0.02} + (400 - d_v)\,\frac{\bar V}{0.5}, \qquad
-T_s(\bar W) = d_\omega \tanh\!\frac{\bar W}{0.10} + (400 - d_\omega)\,\frac{\bar W}{0.5} \qquad (28)
+T(\bar V) = d_v \tanh\negthinspace \frac{\bar V}{0.02} + (400 - d_v)\thinspace \frac{\bar V}{0.5}, \qquad
+T_s(\bar W) = d_\omega \tanh\negthinspace \frac{\bar W}{0.10} + (400 - d_\omega)\thinspace \frac{\bar W}{0.5} \qquad (28)
 $$
 
 $$
-\tau_X = K_{P,v}\,e_v + K_{I,v}\!\int e_v\,dt, \quad
-\tau_N = K_{P,\omega}\,L e_\omega + K_{I,\omega}\!\int L e_\omega\,dt, \quad
-\tau = \tilde B^{-1}\begin{bmatrix} \tau_X \\ \tau_N \end{bmatrix} \qquad (29)
+\tau_X = K_{P,v}\thinspace e_v + K_{I,v}\negthinspace \int e_v\thinspace dt, \quad
+\tau_N = K_{P,\omega}\thinspace L e_\omega + K_{I,\omega}\negthinspace \int L e_\omega\thinspace dt, \quad
+\tau = \tilde B^{-1}\begin{bmatrix} \tau_X \cr \tau_N \end{bmatrix} \qquad (29)
 $$
 
 | 기호 | 정의 | 값 |
@@ -875,8 +875,8 @@ $$
 모드 3 (직선 추종). 시간에 따라 움직이는 기준점을 바디 좌표 오차로 따라감.
 
 $$
-x_r(t) = W_{prev} + v_r\,(t - t_{line})\,u_r, \qquad
-\begin{bmatrix} e_x \\ e_y \end{bmatrix} = R^{\top}(\psi)\,(x_r - p), \qquad
+x_r(t) = W_{prev} + v_r\thinspace (t - t_{line})\thinspace u_r, \qquad
+\begin{bmatrix} e_x \cr e_y \end{bmatrix} = R^{\top}(\psi)\thinspace (x_r - p), \qquad
 e_\theta = \mathrm{wrap}(\theta_r - \psi) \qquad (30a)
 $$
 
@@ -889,12 +889,12 @@ $$
 
 $$
 \rho = \lVert W - p\rVert, \quad
-\alpha = \mathrm{wrap}\!\left(\mathrm{atan2}(W - p) - \psi\right), \quad
-v_c = k_\rho\,\rho \max(0, \cos\alpha), \quad
-\omega_c = k_\alpha\,\alpha + \tfrac{1}{2}\sin\alpha\cos\alpha \qquad (31)
+\alpha = \mathrm{wrap}\negthinspace \left(\mathrm{atan2}(W - p) - \psi\right), \quad
+v_c = k_\rho\thinspace \rho \max(0, \cos\alpha), \quad
+\omega_c = k_\alpha\thinspace \alpha + \tfrac{1}{2}\sin\alpha\cos\alpha \qquad (31)
 $$
 
-모드 2 (방향 맞추기). $v_c = 0$, $\omega_c = k_\alpha\,\mathrm{wrap}(\theta_r - \psi)$. 모든 모드에서 $\lvert v_c\rvert \le v_{max}$, $\lvert\omega_c\rvert \le \omega_{max}$.
+모드 2 (방향 맞추기). $v_c = 0$, $\omega_c = k_\alpha\thinspace \mathrm{wrap}(\theta_r - \psi)$. 모든 모드에서 $\lvert v_c\rvert \le v_{max}$, $\lvert\omega_c\rvert \le \omega_{max}$.
 
 | 기호 | 정의 | 값 (`XY_setup.m` 이름) |
 |---|---|---|
@@ -905,36 +905,36 @@ $$
 | $k_\rho,\ k_\alpha$ | 거리·방향 게인 | 1.0 s⁻¹, 2.0 s⁻¹ (`K_dist`, `K_yaw`) |
 | $v_{max},\ \omega_{max}$ | 명령 한계 | 0.20 m/s, 45 °/s |
 
-- 식 (30b) 는 Kanayama 형 (Zou 식 (38), Sabiha 식 (40)) $\omega_c = \omega_r + v_r\,[k_y' e_y + k_\theta \sin e_\theta]$ 에서 $\omega_r = 0$ (직선) 이고 $v_r$ 을 게인에 흡수한 형태. $k_y = v_r k_y'$, $k_\psi = v_r k_\theta$
+- 식 (30b) 는 Kanayama 형 (Zou 식 (38), Sabiha 식 (40)) $\omega_c = \omega_r + v_r\thinspace [k_y' e_y + k_\theta \sin e_\theta]$ 에서 $\omega_r = 0$ (직선) 이고 $v_r$ 을 게인에 흡수한 형태. $k_y = v_r k_y'$, $k_\psi = v_r k_\theta$
 - 기준점은 시간 기준이므로 로봇이 늦거나 빠르면 $e_x$ 가 $v_c$ 를 조절함 (18.5 절의 속도 차이 참조)
-- 모드 1 의 식 (31) 는 태그 $\hat p$ 대신 중심 추정 $\hat c = \hat p - R(\hat\psi)\,r_{tag}$ 와 출발 중심 $c_A = r_A - R(\theta_l)\,r_{tag}$ 로 계산하고, 전이 조건 `dist_start` 도 $\lVert c_A - \hat c\rVert$ 를 씀. 원본 6WP_sim 이 중심을 목표점으로 보내는 것과 같은 뜻이며, 모드 2 의 제자리 회전 뒤 태그가 $r_A$ 에 오게 함 (8.2 절). 모드 3·4 는 태그 기준 그대로
+- 모드 1 의 식 (31) 는 태그 $\hat p$ 대신 중심 추정 $\hat c = \hat p - R(\hat\psi)\thinspace r_{tag}$ 와 출발 중심 $c_A = r_A - R(\theta_l)\thinspace r_{tag}$ 로 계산하고, 전이 조건 `dist_start` 도 $\lVert c_A - \hat c\rVert$ 를 씀. 원본 6WP_sim 이 중심을 목표점으로 보내는 것과 같은 뜻이며, 모드 2 의 제자리 회전 뒤 태그가 $r_A$ 에 오게 함 (8.2 절). 모드 3·4 는 태그 기준 그대로
 
 ### 8.6 펜 기구학 보상 (유도)
 
 펜 끝 위치는 태그, 레버암, 캐리지 이동의 합.
 
 $$
-P = p + R(\psi)\,(d + \Delta s) = c_0 + R(\psi)\,\Delta s, \qquad c_0 = p + R(\psi)\,d \qquad (32)
+P = p + R(\psi)\thinspace (d + \Delta s) = c_0 + R(\psi)\thinspace \Delta s, \qquad c_0 = p + R(\psi)\thinspace d \qquad (32)
 $$
 
 - $c_0$ 는 스테이지가 중앙에 있을 때의 펜 위치
 - 목표: 펜이 직선 위에 있게 하되, 직선 방향 진행은 로봇에게 맡김 → 펜 목표를 $c_0$ 를 직선에 내린 수선의 발로 둠
 
 $$
-p^{\star} = A + \sigma\,u, \quad \sigma = u^{\top}(c_0 - A)
+p^{\star} = A + \sigma\thinspace u, \quad \sigma = u^{\top}(c_0 - A)
 \quad\Rightarrow\quad
 P = p^{\star}
 \ \Leftrightarrow\
-\Delta s = R^{\top}(\psi)\,(p^{\star} - p) - d,
+\Delta s = R^{\top}(\psi)\thinspace (p^{\star} - p) - d,
 \qquad
-s^{\star} = s_c + 1000\,\Delta s \qquad (33)
+s^{\star} = s_c + 1000\thinspace \Delta s \qquad (33)
 $$
 
-보상 없는 횡오차 $e_0 = n^{\top}(c_0 - A)$ 를 쓰면 $p^{\star} - c_0 = -e_0\,n$ 이므로
+보상 없는 횡오차 $e_0 = n^{\top}(c_0 - A)$ 를 쓰면 $p^{\star} - c_0 = -e_0\thinspace n$ 이므로
 
 $$
-\Delta s = -e_0\,R^{\top}(\psi)\,n = -e_0 \begin{bmatrix} \sin(\psi - \theta_l) \\ \cos(\psi - \theta_l) \end{bmatrix},
-\qquad u = \begin{bmatrix}\cos\theta_l \\ \sin\theta_l\end{bmatrix} \qquad (34)
+\Delta s = -e_0\thinspace R^{\top}(\psi)\thinspace n = -e_0 \begin{bmatrix} \sin(\psi - \theta_l) \cr \cos(\psi - \theta_l) \end{bmatrix},
+\qquad u = \begin{bmatrix}\cos\theta_l \cr \sin\theta_l\end{bmatrix} \qquad (34)
 $$
 
 - 스테이지는 $e_0$ 만큼만 움직이고, 그 방향은 로봇과 직선의 각도차 $\psi - \theta_l$ 로 정해짐
@@ -942,8 +942,8 @@ $$
 - $p^{\star}$ 를 $[A, B]$ 로 자르지 않음. 자르면 펜이 A 앞에 있을 때 $\sigma < 0$ 인 거리를 스테이지가 메우려 해 X 가 행정 끝에 닿음
 
 $$
-\mathrm{pen\_on} = \mathbb{1}\left[\,0 \le \sigma \le \lVert B - A\rVert\,\right], \qquad
-s^{\star} \leftarrow \mathrm{rate}_{83\,\mathrm{mm/s}}\!\left(\mathrm{sat}_{[0,\,101.6]}(s^{\star})\right) \qquad (35)
+\mathrm{pen\text{_}on} = \mathbb{1}\left[\thinspace 0 \le \sigma \le \lVert B - A\rVert\thinspace \right], \qquad
+s^{\star} \leftarrow \mathrm{rate}_{83\thinspace \mathrm{mm/s}}\negthinspace \left(\mathrm{sat}_{[0,\thinspace 101.6]}(s^{\star})\right) \qquad (35)
 $$
 
 #### 8.6.1 식 (32)–(33) 의 단계별 의미
@@ -955,15 +955,15 @@ $$
 
 | 단계 | 식 | 좌표계 | 의미 |
 |---|---|---|---|
-| 1 | $R(\hat\psi)\,d$ | 바디 → 벽면 | 바디에 고정된 레버암 (태그 → 펜) 을 현재 heading 으로 돌려 벽면 벡터로 만듦 |
-| 2 | $c_0 = \hat p + R(\hat\psi)\,d$ | 벽면 | 스테이지가 중앙일 때 펜이 닿을 벽 위의 점 |
+| 1 | $R(\hat\psi)\thinspace d$ | 바디 → 벽면 | 바디에 고정된 레버암 (태그 → 펜) 을 현재 heading 으로 돌려 벽면 벡터로 만듦 |
+| 2 | $c_0 = \hat p + R(\hat\psi)\thinspace d$ | 벽면 | 스테이지가 중앙일 때 펜이 닿을 벽 위의 점 |
 | 3 | $\sigma = u^{\top}(c_0 - A)$ | 벽면 | $c_0$ 의 직선 방향 성분 = 직선 위 진행 거리. 펜 다운 판정 (식 (35)) 에도 씀 |
 | 4 | $e_0 = n^{\top}(c_0 - A)$ | 벽면 | 스테이지를 쓰지 않을 때의 펜 횡오차 (부호: $n$ 쪽이 +) |
 | 5 | $p^{\star} = A + \sigma u$ | 벽면 | $c_0$ 에서 직선에 내린 수선의 발. 진행 방향은 그대로 두고 횡 방향만 고친 목표 |
 | 6 | $p^{\star} - \hat p$ | 벽면 | 태그에서 펜 목표까지의 벡터 |
-| 7 | $R^{\top}(\hat\psi)\,(p^{\star} - \hat p)$ | 벽면 → 바디 | 같은 벡터를 바디 좌표로. 펜이 있어야 할 바디 위치 |
+| 7 | $R^{\top}(\hat\psi)\thinspace (p^{\star} - \hat p)$ | 벽면 → 바디 | 같은 벡터를 바디 좌표로. 펜이 있어야 할 바디 위치 |
 | 8 | $\Delta s = (7) - d$ | 바디 | 펜이 중앙 위치 ($d$) 에서 움직여야 할 양 = 캐리지 이동량 [m] |
-| 9 | $s^{\star} = s_c + 1000\,\Delta s$ | 스테이지 | 스테이지 좌표 [mm]. 원점이 모서리이므로 중앙 $s_c$ 를 더함 |
+| 9 | $s^{\star} = s_c + 1000\thinspace \Delta s$ | 스테이지 | 스테이지 좌표 [mm]. 원점이 모서리이므로 중앙 $s_c$ 를 더함 |
 
 - 검산: 단계 8 을 식 (32) 에 넣으면 $P = \hat p + R(d + \Delta s) = \hat p + R R^{\top}(p^{\star} - \hat p) = p^{\star}$
 - 수선의 발을 쓰는 이유: 직선 방향 ($u$) 의 펜 위치는 로봇이 정함. 스테이지가 직선 방향까지 맞추려 하면 로봇 진행 오차 수 cm 를 메워야 해서 행정 (±50.8 mm) 이 모자람
@@ -976,8 +976,8 @@ $$
 
 | 양 | 계산 | 값 [mm] |
 |---|---|---|
-| $R(\hat\psi)$ | $\cos 3^{\circ} = 0.9986$, $\sin 3^{\circ} = 0.0523$ | $[\,0.9986\ \ {-0.0523};\ 0.0523\ \ 0.9986\,]$ |
-| $R\,d$ | $d = (80.0,\ -60.0)$ | $(83.0,\ -55.7)$ |
+| $R(\hat\psi)$ | $\cos 3^{\circ} = 0.9986$, $\sin 3^{\circ} = 0.0523$ | $[\thinspace 0.9986\ \ {-0.0523};\ 0.0523\ \ 0.9986\thinspace]$ |
+| $R\thinspace d$ | $d = (80.0,\ -60.0)$ | $(83.0,\ -55.7)$ |
 | $c_0$ | $\hat p + R d$ | $(-117.0,\ 289.3)$ |
 | $\sigma$ | $u^{\top}(c_0 - A) = -117.0 - (-700)$ | 583.0 (펜 다운 구간 $0 \le \sigma \le 1200$ 안) |
 | $e_0$ | $n^{\top}(c_0 - A) = 289.3 - 300$ | $-10.73$ (펜이 직선보다 10.73 mm 아래) |
@@ -985,8 +985,8 @@ $$
 | $p^{\star} - \hat p$ | – | $(83.0,\ -45.0)$ |
 | $R^{\top}(p^{\star} - \hat p)$ | – | $(80.6,\ -49.3)$ |
 | $\Delta s$ | $(80.6 - 80.0,\ -49.3 + 60.0)$ | $(0.56,\ 10.72)$ |
-| 식 (34) 검산 | $-e_0\,[\sin 3^{\circ},\ \cos 3^{\circ}]$ | $(0.56,\ 10.72)$, 일치 |
-| $s^{\star}$ | $50.8 + 1000\,\Delta s$ ($\Delta s$ 를 m 로) | $(51.36,\ 61.52)$ |
+| 식 (34) 검산 | $-e_0\thinspace [\sin 3^{\circ},\ \cos 3^{\circ}]$ | $(0.56,\ 10.72)$, 일치 |
+| $s^{\star}$ | $50.8 + 1000\thinspace \Delta s$ ($\Delta s$ 를 m 로) | $(51.36,\ 61.52)$ |
 | $P$ | $\hat p + R(d + \Delta s)$ | $(-117.0,\ 300.0) = p^{\star}$ |
 
 - 스테이지는 Y 로 10.72 mm (바디 왼쪽 = 벽 위쪽) 움직여 펜을 직선으로 올림. X 는 0.56 mm 만 움직임 ($3^{\circ}$ 기울기 성분)
@@ -994,7 +994,7 @@ $$
 
 #### 8.6.3 부호 점검
 
-$\theta_l = 0^{\circ}$ (직선이 오른쪽) 기준. $\Delta s = -e_0\,[\sin(\psi - \theta_l),\ \cos(\psi - \theta_l)]^{\top}$.
+$\theta_l = 0^{\circ}$ (직선이 오른쪽) 기준. $\Delta s = -e_0\thinspace [\sin(\psi - \theta_l),\ \cos(\psi - \theta_l)]^{\top}$.
 
 | 상황 | $\psi - \theta_l$ | $e_0$ | $\Delta s_X$ | $\Delta s_Y$ | 벽에서 펜이 움직이는 방향 | 판정 |
 |---|---|---|---|---|---|---|
@@ -1003,7 +1003,7 @@ $\theta_l = 0^{\circ}$ (직선이 오른쪽) 기준. $\Delta s = -e_0\,[\sin(\ps
 | 펜이 직선 아래, 코 $3^{\circ}$ 위 | $+3^{\circ}$ | $< 0$ | $+0.05\lvert e_0\rvert$ | $+\lvert e_0\rvert$ | $y_B$ 가 $3^{\circ}$ 기울었으므로 X 를 조금 더해 수직으로 올림 | 직선 쪽 |
 | 펜이 직선 아래, 로봇이 거꾸로 ($B \to A$) | $180^{\circ}$ | $< 0$ | 0 | $-\lvert e_0\rvert$ | $y_B$ = 아래이므로 $-y_B$ = 위 | 직선 쪽 |
 
-- 모든 경우 펜이 $-e_0\,n$ 방향, 즉 직선 쪽으로 움직임. heading 이 바뀌어도 식이 자동으로 축을 바꿔 줌
+- 모든 경우 펜이 $-e_0\thinspace n$ 방향, 즉 직선 쪽으로 움직임. heading 이 바뀌어도 식이 자동으로 축을 바꿔 줌
 
 #### 8.6.4 식과 Simulink 코드 대응 (`PenCtrl/PenComp`)
 
@@ -1015,7 +1015,7 @@ $\theta_l = 0^{\circ}$ (직선이 오른쪽) 기준. $\Delta s = -e_0\,[\sin(\ps
 | $\sigma = u^{\top}(c_0 - A)$ | `sigma = dot(u, pc - A);` |
 | $p^{\star} = A + \sigma u$ | `p_des = A + sigma * u;` |
 | $\Delta s = R^{\top}(p^{\star} - \hat p) - d$ | `e_b = R' * (p_des - pT) - pen_d;` |
-| $s^{\star} = s_c + 1000\,\Delta s$ | `s_cmd = stage_c + 1000 * e_b;` |
+| $s^{\star} = s_c + 1000\thinspace \Delta s$ | `s_cmd = stage_c + 1000 * e_b;` |
 | pen_on (식 (35)) | `pen_on = double(sigma >= 0 && sigma <= L);` |
 | 모드 3 이외 | `s_cmd = [stage_c; stage_c]` (스테이지 중앙, 펜 올림) |
 
@@ -1024,9 +1024,9 @@ $\theta_l = 0^{\circ}$ (직선이 오른쪽) 기준. $\Delta s = -e_0\,[\sin(\ps
 
 #### 8.6.5 heading 오차의 영향
 
-보상기가 $\hat\psi$ 를 쓰므로 heading 이 $\delta\psi$ 만큼 틀리면 펜이 $\ell_u\,\delta\psi$ 만큼 직선에서 벗어남 (식 (40)).
+보상기가 $\hat\psi$ 를 쓰므로 heading 이 $\delta\psi$ 만큼 틀리면 펜이 $\ell_u\thinspace \delta\psi$ 만큼 직선에서 벗어남 (식 (40)).
 
-| $\delta\psi$ | 펜 오차 (수치 예의 자세, 정확히 계산) | 1 차 근사 $\ell_u\,\delta\psi$, $\ell_u$ = 0.083 m |
+| $\delta\psi$ | 펜 오차 (수치 예의 자세, 정확히 계산) | 1 차 근사 $\ell_u\thinspace \delta\psi$, $\ell_u$ = 0.083 m |
 |---|---|---|
 | $1^{\circ}$ | 1.46 mm | 1.45 mm |
 | $3^{\circ}$ | 4.25 mm | 4.35 mm |
@@ -1038,12 +1038,12 @@ $\theta_l = 0^{\circ}$ (직선이 오른쪽) 기준. $\Delta s = -e_0\,[\sin(\ps
 Zaber 펌웨어의 사다리꼴 궤적 생성기 뒤에 축마다 위치 서보가 있는 구조로 모델링함.
 
 $$
-m_i\,\ddot x_i + c_s\,\dot x_i = \mathrm{sat}_{F_{max}(\dot x_i)}\!\left(K_{P,i} e_i + K_{D,i}\,\dot e_i + K_{I,i}\!\int e_i\,dt\right) - m_i\,g_{B,i}(\psi), \qquad i \in \{X, Y\} \qquad (36)
+m_i\thinspace \ddot x_i + c_s\thinspace \dot x_i = \mathrm{sat}_{F_{max}(\dot x_i)}\negthinspace \left(K_{P,i} e_i + K_{D,i}\thinspace \dot e_i + K_{I,i}\negthinspace \int e_i\thinspace dt\right) - m_i\thinspace g_{B,i}(\psi), \qquad i \in \lbrace X, Y\rbrace \qquad (36)
 $$
 
 $$
-K_{P,i} = m_i\,\omega_{n,s}^2, \quad K_{D,i} = 2\zeta_s m_i\,\omega_{n,s}, \quad K_{I,i} = K_{P,i}\,\omega_{n,s}/5, \quad
-g_B(\psi) = R^{\top}(\psi)\begin{bmatrix} 0 \\ -g \end{bmatrix} \qquad (37)
+K_{P,i} = m_i\thinspace \omega_{n,s}^2, \quad K_{D,i} = 2\zeta_s m_i\thinspace \omega_{n,s}, \quad K_{I,i} = K_{P,i}\thinspace \omega_{n,s}/5, \quad
+g_B(\psi) = R^{\top}(\psi)\begin{bmatrix} 0 \cr -g \end{bmatrix} \qquad (37)
 $$
 
 | 기호 | 정의 | 값 |
@@ -1058,7 +1058,7 @@ $$
 
 $$
 \hat p(t_k) = p(t_k - \tau_{zk}) + \eta_p, \quad \eta_p \sim \mathcal{N}(0, \sigma_p^2 I), \qquad
-\hat\psi(t) = \psi(t) + \eta_\psi + \dot b_\psi\,t, \quad \eta_\psi \sim \mathcal{N}(0, \sigma_\psi^2) \qquad (38)
+\hat\psi(t) = \psi(t) + \eta_\psi + \dot b_\psi\thinspace t, \quad \eta_\psi \sim \mathcal{N}(0, \sigma_\psi^2) \qquad (38)
 $$
 
 | 기호 | 정의 | 값 |
@@ -1072,20 +1072,20 @@ $$
 
 $$
 P = \underbrace{\hat p + R(\hat\psi)(d + \Delta s)}_{\text{on the line}} - \delta p + \big(R(\psi) - R(\hat\psi)\big)(d + \Delta s),
-\qquad R(\psi) - R(\hat\psi) \approx -\delta\psi\,J R(\psi) \qquad (39)
+\qquad R(\psi) - R(\hat\psi) \approx -\delta\psi\thinspace J R(\psi) \qquad (39)
 $$
 
 $$
-e = n^{\top}(P - A) \approx -\,n^{\top}\delta p \;-\; \delta\psi\;\ell_u, \qquad
-\ell_u = u^{\top} R(\psi)\,(d + \Delta s) \qquad (40)
+e = n^{\top}(P - A) \approx -\thinspace n^{\top}\delta p \thickspace -\thickspace \delta\psi\thickspace \ell_u, \qquad
+\ell_u = u^{\top} R(\psi)\thinspace (d + \Delta s) \qquad (40)
 $$
 
 - $\delta p = \hat p - p$, $\delta\psi = \hat\psi - \psi$. $n = Ju$ 이고 $J^{\top}J = I$ 이므로 $n^{\top}J = u^{\top}J^{\top}J = u^{\top}$ 을 씀
-- 이전 판의 식 (40) 은 둘째 항 부호가 $+$ 였음 ($n^{\top}J = -u^{\top}$ 으로 잘못 씀). 수치 예 자세에서 $\delta\psi = +1^{\circ}$ 일 때 직접 계산한 $e = -1.44$ mm 가 $-\delta\psi\,\ell_u$ 와 일치함을 확인하고 수정. 분산 식 (41) 는 제곱이므로 영향 없음
+- 이전 판의 식 (40) 은 둘째 항 부호가 $+$ 였음 ($n^{\top}J = -u^{\top}$ 으로 잘못 씀). 수치 예 자세에서 $\delta\psi = +1^{\circ}$ 일 때 직접 계산한 $e = -1.44$ mm 가 $-\delta\psi\thinspace \ell_u$ 와 일치함을 확인하고 수정. 분산 식 (41) 는 제곱이므로 영향 없음
 - 위치 오차는 직선 법선 성분만, heading 오차는 레버암의 직선 방향 성분 $\ell_u$ 를 곱해 펜 오차가 됨. 현재 배치에서 $\ell_u \approx d_x$ = 0.08 m
 
 $$
-\sigma_e^2 \approx \sigma_p^2 + \ell_u^2\,\sigma_\psi^2 + \ell_u^2\,\frac{(\dot b_\psi T)^2}{3}
+\sigma_e^2 \approx \sigma_p^2 + \ell_u^2\thinspace \sigma_\psi^2 + \ell_u^2\thinspace \frac{(\dot b_\psi T)^2}{3}
 = (1.0)^2 + (0.42)^2 + (0.63)^2\ \mathrm{mm}^2
 \ \Rightarrow\ \sigma_e \approx 1.25\ \mathrm{mm} \qquad (41)
 $$
@@ -1097,8 +1097,8 @@ $$
 
 | 기능 | 위치 | 식 | 파라미터 |
 |---|---|---|---|
-| ZeroKey 지연 보상 | Nav | $\hat p \leftarrow \hat p + \tau_{pred}\,\hat{\dot p}$ | `tau_pred` (기본 0) |
-| 스테이지 중앙 유지 | RobotCtrl M3 | $e_y \leftarrow e_y + k_c e_s + k_{ci}\int e_s\,dt$, $e_s = (s_{Y,meas} - s_c)/1000$ | `K_c`, `K_ci` (기본 0) |
+| ZeroKey 지연 보상 | Nav | $\hat p \leftarrow \hat p + \tau_{pred}\thinspace \hat{\dot p}$ | `tau_pred` (기본 0) |
+| 스테이지 중앙 유지 | RobotCtrl M3 | $e_y \leftarrow e_y + k_c e_s + k_{ci}\int e_s\thinspace dt$, $e_s = (s_{Y,meas} - s_c)/1000$ | `K_c`, `K_ci` (기본 0) |
 
 - 효과는 20 장 비교 참조
 
@@ -1326,7 +1326,7 @@ $$
 | 적분점 | 로봇 중심 | 로봇 중심 (2026-11-11 수정 전에는 태그 점) | 같음 |
 | 출력 | 중심 자세 $q$ | 태그 자세 (`TagPoint`, 식 (21a)) | 센서 위치에 맞춤 |
 
-- 원본 Kinematics 의 첫 두 행 $(u/L)\sin\theta$ 항은 둘째 속도 성분이 $\omega$ 일 때 차원이 맞지 않으나 $\alpha = 0$ ($u = 0$) 에서는 영향 없음. 이 모델은 $u\,\omega\sin\psi$ 로 씀 (식 (21))
+- 원본 Kinematics 의 첫 두 행 $(u/L)\sin\theta$ 항은 둘째 속도 성분이 $\omega$ 일 때 차원이 맞지 않으나 $\alpha = 0$ ($u = 0$) 에서는 영향 없음. 이 모델은 $u\thinspace \omega\sin\psi$ 로 씀 (식 (21))
 
 ### 12.2 Zaber 스테이지 (데이터시트 + CAD)
 
@@ -1403,9 +1403,9 @@ MATLAB Function 블록별 입출력 (각 블록 코드 머리에 한·영 같은
 | NavFcn (Nav) | ZeroKey 위치 [m], 속도 [m/s], IMU 쿼터니언, $\psi_0$ [rad], $\tau_{pred}$ [s], `zk_xsign` | `pose` = $[\hat x;\ \hat y;\ \hat\psi]$ [m, m, rad] (2 판: + $V_{meas}$ [m/s, rad/s]) | $\hat p = [\pm x_{zk};\ z_{zk}]$, $\hat\psi = \mathrm{yaw} - \mathrm{yaw}_0 + \psi_0$ | 실기 `plane_project` 를 REP-103 형으로 |
 | Guards (Mission) | `pose`, $A,\ B,\ d$, `line_pre`, `line_post`, $r_{tag}$ [m] | `dist_start` [m], `th_err` [rad], `along_rem` [m] | $\lVert c_A - \hat c\rVert$, $\mathrm{wrap}(\theta_l - \hat\psi)$, $u^{\top}(r_B - \hat p)$ | 실기 Chart |
 | ModeChart (Mission) | 위 셋, 시각 $t$ [s] | `mode`, `t_line` [s] | 그림 7 | 6WP_sim Chart |
-| Waypoints (Mission) | `mode`, 직선 기하 [m] | `WP_prev`, `WP_target`, `lineAB` [m] | $r_A = A - R(\theta_l)d - u\,\ell_{pre}$, $c_A = r_A - R(\theta_l) r_{tag}$ | 8.5 절 |
+| Waypoints (Mission) | `mode`, 직선 기하 [m] | `WP_prev`, `WP_target`, `lineAB` [m] | $r_A = A - R(\theta_l)d - u\thinspace \ell_{pre}$, $c_A = r_A - R(\theta_l) r_{tag}$ | 8.5 절 |
 | Fcn1 Goto_Start (RobotCtrl) | `WP_target` [m], `pose` | $v$ [m/s], $\omega$ [rad/s] | 식 (31), 중심 기준 | 6WP_sim |
-| Fcn2 Turning | `WP_prev`, `WP_target`, `pose` | $v = 0$, $\omega$ [rad/s] | $\omega = k_\alpha\,\mathrm{wrap}(\theta_l - \hat\psi)$ | 6WP_sim |
+| Fcn2 Turning | `WP_prev`, `WP_target`, `pose` | $v = 0$, $\omega$ [rad/s] | $\omega = k_\alpha\thinspace \mathrm{wrap}(\theta_l - \hat\psi)$ | 6WP_sim |
 | Fcn3 Line_Tracking | 선분 [m], `t_line` [s], `pose`, `/stage/pos` [mm] | $v$ [m/s], $\omega$ [rad/s], `e_cross` [m] | 식 (30) (+ 8.10 절 중앙 유지) | 6WP_sim, 실기 게인 |
 | Fcn4 Stop_Destination | `WP_target`, `pose` | $v$, $\omega$ | 식 (31) | 6WP_sim |
 | SpeedErr (InnerPI, 2 판) | $v_c$ [m/s], $\omega_c$ [rad/s], $V_{meas}$, `mode` | $e_v$ [m/s], $e_\omega$ [rad/s], 리셋 | 식 (45) | 실기 Xsens 모델 |
@@ -1421,7 +1421,7 @@ MATLAB Function 블록별 입출력 (각 블록 코드 머리에 한·영 같은
 | ZkWorld, ZkVel, ImuQuat, ZkQuat (Sensors) | `q_true`, `V_true`, 잡음 | 토픽 값 [m], [m/s], 쿼터니언 | 식 (38) | 12.3 절 |
 | ZaberTraj (StagePlant) | $s^{\star}$ [mm] | 궤적 [mm, mm/s] | 사다리꼴 (104 mm/s, 500 mm/s²) | 데이터시트 |
 | ZaberServo | 궤적, 캐리지 상태, `q_true` | 가속도 [m/s²] | 식 (36)–(37) | 8.7 절 |
-| Encoder | 캐리지 위치 [m] | `stage_pos` [mm] | $1000\,x$, 0–101.6 포화 | `get pos` |
+| Encoder | 캐리지 위치 [m] | `stage_pos` [mm] | $1000\thinspace x$, 0–101.6 포화 | `get pos` |
 | PenTraceFcn (평가) | `q_true`, `stage_pos` [mm] | 참 펜 위치 [m], 횡오차 [m] | $P = p + R(\psi)(d + (s - s_c)/1000)$ | 그림 12 (6)–(7) |
 
 ![StagePlant](1_simulation/img/XY_1_pen_sim__StagePlant.png)
@@ -1441,7 +1441,7 @@ MATLAB Function 블록별 입출력 (각 블록 코드 머리에 한·영 같은
 | `zerokey_position` [m], `zerokey_vel` [m/s], `imu_quat`, `psi0` [rad], `tau_pred` [s], `zk_xsign` | `pose` = $[\hat x;\ \hat y;\ \hat\psi]$ [m, m, rad] (2 판: + `V_meas`) |
 
 $$
-\hat p = \begin{bmatrix} z \\ x \end{bmatrix}, \qquad
+\hat p = \begin{bmatrix} z \cr x \end{bmatrix}, \qquad
 \mathrm{yaw} = \mathrm{atan2}\big(2(q_w q_z + q_x q_y),\ 1 - 2(q_y^2 + q_z^2)\big), \qquad
 \hat\psi = \mathrm{wrap}(\mathrm{yaw} - \mathrm{yaw}_0 + \psi_0) \qquad (42)
 $$
@@ -1459,17 +1459,17 @@ Guards 는 전이 조건에 쓸 세 값을 만든다. 출발 중심까지의 거
 모드 1·4 는 극좌표형 법칙을 쓴다. 목표까지의 거리 $\rho$ 와 방위 오차 $\alpha$ 로
 
 $$
-v = k_\rho\,\rho\,\max(0,\ \cos\alpha), \qquad \omega = k_\alpha\,\alpha + \tfrac12\sin\alpha\cos\alpha \qquad (43)
+v = k_\rho\thinspace \rho\thinspace \max(0,\ \cos\alpha), \qquad \omega = k_\alpha\thinspace \alpha + \tfrac12\sin\alpha\cos\alpha \qquad (43)
 $$
 
-를 낸다. $\max(0,\ \cos\alpha)$ 때문에 방위가 90° 넘게 틀리면 전진하지 않고 돌기만 하며, 방향이 맞을수록 빨리 간다. 모드 1 은 중심, 모드 4 는 태그를 목표로 보낸다. 모드 2 는 $v = 0$, $\omega = k_\alpha\,\mathrm{wrap}(\theta_l - \hat\psi)$ 로 제자리 회전한다. 모드 3 은 식 (7)–(8) 이다. 선택 기능인 스테이지 중앙 유지($K_c,\ K_{ci} > 0$)를 켜면, `/stage/pos` 의 Y 편차 $e_s = (s_Y - s_c)/1000$ [m] 를 횡오차에 더해 로봇이 펜 쪽으로 다가가게 하고 스테이지가 행정 가운데에서 일하게 한다.
+를 낸다. $\max(0,\ \cos\alpha)$ 때문에 방위가 90° 넘게 틀리면 전진하지 않고 돌기만 하며, 방향이 맞을수록 빨리 간다. 모드 1 은 중심, 모드 4 는 태그를 목표로 보낸다. 모드 2 는 $v = 0$, $\omega = k_\alpha\thinspace \mathrm{wrap}(\theta_l - \hat\psi)$ 로 제자리 회전한다. 모드 3 은 식 (7)–(8) 이다. 선택 기능인 스테이지 중앙 유지($K_c,\ K_{ci} > 0$)를 켜면, `/stage/pos` 의 Y 편차 $e_s = (s_Y - s_c)/1000$ [m] 를 횡오차에 더해 로봇이 펜 쪽으로 다가가게 하고 스테이지가 행정 가운데에서 일하게 한다.
 
 ### 14.4 InnerPI (2 판만)
 
 $$
 e_v = v_c - u_B, \quad e_\omega = \omega_c - g_\omega r, \qquad
-\bar V = \mathrm{sat}_{[0,\,0.5]}\Big(K_{P,v} e_v + K_{I,v}\sum e_v T_s\Big), \quad
-\bar W = \mathrm{sat}_{[-0.5,\,0.5]}\Big(K_{P,\omega} e_\omega + K_{I,\omega}\sum e_\omega T_s\Big) \qquad (44)
+\bar V = \mathrm{sat}_{[0,\thinspace 0.5]}\Big(K_{P,v} e_v + K_{I,v}\sum e_v T_s\Big), \quad
+\bar W = \mathrm{sat}_{[-0.5,\thinspace 0.5]}\Big(K_{P,\omega} e_\omega + K_{I,\omega}\sum e_\omega T_s\Big) \qquad (44)
 $$
 
 실기 Xsens 모델과 같은 이산 PI(Forward Euler, 0.01 s, 적분 clamping)이다. 실기 값 그대로 쓰면 두 문제가 있다. 자이로 배율 $g_\omega = 0.1443$ 은 rad/s 명령과 단위가 맞지 않아 ω 가 흔들리므로 1 로 두었고, 모드가 바뀔 때 적분값이 남아 회전 중 전진하므로 모드 전환 시 적분기를 리셋한다. 출처 확인이 남아 있다(21.2 절).
@@ -1672,7 +1672,7 @@ Run 버튼으로 실행할 때의 동작
 |---|---|---|
 | ω 추종 오차 RMS (펜 다운) | 6.3 deg/s | 1.4 deg/s |
 | 펜 RMS | 1.19–1.20 mm | 1.18–1.20 mm |
-| $\int\omega\,dt$ 와 $\Delta\psi$ 일치 (이전 판 확인) | 맞지 않음 (수치 진동) | 2.5° 이내 |
+| $\int\omega\thinspace dt$ 와 $\Delta\psi$ 일치 (이전 판 확인) | 맞지 않음 (수치 진동) | 2.5° 이내 |
 | 원인 | 회전 저항 $\tanh(\omega/\varepsilon_\omega)$ 의 기울기에 비해 스텝이 큼 ($\lambda h \approx 44$, 8.3 절) | – |
 
 - 떨림은 게인 문제가 아니라 수치 적분 문제였음. 5 ms 에서도 펜 RMS 는 같음 (떨림 주파수가 스테이지 보상 대역 안의 heading 측정에 거의 나타나지 않음)
@@ -1875,8 +1875,8 @@ Run 버튼으로 실행할 때의 동작
 | Sensors · PlantRosOut | IMU 메시지 하나에 자세와 자이로 z (참 각속도 + 잡음 0.1°/s) 를 같이 실어 발행 |
 
 $$
-\bar V = \mathrm{sat}_{[0,\,0.5]}\!\Big(K_{P,v}^{in} e_v + K_{I,v}^{in}\!\sum e_v\,T_s\Big),\ e_v = v_c - u_B, \qquad
-\bar W = \mathrm{sat}_{[-0.5,\,0.5]}\!\Big(K_{P,\omega}^{in} e_\omega + K_{I,\omega}^{in}\!\sum e_\omega\,T_s\Big),\ e_\omega = \omega_c - g_\omega\,r \qquad (45)
+\bar V = \mathrm{sat}_{[0,\thinspace 0.5]}\negthinspace \Big(K_{P,v}^{in} e_v + K_{I,v}^{in}\negthinspace \sum e_v\thinspace T_s\Big),\ e_v = v_c - u_B, \qquad
+\bar W = \mathrm{sat}_{[-0.5,\thinspace 0.5]}\negthinspace \Big(K_{P,\omega}^{in} e_\omega + K_{I,\omega}^{in}\negthinspace \sum e_\omega\thinspace T_s\Big),\ e_\omega = \omega_c - g_\omega\thinspace r \qquad (45)
 $$
 
 | 기호 | 정의 | 값 (`XY_setup.m` 10 절) |

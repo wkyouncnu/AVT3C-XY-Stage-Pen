@@ -9,13 +9,19 @@ Extract the pen-control part of README.md (or README_EN.md) into PenControl(_EN)
     bash ../../_tools/md2pdf.sh PenControl_EN.md
     mv PenControl_EN.pdf 2_docs/manual/AVT3C_XY_Stage_Pen_Control_EN.pdf && rm PenControl_EN.md
 
+    py 2_docs/make_pen_excerpt.py --lang vi    # 베트남어 / Vietnamese (README_VI.md -> PenControl_VI.md)
+    bash ../../_tools/md2pdf.sh PenControl_VI.md
+    mv PenControl_VI.pdf 2_docs/manual/AVT3C_XY_Stage_Pen_Control_VI.pdf && rm PenControl_VI.md
+
 장·절·식·그림 번호는 통합본과 같게 둔다 (발췌본에 없는 번호는 통합본을 본다).
 Section, equation and figure numbers are kept as in the full manual.
 """
 import io, re, sys
 
-EN = '--lang' in sys.argv and sys.argv[sys.argv.index('--lang') + 1] == 'en'
-src = io.open('README_EN.md' if EN else 'README.md', encoding='utf-8').read()
+LANG = sys.argv[sys.argv.index('--lang') + 1] if '--lang' in sys.argv else 'ko'   # ko / en / vi
+EN = LANG == 'en'
+VI = LANG == 'vi'
+src = io.open({'en': 'README_EN.md', 'vi': 'README_VI.md'}.get(LANG, 'README.md'), encoding='utf-8').read()
 
 def block(start, stop):
     """start 줄부터 stop 줄 앞까지 / from the start heading up to the stop heading."""
@@ -26,7 +32,23 @@ def block(start, stop):
 def heading(prefix):
     return re.search(r'(?m)^' + re.escape(prefix) + r'.*$', src).group(0) + '\n\n'
 
-if EN:
+if VI:
+    head = [
+        '# Robot leo tường AVT-3C + bàn trượt XY Zaber: Bù động học bút (Bản trích)\n\n',
+        '- Tác giả: GS. Wonkeun Youn, Khoa Kỹ thuật Hệ thống Phương tiện Tự hành, Đại học Quốc gia Chungnam\n',
+        '- Kho mã: <https://github.com/wkyouncnu/AVT3C-XY-Stage-Pen>\n',
+        '- Tài liệu đầy đủ (PDF): [2_docs/manual/AVT3C_XY_Stage_Pen_VI.pdf](2_docs/manual/AVT3C_XY_Stage_Pen_VI.pdf)\n',
+        '- Tài liệu này chỉ gồm các phần của tài liệu đầy đủ liên quan đến điều khiển bút (PenComp). '
+        'Số chương, mục, phương trình và hình giống tài liệu đầy đủ; các số không có ở đây nằm trong tài liệu đầy đủ.\n\n',
+        '| Phần được trích | Nội dung |\n|---|---|\n',
+        '| Chương 3 | Hệ tọa độ tường, thân, bàn trượt và ma trận quay |\n',
+        '| Mục 4.1 | Phương trình vị trí đầu bút |\n',
+        '| Chương 6 | Bù động học bút: ký hiệu, hình theo hệ thân/tường/kết hợp, 1000 và $s_c$, ví dụ số |\n',
+        '| Mục 8.6 | Dẫn giải dạng gạch đầu dòng của cùng nội dung và kiểm tra dấu |\n',
+        '| Mục 14.6 | Khối Simulink PenCtrl |\n\n---\n\n',
+    ]
+    refs, out = '## Tài liệu tham khảo', 'PenControl_VI.md'
+elif EN:
     head = [
         '# AVT-3C Wall-Climbing Robot + Zaber XY Stage: Pen Kinematic Compensation (Excerpt)\n\n',
         '- Author: Prof. Wonkeun Youn, Department of Autonomous Vehicle System Engineering, Chungnam National University\n',

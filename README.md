@@ -4,8 +4,10 @@
 - 저장소: <https://github.com/wkyouncnu/AVT3C-XY-Stage-Pen>
 - 매뉴얼(PDF, 한글): [2_docs/manual/AVT3C_XY_Stage_Pen.pdf](2_docs/manual/AVT3C_XY_Stage_Pen.pdf)
 - 매뉴얼(PDF, 영문): [2_docs/manual/AVT3C_XY_Stage_Pen_EN.pdf](2_docs/manual/AVT3C_XY_Stage_Pen_EN.pdf) (원본 [README_EN.md](README_EN.md))
+- 매뉴얼(PDF, 베트남어): [2_docs/manual/AVT3C_XY_Stage_Pen_VI.pdf](2_docs/manual/AVT3C_XY_Stage_Pen_VI.pdf) (원본 [README_VI.md](README_VI.md))
 - 펜 기구학 보상 발췌본(PDF, 한글): [2_docs/manual/AVT3C_XY_Stage_Pen_Control.pdf](2_docs/manual/AVT3C_XY_Stage_Pen_Control.pdf) (3 장, 4.1 절, 6 장, 8.6 절, 14.6 절. `2_docs/make_pen_excerpt.py` 로 생성)
 - 펜 기구학 보상 발췌본(PDF, 영문): [2_docs/manual/AVT3C_XY_Stage_Pen_Control_EN.pdf](2_docs/manual/AVT3C_XY_Stage_Pen_Control_EN.pdf) (`2_docs/make_pen_excerpt.py --lang en` 으로 생성)
+- 펜 기구학 보상 발췌본(PDF, 베트남어): [2_docs/manual/AVT3C_XY_Stage_Pen_Control_VI.pdf](2_docs/manual/AVT3C_XY_Stage_Pen_Control_VI.pdf) (`--lang vi`)
 - 스테이지 매뉴얼(Zaber): [5_references/manuals/X-LSM-E-Manual.pdf](5_references/manuals/X-LSM-E-Manual.pdf), 데이터시트 [5_references/manuals/X-LSM-E-Datasheet.pdf](5_references/manuals/X-LSM-E-Datasheet.pdf). 참고 논문 목록은 [5_references/README.md](5_references/README.md)
 
 ![시스템 구성](2_docs/img/diagram_overview.svg)
@@ -1145,6 +1147,7 @@ $$
 ```
 ├── README.md                 이 문서 (원본, 한글)
 ├── README_EN.md              영문판 (같은 장·식·그림 번호)
+├── README_VI.md              베트남어판 (같은 번호, 다이어그램은 영문판 사용)
 ├── 1_simulation/             가상 실험·실기 Simulink 모델과 스크립트 (주석 한·영 병기)
 │   ├── XY_setup.m            파라미터 (먼저 실행)
 │   ├── build_xy_models.m     모델 생성기 — 두 .slx 는 이것으로만 만듦
@@ -1160,7 +1163,7 @@ $$
 │   └── video/                결과 동영상
 ├── 2_docs/
 │   ├── img/                  다이어그램 SVG (영문판은 *_en.svg), 수식 그림 PNG (src/make_fig_math.m, 펜 보상 그림 src/make_fig_pen.m)
-│   ├── manual/               README·README_EN 에서 생성한 PDF (통합본, 펜 제어 발췌본, 각각 한글·영문)
+│   ├── manual/               README·README_EN·README_VI 에서 생성한 PDF (통합본, 펜 제어 발췌본, 각각 한글·영문·베트남어)
 │   └── make_pen_excerpt.py   펜 제어 발췌본 생성
 ├── 3_robot_code/zaber_stage_node.py   NUC 에서 도는 스테이지 노드 (RS-232)
 ├── 4_CAD/                    로봇 STL (저장소에 올리지 않음)

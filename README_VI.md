@@ -1143,6 +1143,8 @@ $$
 
 ### 9.4 Bố cục kho mã
 
+- Mỗi thư mục có hướng dẫn bằng tiếng Hàn, tiếng Anh và tiếng Việt (`README.md`, `README_EN.md`, `README_VI.md`).
+
 ```
 ├── README.md                 Bản gốc tiếng Hàn
 ├── README_EN.md              Bản tiếng Anh (cùng số chương, số phương trình và số hình)
@@ -1165,7 +1167,7 @@ $$
 │   ├── manual/               PDF tạo từ README, README_EN và README_VI (tài liệu đầy đủ và bản trích điều khiển bút, mỗi loại có bản tiếng Hàn, tiếng Anh và tiếng Việt)
 │   └── make_pen_excerpt.py   Tạo trích đoạn điều khiển bút
 ├── 3_robot_code/zaber_stage_node.py   Node bàn trượt chạy trên NUC (RS-232)
-├── 4_CAD/                    STL robot (không có trong kho mã)
+├── 4_CAD/                    Ghi chú về STL robot (tệp STL là thiết kế bảo mật, không tải lên)
 ├── 5_references/
 │   ├── manuals/              Hướng dẫn sử dụng và datasheet Zaber X-LSM-E (PDF)
 │   └── README.md             Bài báo tham khảo (DOI). PDF bài báo không có trong kho mã vì lý do bản quyền

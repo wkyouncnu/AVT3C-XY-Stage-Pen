@@ -1144,6 +1144,8 @@ $$
 
 ### 9.4 저장소 구성
 
+- 각 폴더에 한국어·영어·베트남어 안내가 있다 (`README.md`, `README_EN.md`, `README_VI.md`).
+
 ```
 ├── README.md                 이 문서 (원본, 한글)
 ├── README_EN.md              영문판 (같은 장·식·그림 번호)
@@ -1166,7 +1168,7 @@ $$
 │   ├── manual/               README·README_EN·README_VI 에서 생성한 PDF (통합본, 펜 제어 발췌본, 각각 한글·영문·베트남어)
 │   └── make_pen_excerpt.py   펜 제어 발췌본 생성
 ├── 3_robot_code/zaber_stage_node.py   NUC 에서 도는 스테이지 노드 (RS-232)
-├── 4_CAD/                    로봇 STL (저장소에 올리지 않음)
+├── 4_CAD/                    로봇 STL 안내 (STL 파일은 설계 기밀이라 올리지 않음)
 ├── 5_references/
 │   ├── manuals/              Zaber X-LSM-E 사용자 매뉴얼, 데이터시트 (PDF)
 │   └── README.md             참고 논문 목록 (DOI). 논문 PDF 는 저작권 때문에 저장소에 올리지 않음

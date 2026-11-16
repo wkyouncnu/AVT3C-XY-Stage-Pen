@@ -1143,6 +1143,8 @@ $$
 
 ### 9.4 Repository layout
 
+- Every folder has a guide in Korean, English and Vietnamese (`README.md`, `README_EN.md`, `README_VI.md`).
+
 ```
 ├── README.md                 Korean original
 ├── README_EN.md              This document (English edition, same chapter, equation and figure numbers)
@@ -1165,7 +1167,7 @@ $$
 │   ├── manual/               PDFs generated from README, README_EN and README_VI (full manual and pen control excerpt, each in Korean, English and Vietnamese)
 │   └── make_pen_excerpt.py   Builds the pen control excerpt
 ├── 3_robot_code/zaber_stage_node.py   Stage node running on the NUC (RS-232)
-├── 4_CAD/                    Robot STL (not in the repository)
+├── 4_CAD/                    Robot STL notes (the STL file is a confidential design and is not uploaded)
 ├── 5_references/
 │   ├── manuals/              Zaber X-LSM-E user manual and datasheet (PDF)
 │   └── README.md             Reference papers (DOI). Paper PDFs are not in the repository for copyright reasons

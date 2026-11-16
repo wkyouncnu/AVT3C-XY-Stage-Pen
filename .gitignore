@@ -1,7 +1,8 @@
 # 내부 문서·대용량·생성물
 CLAUDE.md
 0_plan/
-4_CAD/
+4_CAD/*
+!4_CAD/README*.md
 pycheck/
 1_simulation/_old/
 1_simulation/logs/

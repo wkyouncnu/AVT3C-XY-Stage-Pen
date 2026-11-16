@@ -923,7 +923,7 @@ $$
 p^{\star} = A + \sigma\thinspace u, \quad \sigma = u^{\top}(c_0 - A)
 \quad\Rightarrow\quad
 P = p^{\star}
-\ \Leftrightarrow\
+\ \Leftrightarrow\quad
 \Delta s = R^{\top}(\psi)\thinspace (p^{\star} - p) - d,
 \qquad
 s^{\star} = s_c + 1000\thinspace \Delta s \qquad (33)
@@ -941,7 +941,7 @@ $$
 - $p^{\star}$ không bị giới hạn trong $[A, B]$. Nếu giới hạn, khi bút ở phía trước A, bàn trượt sẽ cố bù khoảng cách tại vùng $\sigma < 0$ và trục X chạm cuối hành trình
 
 $$
-\mathrm{pen\text{_}on} = \mathbb{1}\left[\thinspace 0 \le \sigma \le \lVert B - A\rVert\thinspace \right], \qquad
+\mathrm{pen}_{\mathrm{on}} = \mathbb{1}\left[\thinspace 0 \le \sigma \le \lVert B - A\rVert\thinspace \right], \qquad
 s^{\star} \leftarrow \mathrm{rate}_{83\thinspace \mathrm{mm/s}}\negthinspace \left(\mathrm{sat}_{[0,\thinspace 101.6]}(s^{\star})\right) \qquad (35)
 $$
 

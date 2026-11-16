@@ -924,7 +924,7 @@ $$
 p^{\star} = A + \sigma\thinspace u, \quad \sigma = u^{\top}(c_0 - A)
 \quad\Rightarrow\quad
 P = p^{\star}
-\ \Leftrightarrow\
+\ \Leftrightarrow\quad
 \Delta s = R^{\top}(\psi)\thinspace (p^{\star} - p) - d,
 \qquad
 s^{\star} = s_c + 1000\thinspace \Delta s \qquad (33)
@@ -942,7 +942,7 @@ $$
 - $p^{\star}$ 를 $[A, B]$ 로 자르지 않음. 자르면 펜이 A 앞에 있을 때 $\sigma < 0$ 인 거리를 스테이지가 메우려 해 X 가 행정 끝에 닿음
 
 $$
-\mathrm{pen\text{_}on} = \mathbb{1}\left[\thinspace 0 \le \sigma \le \lVert B - A\rVert\thinspace \right], \qquad
+\mathrm{pen}_{\mathrm{on}} = \mathbb{1}\left[\thinspace 0 \le \sigma \le \lVert B - A\rVert\thinspace \right], \qquad
 s^{\star} \leftarrow \mathrm{rate}_{83\thinspace \mathrm{mm/s}}\negthinspace \left(\mathrm{sat}_{[0,\thinspace 101.6]}(s^{\star})\right) \qquad (35)
 $$
 

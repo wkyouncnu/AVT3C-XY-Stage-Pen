@@ -1,0 +1,35 @@
+\documentclass[tikz,border=6pt]{standalone}
+\input{xystyle}
+% diagram_ros2 : real-robot ROS 2 graph (node = box, topic = arrow). Type·fields·units·rate
+\begin{document}
+\begin{tikzpicture}
+\node[key, minimum width=4.2cm, minimum height=7.2cm] (c) at (0,0) {\textbf{Simulink controller node}\\[3pt]
+  \texttt{XY\_2\_pen\_ros2(\_v2).slx}\\[2pt] (virtual exp.: \texttt{XY\_1} top row)\\[8pt]
+  RosIn $\to$ Nav $\to$ Mission\\ $\to$ RobotCtrl $\to$ PwmMap\\ PenCtrl $\to$ RosOut\\[8pt]
+  step $T_s = 0.01$ s};
+% ---- left: sensor nodes
+\node[hw, minimum width=3.4cm, minimum height=2.0cm] (zk) at (-10.0,2.3) {\textbf{ZeroKey node}\\ 1 RTLS tag\\ (INSMODE2)};
+\node[hw, minimum width=3.4cm, minimum height=1.6cm] (xs) at (-10.0,-1.6) {\textbf{Xsens node}\\ MTi IMU (USB)};
+\draw[sig] ($(zk.east)+(0,0.55)$) -- node[lab, above]{\tp{/zerokey/position}} node[lab, below, pos=0.45]{\tp{PointStamped}: \tp{point.x,y,z} [m], 20 Hz}
+  ($(c.west)+(0,2.85)$);
+\draw[sig] ($(zk.east)+(0,-0.55)$) -- node[lab, above]{\tp{/zerokey/vel}} node[lab, below, pos=0.45]{\tp{TwistStamped}: \tp{twist.linear.x,y,z}\\{}[m/s], 20 Hz}
+  ($(c.west)+(0,1.75)$);
+\draw[sig] (xs.east) -- node[lab, above]{\tp{/imu/data}} node[lab, below, align=center]{\tp{sensor\_msgs/Imu}: \tp{orientation}\\ (quaternion, 100 Hz)\\ v2: \tp{angular\_velocity.z} [rad/s]}
+  ($(c.west)+(0,-1.6)$);
+% ---- right: actuator nodes
+\node[hw, minimum width=3.6cm, minimum height=2.0cm] (ar) at (9.4,2.3) {\textbf{Robot bridge}\\ Arduino Mega\\ $\to$ C620 ESC $\to$ track motors};
+\node[hw, minimum width=3.6cm, minimum height=2.4cm] (zb) at (9.4,-1.6) {\textbf{\texttt{zaber\_stage\_node.py}}\\ RS-232 115200 bps\\ $\to$ X-LSM100B $\times 2$\\ (\texttt{move abs}, \texttt{get pos})};
+\draw[sig] ($(c.east)+(0,2.3)$) -- node[lab, above]{\tp{/motor\_pwm}} node[lab, below, align=center]{\tp{geometry\_msgs/Point}\\ \tp{x} left, \tp{y} right [count], 100 Hz}
+  (ar.west);
+\draw[sig] ($(c.east)+(0,-1.0)$) -- node[lab, above]{\tp{/stage/target\_pos}} node[lab, below]{\tp{Point}: \tp{x} = X, \tp{y} = Y [mm], 100 Hz}
+  ($(zb.west)+(0,0.6)$);
+\draw[sig] ($(zb.west)+(0,-0.6)$) -- node[lab, above]{\tp{/stage/pos}} node[lab, below]{\tp{PointStamped}: \tp{point.x,y} [mm], 20 Hz}
+  ($(c.east)+(0,-2.2)$);
+% ---- auxiliary
+\node[opt, minimum width=3.6cm, font=\footnotesize] (aux) at (9.4,-4.6) {\tp{/stage/cmd\_vel} (Vector3, mm/s)\\ \tp{/stage/stop} (Empty)};
+\draw[optsig] (aux) -- (zb);
+\node[note, anchor=north west] at (-12,-3.9) {\textbf{Domain}\ \ real robot \tp{ROS\_DOMAIN\_ID} = 0, virtual experiment 77\\[2pt]
+  \textbf{Virtual exp.}\ \ \tp{PlantRosOut} replaces the two left nodes and \tp{/stage/pos};\\ \hspace*{4.3em}\tp{PlantRosIn} replaces the two right nodes (same names·types)\\[2pt]
+  \tp{/zerokey/orientation} (QuaternionStamped) is also published but not used by this controller};
+\end{tikzpicture}
+\end{document}

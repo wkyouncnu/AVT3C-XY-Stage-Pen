@@ -1,0 +1,24 @@
+\documentclass[tikz,border=6pt]{standalone}
+\input{xystyle}
+% diagram_modes : ModeChart (Stateflow) states and transition conditions, what robot·stage·pen do in each mode
+\begin{document}
+\begin{tikzpicture}[node distance=2.15cm]
+\tikzset{st/.style={key, minimum width=2.55cm, minimum height=1.25cm}, do/.style={font=\footnotesize, align=center, anchor=north, text=ink}}
+\node[st] (m1) {\textbf{1} Goto\_Start\\ to start point};
+\node[st, right=of m1] (m2) {\textbf{2} Turning\\ in-place turn};
+\node[st, right=of m2] (m3) {\textbf{3} Line\_Tracking\\ line tracking + pen};
+\node[st, right=of m3] (m4) {\textbf{4} Stop\_Destination\\ hold end point};
+\node[blk, right=of m4, minimum width=1.6cm, minimum height=1.25cm] (m5) {\textbf{5} Done\\ stop};
+\draw[sig] (m1) -- node[lab, above]{$\lVert c_A - \hat c\rVert$}  node[lab, below]{$< d_{reach}$} (m2);
+\draw[sig] (m2) -- node[lab, above]{after 1 s}  node[lab, below]{$\lvert\theta_l - \hat\psi\rvert < \theta_{tol}$} (m3);
+\draw[sig] (m3) -- node[lab, above]{remaining dist.}  node[lab, below]{$< d_{reach}$} (m4);
+\draw[sig] (m4) -- node[lab, above]{after 2 s} (m5);
+\draw[sig] ($(m1.north)+(0,0.6)$) -- (m1.north);
+\node[do] at ($(m1.south)+(0,-0.15)$) {Robot: centre to $c_A$ by $v,\ \omega$\\ Stage: centred\\ Pen: up};
+\node[do] at ($(m2.south)+(0,-0.15)$) {Robot: $v = 0$, $\omega$ only\\ Stage: centred\\ Pen: up};
+\node[do] at ($(m3.south)+(0,-0.15)$) {Robot: advance at $v_r$, steer by $\omega$\\ Stage: compensate by Eq. (14)\\ Pen: down for $0 \le \sigma \le L$};
+\node[do] at ($(m4.south)+(0,-0.15)$) {Robot: hold end point\\ Stage: centred\\ Pen: up};
+\node[note, anchor=north west] at ($(m1.south west)+(0,-1.75)$) {$d_{reach} = 0.03$ m,\ \ $\theta_{tol} = 1^{\circ}$ (same values as the real-robot Chart).\ \
+  $\hat c = \hat p - R(\hat\psi)\,r_{tag}$: estimated centre,\ $c_A$: start centre,\ $\theta_l$: line direction,\ $\sigma$: distance along the line,\ $L = \lVert B - A\rVert$};
+\end{tikzpicture}
+\end{document}

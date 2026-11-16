@@ -2,8 +2,10 @@
 
 - 작성: 충남대학교 자율운항시스템공학과 윤원근 교수
 - 저장소: <https://github.com/wkyouncnu/AVT3C-XY-Stage-Pen>
-- 매뉴얼(PDF): [docs/manual/AVT3C_XY_Stage_Pen.pdf](docs/manual/AVT3C_XY_Stage_Pen.pdf)
-- 펜 기구학 보상 발췌본(PDF): [docs/manual/AVT3C_XY_Stage_Pen_Control.pdf](docs/manual/AVT3C_XY_Stage_Pen_Control.pdf) (3 장, 4.1 절, 6 장, 8.6 절, 14.6 절. `docs/make_pen_excerpt.py` 로 생성)
+- 매뉴얼(PDF, 한글): [docs/manual/AVT3C_XY_Stage_Pen.pdf](docs/manual/AVT3C_XY_Stage_Pen.pdf)
+- 매뉴얼(PDF, 영문): [docs/manual/AVT3C_XY_Stage_Pen_EN.pdf](docs/manual/AVT3C_XY_Stage_Pen_EN.pdf) (원본 [README_EN.md](README_EN.md))
+- 펜 기구학 보상 발췌본(PDF, 한글): [docs/manual/AVT3C_XY_Stage_Pen_Control.pdf](docs/manual/AVT3C_XY_Stage_Pen_Control.pdf) (3 장, 4.1 절, 6 장, 8.6 절, 14.6 절. `docs/make_pen_excerpt.py` 로 생성)
+- 펜 기구학 보상 발췌본(PDF, 영문): [docs/manual/AVT3C_XY_Stage_Pen_Control_EN.pdf](docs/manual/AVT3C_XY_Stage_Pen_Control_EN.pdf) (`docs/make_pen_excerpt.py --lang en` 으로 생성)
 
 ![시스템 구성](docs/img/diagram_overview.svg)
 
@@ -521,7 +523,7 @@ $$
 
 *그림 13. 펜 보상 수치 예 종합 (mm). (a) 벽면, (b) 스테이지 명령, (c) 계산 단계*
 
-그림 13 은 그림 8–{stage} 의 내용을 한 장에 모은 것이다. 직선 추종 중 측정 $\hat p = (-200.0,\ 345.0)$ mm, $\hat\psi = 3^{\circ}$ 인 순간이며, 로봇은 직선 방향 $\theta_l = 0^{\circ}$ 보다 코가 3° 위를 향한다. 계산은 다음 순서로 진행한다.
+그림 13 은 그림 8–11 의 내용을 한 장에 모은 것이다. 직선 추종 중 측정 $\hat p = (-200.0,\ 345.0)$ mm, $\hat\psi = 3^{\circ}$ 인 순간이며, 로봇은 직선 방향 $\theta_l = 0^{\circ}$ 보다 코가 3° 위를 향한다. 계산은 다음 순서로 진행한다.
 
 | 단계 | 코드 | 식 | 이 예의 값 [mm] | 그림에서 |
 |---|---|---|---|---|
@@ -1140,9 +1142,10 @@ $$
 ### 9.4 저장소 구성
 
 ```
-├── README.md                 이 문서 (원본)
-├── docs/img/                 다이어그램 SVG, 수식 그림 PNG (src/make_fig_math.m, 펜 보상 그림 src/make_fig_pen.m)
-├── docs/manual/              README 에서 생성한 PDF (통합본, 펜 제어 발췌본)
+├── README.md                 이 문서 (원본, 한글)
+├── README_EN.md              영문판 (같은 장·식·그림 번호)
+├── docs/img/                 다이어그램 SVG (영문판은 *_en.svg), 수식 그림 PNG (src/make_fig_math.m, 펜 보상 그림 src/make_fig_pen.m)
+├── docs/manual/              README·README_EN 에서 생성한 PDF (통합본, 펜 제어 발췌본, 각각 한글·영문)
 ├── 1_시뮬레이션/
 │   ├── XY_setup.m            파라미터 (먼저 실행)
 │   ├── build_xy_models.m     모델 생성기 — 두 .slx 는 이것으로만 만듦

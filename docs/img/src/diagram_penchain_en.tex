@@ -1,0 +1,29 @@
+\documentclass[tikz,border=6pt]{standalone}
+\input{xystyle}
+% diagram_penchain : PenComp computation order, frames and units (where the 1000 sits)
+\begin{document}
+\begin{tikzpicture}[node distance=0.75cm]
+\tikzset{b/.style={key, minimum height=1.45cm, minimum width=2.5cm}, h/.style={hw, minimum height=1.45cm, minimum width=2.5cm},
+         fr/.style={font=\footnotesize, text=mute, anchor=north}}
+\node[blk, minimum height=1.45cm, minimum width=2.2cm] (in) {measured·target\\ $\hat p,\ \hat\psi$\\ $A,\ B$};
+\node[b, right=of in] (s1) {(1) pen when centred\\ $c_0 = \hat p + R(\hat\psi)\,d$};
+\node[b, right=of s1] (s2) {(2) foot of perpendicular\\ $p^{\star} = A + \sigma u$\\ $\sigma = u^{\top}(c_0 - A)$};
+\node[b, right=of s2] (s3) {(3) to body frame\\ $\Delta s = R^{\top}(\hat\psi)(p^{\star}-\hat p) - d$};
+\node[b, right=of s3, draw=red!60!black, line width=1pt] (s4) {(4) unit conversion\\ $1000\,\Delta s$};
+\node[b, right=of s4] (s5) {(5) origin shift\\ $s^{\star} = s_c + 1000\,\Delta s$};
+\foreach \n/\t in {in/{wall $\mathcal W$, m}, s1/{wall $\mathcal W$, m}, s2/{wall $\mathcal W$, m}, s3/{body $\mathcal B$, m}, s4/{body $\mathcal B$, mm}, s5/{stage $\mathcal S$, mm}}
+  \node[fr] at ($(\n.south)+(0,-0.05)$) {\t};
+\draw[sig] (in)--(s1); \draw[sig] (s1)--(s2); \draw[sig] (s2)--(s3);
+\draw[sig] (s3)-- node[lab, above]{m} (s4); \draw[sig] (s4)-- node[lab, above]{mm} (s5);
+% ---- real device side (return path)
+\node[h, below=1.7cm of s5] (zb) {Zaber firmware\\ \texttt{move abs} $s^{\star}$\\ $\to$ carriage $s$ [mm]};
+\node[h, left=of zb] (r1) {(6) undo origin·unit\\ $\Delta s = \dfrac{s - s_c}{1000}$ [m]};
+\node[h, left=of r1, minimum width=4.6cm] (r2) {(7) actual pen tip (wall $\mathcal W$, m)\\ $P = p + R(\psi)\,(d + \Delta s)$};
+\draw[sig] ($(s5.south)+(1.2,0)$) -- node[lab, right]{\tp{/stage/target\_pos}\\ $[X;\ Y]$ mm} ($(zb.north)+(1.2,0)$);
+\draw[sig] (zb) -- (r1); \draw[sig] (r1) -- (r2);
+\node[note, anchor=north west, text width=19cm] at ($(in.south west |- r2.south)+(0,-0.35)$) {%
+  Lengths inside the controller are in SI metres; Zaber and the \tp{/stage/*} topics use mm ($1\ \mathrm{m} = 1000\ \mathrm{mm}$).
+  Zaber's zero is home (one end of travel), so the centre $s_c = 50.8$ mm is added. (6) is the inverse of (4)·(5) and is used to compute the pen position (\texttt{PenTrace}).\\
+  Check: substituting (3) into (7) gives $P = \hat p + R R^{\top}(p^{\star} - \hat p) = p^{\star}$ (with exact measurements).};
+\end{tikzpicture}
+\end{document}

@@ -1,0 +1,55 @@
+\documentclass[tikz,border=6pt]{standalone}
+\input{xystyle}
+% diagram_tags : three ZeroKey tag layouts (body frame, top view, scale 1 m = 12 cm)
+\begin{document}
+\begin{tikzpicture}
+\newcommand{\robot}[1]{%
+  \begin{scope}[shift={(#1,0)}, scale=12]
+    \fill[hwbg] (-0.21,-0.1715) rectangle (0.21,0.1715);
+    \draw[ink, line width=0.6pt] (-0.21,-0.1715) rectangle (0.21,0.1715);
+    \fill[mute!35] (-0.21,0.135) rectangle (0.21,0.1715);
+    \fill[mute!35] (-0.21,-0.1715) rectangle (0.21,-0.135);
+    \draw[navy, dashed, line width=0.6pt] (-0.0508,-0.0508) rectangle (0.0508,0.0508);
+    \draw[->, ink, line width=0.6pt] (0.10,-0.11) -- (0.19,-0.11) node[right, font=\footnotesize, inner sep=1pt] {$x_B$};
+    \draw[->, ink, line width=0.6pt] (0.10,-0.11) -- (0.10,-0.04) node[above, font=\footnotesize, inner sep=1pt] {$y_B$};
+    \fill[red!70!black] (0,0) circle (0.006);
+    \node[font=\footnotesize, anchor=north, inner sep=2pt] at (0,-0.006) {$P$};
+  \end{scope}}
+\newcommand{\ztag}[4]{% x y name position
+  \fill[ink] ($(#1,#2)+(-0.11,-0.11)$) rectangle ($(#1,#2)+(0.11,0.11)$);
+  \node[font=\footnotesize, #4, inner sep=2pt] at (#1,#2) {#3};}
+% (a) current
+\robot{0}
+\ztag{-0.96}{0.72}{$T_1$}{above}
+\draw[sig, draw=navy] (-0.96,0.72) -- node[lab, below left, text=navy, pos=0.5]{$d$} (0,0);
+\node[blk, draw=none, fill=none, anchor=north, font=\footnotesize] at (0,-2.25) {\textbf{(a) Current: 1 on the robot}\\[3pt]
+  $\hat P = \hat p_1 + R(\hat\psi)(d + \Delta s)$\\[2pt]
+  $\sigma_e^2 \approx \sigma_p^2 + \ell_u^2\big(\sigma_\psi^2 + \tfrac{(\dot b_\psi T)^2}{3}\big)$\\[2pt]
+  predicted 1.25 mm,\ simulated 1.19 mm};
+% (b) 2 on the robot, symmetric about the pen
+\robot{6.4}
+\ztag{5.44}{0.72}{$T_1$}{above}
+\ztag{7.36}{-0.72}{$T_2$}{below}
+\draw[navy, line width=0.5pt, dashed] (5.44,0.72) -- (7.36,-0.72);
+\node[font=\footnotesize, text=navy, anchor=west] at (7.0,0.05) {$b = 0.2$ m};
+\node[blk, draw=none, fill=none, anchor=north, font=\footnotesize] at (6.4,-2.25) {\textbf{(b) 2 on the robot (pen in between)}\\[3pt]
+  $\hat P = \tfrac12(\hat p_1 + \hat p_2) + R(\hat\psi)\,\Delta s$\\[2pt]
+  $\sigma_e^2 \approx \tfrac12\sigma_p^2 + \lvert\Delta s\rvert^2\sigma_\psi^2$\\[2pt]
+  sensor term 0.71 mm,\ approx. sim. 0.84 mm};
+% (c) 1 on the robot + 1 on the pen carriage
+\robot{12.8}
+\ztag{11.84}{0.72}{$T_1$}{above}
+\ztag{12.8}{0.36}{$T_3$}{left=3pt}
+\draw[->, navy, line width=0.5pt] (13.2,0.36) -- (13.55,0.36);
+\draw[->, navy, line width=0.5pt] (13.2,0.36) -- (13.2,0.70);
+\node[font=\footnotesize, text=navy, anchor=west] at (13.6,0.36) {moves with carriage};
+\node[blk, draw=none, fill=none, anchor=north, font=\footnotesize] at (12.8,-2.25) {\textbf{(c) 1 on robot + 1 on pen carriage}\\[3pt]
+  $\hat P = \hat p_3 + R(\hat\psi)\,r_3$\ \ ($r_3$: tag $\to$ pen tip)\\[2pt]
+  $\sigma_e^2 \approx \sigma_p^2 + \lvert r_3\rvert^2\sigma_\psi^2$\\[2pt] sensor term 1.0 mm,\ approx. sim. 1.07 mm\\[2pt]
+  feedback through the stage (50 ms delay)};
+% legend
+\node[note, anchor=north west] at (-2.6,-5.0) {Grey bands: tracks.\ \ Navy dashed square: stage travel $\pm 50.8$ mm (around pen $P$).\ \ Black squares: ZeroKey tags.\ \
+  $T_1 = r_{tag} = (-0.08,\ 0.06)$ m,\ $T_2 = (0.08,\ -0.06)$ m.\\
+  Sensor term extends Eq. (22) ($\sigma_p = 1$ mm, $\sigma_\psi = 0.3^{\circ}$, independent noise on the two tags assumed). Approx. sim.: (b) ZeroKey noise $\sigma_p/\sqrt2$ + zero IMU effect, (c) zero IMU effect.\\ Non-sensor error floor (surface bumps·creep·stage dynamics) of about 0.41 mm adds on top. If both tags see the same multipath error, the gain of (b) shrinks};
+\end{tikzpicture}
+\end{document}

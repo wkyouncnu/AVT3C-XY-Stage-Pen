@@ -1,0 +1,44 @@
+\documentclass[tikz,border=6pt]{standalone}
+\input{xystyle}
+% diagram_models : relation of the 4 Simulink files. Top row = controller (common to all four), bottom row = virtual test bench (_sim only), InnerPI = v2 only
+\begin{document}
+\begin{tikzpicture}[node distance=0.55cm]
+\tikzset{s/.style={key, minimum height=1.25cm, minimum width=1.75cm}, p/.style={hw, minimum height=1.25cm, minimum width=1.9cm}}
+% ---- controller row
+\node[s] (ri) {RosIn\\ subscribe};
+\node[s, right=of ri] (nv) {Nav\\ $\hat p,\hat\psi$};
+\node[s, right=of nv] (ms) {Mission\\ mode};
+\node[s, right=of ms] (rc) {RobotCtrl\\ $v_c,\omega_c$};
+\node[opt, right=of rc, minimum height=1.25cm, minimum width=1.9cm, fill=white] (pi) {InnerPI\\ \footnotesize v2 only};
+\node[s, right=of pi] (pw) {PwmMap\\ \tp{calc\_pwm}};
+\node[s, right=of pw] (ro) {RosOut\\ publish};
+\node[s, below=0.45cm of rc] (pc) {PenCtrl\\ $s^{\star}$};
+\draw[sig] (ri)--(nv); \draw[sig] (nv)--(ms); \draw[sig] (ms)--(rc); \draw[sig] (rc)--(pi); \draw[sig] (pi)--(pw); \draw[sig] (pw)--(ro);
+\draw[sig] (pc.east) -| (ro.south);
+\draw[sig] (ms.south) |- (pc.west);
+\begin{scope}[on background layer]
+\node[grp, fit=(ri)(ro)(pc), label={[ttl, anchor=south west]north west:Controller row = all of \texttt{XY\_2\_pen\_ros2} (common to all four files, same builder function)}] (G1) {};
+\end{scope}
+% ---- virtual test bench row
+\node[p, below=2.6cm of ro] (pri) {PlantRosIn\\ subscribe};
+\node[p, left=of pri] (rp) {RobotPlant\\ dynamics};
+\node[p, left=of rp] (se) {Sensors\\ noise·delay};
+\node[p, left=of se] (pro) {PlantRosOut\\ publish};
+\node[p, below=0.45cm of rp] (sp) {StagePlant\\ Zaber model};
+\node[blk, minimum height=1.25cm, left=1.3cm of pro, fill=white] (ev) {PenTrace · Logging\\ Animate (evaluate·log)};
+\draw[sig] (pri)--(rp); \draw[sig] (rp)--(se); \draw[sig] (se)--(pro);
+\draw[sig] (pri.south) |- (sp.east);
+\draw[sig] (sp.west) -| (pro.south);
+\begin{scope}[on background layer]
+\node[grp, fit=(pri)(pro)(sp)(ev), label={[ttl, anchor=north west]south west:Virtual test bench row = only in \texttt{XY\_1\_pen\_sim} (stands in for real hardware)}] (G2) {};
+\end{scope}
+% ---- ROS 2 loopback
+\draw[sig, draw=navy] ($(ro.south)+(0.35,0)$) -- node[lab, right, text=navy]{\tp{/motor\_pwm}\\ \tp{/stage/target\_pos}} ($(pri.north)+(0.35,0)$);
+\draw[sig, draw=navy] ($(pro.north)$) -- ++(0,0.4) -| node[lab, left, pos=0.8, text=navy]{\tp{/zerokey/*}, \tp{/imu/data}\\ \tp{/stage/pos}} (ri.south);
+\node[note, anchor=north west, text width=15cm] at ($(G2.south west)+(0,-0.6)$) {%
+  \textbf{\_sim}\ \ both rows in one file, linked only by ROS 2 topics (domain 77, loopback)\\
+  \textbf{\_ros2}\ \ top row only. Real hardware takes the bottom row's place on the same topics (domain 0)\\
+  \textbf{\_v2}\ \ InnerPI (speed·yaw-rate PI) between RobotCtrl and PwmMap. Nav also outputs $V_{meas}$\\
+  v1 \texttt{XY\_1\_pen\_sim}, \texttt{XY\_2\_pen\_ros2}\quad v2 \texttt{XY\_1\_pen\_sim\_v2}, \texttt{XY\_2\_pen\_ros2\_v2}};
+\end{tikzpicture}
+\end{document}

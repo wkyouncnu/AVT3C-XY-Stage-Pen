@@ -169,7 +169,7 @@ The heading $\psi$ is the angle measured counterclockwise from the $x$ axis to t
 The matrix that transforms a vector $a_B$ written in body coordinates into wall coordinates is the rotation matrix.
 
 $$
-R(\psi) = \begin{bmatrix} \cos\psi & -\sin\psi \\ \sin\psi & \cos\psi \end{bmatrix} = \begin{bmatrix} x_B & y_B \end{bmatrix}, \qquad a_W = R(\psi)\,a_B, \qquad a_B = R^{\top}(\psi)\,a_W \tag{1}
+R(\psi) = \begin{bmatrix} \cos\psi & -\sin\psi \\ \sin\psi & \cos\psi \end{bmatrix} = \begin{bmatrix} x_B & y_B \end{bmatrix}, \qquad a_W = R(\psi)\,a_B, \qquad a_B = R^{\top}(\psi)\,a_W \qquad (1)
 $$
 
 | Symbol | Pronunciation | Meaning |
@@ -182,14 +182,14 @@ $$
 
 *Figure 5. The columns of the rotation matrix are the body axes written in wall coordinates*
 
-The first column is $x_B$ because substituting the body vector $a_B = (1,\ 0)$, i.e. the unit vector in the $x_B$ direction, makes $R a_B$ equal to the first column. For example, at $\psi = 0$, where the robot faces right, $R = I$, and at $\psi = 90^{\circ}$, where it faces the ceiling, $R = \begin{bmatrix} 0 & -1 \\ 1 & 0 \end{bmatrix}$. At $\psi = 0$ the first column $(1,\ 0)$ is the $x$ direction, i.e. rightward on the wall, which is correctly the robot's forward direction. The second column $(0,\ 1)$ is the $y$ direction, i.e. upward. The left of a robot facing right is upward, so this is also correct. In this pose, moving the stage Y axis in the + direction moves the pen upward on the wall. This correspondence is used directly in understanding the signs in Chapter 6.
+The first column is $x_B$ because substituting the body vector $a_B = (1,\ 0)$, i.e. the unit vector in the $x_B$ direction, makes $R a_B$ equal to the first column. For example, at $\psi = 0$, where the robot faces right, $R = I$, and at $\psi = 90^{\circ}$, where it faces the ceiling, $R = [\,0\ \ {-1};\ 1\ \ 0\,]$. At $\psi = 0$ the first column $(1,\ 0)$ is the $x$ direction, i.e. rightward on the wall, which is correctly the robot's forward direction. The second column $(0,\ 1)$ is the $y$ direction, i.e. upward. The left of a robot facing right is upward, so this is also correct. In this pose, moving the stage Y axis in the + direction moves the pen upward on the wall. This correspondence is used directly in understanding the signs in Chapter 6.
 
 ### 3.3 Lever Arm
 
 The vector from the tag to "the pen when the stage is at the centre of travel", written in body coordinates, is called the lever arm $d$.
 
 $$
-d = r_{pen0} - r_{tag} = (0,\ 0) - (-0.08,\ 0.06) = (0.08,\ -0.06)\ \mathrm{m} \tag{2}
+d = r_{pen0} - r_{tag} = (0,\ 0) - (-0.08,\ 0.06) = (0.08,\ -0.06)\ \mathrm{m} \qquad (2)
 $$
 
 Since $d$ is fixed to the robot, it is constant in body coordinates, but in wall coordinates it becomes $R(\psi)\,d$, whose direction changes with heading. If the heading is known incorrectly, $R(\hat\psi)\,d$ is wrong, and that difference directly becomes pen position error (Chapter 7).
@@ -207,7 +207,7 @@ Since $d$ is fixed to the robot, it is constant in body coordinates, but in wall
 The pen tip $P$ is the point obtained by starting from the tag position $p$, adding the lever arm $d$ and the stage carriage displacement $\Delta s$ in body coordinates, and rotating the result into the wall frame.
 
 $$
-P = p + R(\psi)\,(d + \Delta s), \qquad \Delta s = \frac{s - s_c}{1000}\ [\mathrm{m}] \tag{3}
+P = p + R(\psi)\,(d + \Delta s), \qquad \Delta s = \frac{s - s_c}{1000}\ [\mathrm{m}] \qquad (3)
 $$
 
 | Symbol | Meaning | Unit |
@@ -224,7 +224,7 @@ $$
 The pen lying on the line $AB$ means that the distance of the pen in the direction normal to the line, i.e. the cross-track error, is 0.
 
 $$
-e(t) = n^{\top}\big(P(t) - A\big) = 0, \qquad u = \frac{B - A}{\lVert B - A\rVert}, \quad n = J u, \quad J = \begin{bmatrix} 0 & -1 \\ 1 & 0 \end{bmatrix} \tag{4}
+e(t) = n^{\top}\big(P(t) - A\big) = 0, \qquad u = \frac{B - A}{\lVert B - A\rVert}, \quad n = J u, \quad J = \begin{bmatrix} 0 & -1 \\ 1 & 0 \end{bmatrix} \qquad (4)
 $$
 
 $u$ is the unit vector along the line, and $n$ is the normal obtained by rotating $u$ counterclockwise by 90° (the left of the line; upward for this line). Along the line the pen only needs to pass from $A$ to $B$, so no exact timetable is required. That is, the only quantity to be controlled is the cross-track error $e$, and travel is a loose condition that "it only needs to reach the end eventually".
@@ -234,7 +234,7 @@ $u$ is the unit vector along the line, and $n$ is the normal obtained by rotatin
 The motion of the robot centre $c$ and the heading is as follows (disturbances and shift of the centre of rotation are treated in Section 8.2).
 
 $$
-\dot c = v \begin{bmatrix} \cos\psi \\ \sin\psi \end{bmatrix}, \qquad \dot\psi = \omega \tag{5}
+\dot c = v \begin{bmatrix} \cos\psi \\ \sin\psi \end{bmatrix}, \qquad \dot\psi = \omega \qquad (5)
 $$
 
 The absence of lateral velocity in Eq. (5) is the nonholonomic constraint. The robot moves only in the $x_B$ direction, and its lateral position changes only by changing heading. The stage, in contrast, moves body X and Y independently and quickly, but cannot exceed $\lvert\Delta s_i\rvert \le 50.8$ mm.
@@ -275,7 +275,7 @@ In mode 4 (Stop_Destination) the robot stops at the end point, and 2 s later the
 The segment followed by the robot is not the same line as the pen line. For the pen to lie on the line when the stage is centred, the tag must follow a parallel line offset from the line by $-R(\theta_l)\,d$. In addition, the robot starts 60 mm ahead so that it settles before the pen reaches $A$, and travels 40 mm past the end.
 
 $$
-r_A = A - R(\theta_l)\,d - 0.06\,u, \qquad r_B = B - R(\theta_l)\,d + 0.04\,u, \qquad c_A = r_A - R(\theta_l)\,r_{tag} \tag{6}
+r_A = A - R(\theta_l)\,d - 0.06\,u, \qquad r_B = B - R(\theta_l)\,d + 0.04\,u, \qquad c_A = r_A - R(\theta_l)\,r_{tag} \qquad (6)
 $$
 
 ### 5.2 Line-Tracking Law
@@ -285,11 +285,11 @@ The reference point $x_r$ of mode 3 moves along the segment at a constant speed 
 $$
 x_r(t) = r_A + v_r\,(t - t_{line})\,u, \qquad
 \begin{bmatrix} e_x \\ e_y \end{bmatrix} = R^{\top}(\hat\psi)\,(x_r - \hat p), \qquad
-e_\theta = \mathrm{wrap}(\theta_l - \hat\psi) \tag{7}
+e_\theta = \mathrm{wrap}(\theta_l - \hat\psi) \qquad (7)
 $$
 
 $$
-v_c = v_r \cos e_\theta + k_x\,e_x, \qquad \omega_c = k_y\,e_y + k_\psi \sin e_\theta \tag{8}
+v_c = v_r \cos e_\theta + k_x\,e_x, \qquad \omega_c = k_y\,e_y + k_\psi \sin e_\theta \qquad (8)
 $$
 
 $e_x$ is how far the reference point lies ahead of the robot, and $e_y$ is how far the reference point lies to the robot's left. The robot can reduce the longitudinal error $e_x$ directly with forward speed, but cannot reduce the lateral error $e_y$ directly. $e_y$ therefore enters the turn command $\omega_c$. If the reference point is to the left ($e_y > 0$), the robot turns left, and the lateral error decreases as it advances with the deflected heading.
@@ -298,7 +298,7 @@ Why this process is slow becomes apparent by linearising the equations near the 
 
 $$
 \ddot y_l + k_\psi\,\dot y_l + v_r k_y\,y_l = 0, \qquad
-\lambda = \frac{-k_\psi \pm \sqrt{k_\psi^2 - 4 v_r k_y}}{2} \tag{9}
+\lambda = \frac{-k_\psi \pm \sqrt{k_\psi^2 - 4 v_r k_y}}{2} \qquad (9)
 $$
 
 | Quantity | Calculation | Result |
@@ -315,11 +315,11 @@ Since the time constant of the slow root is 8.5 s, the robot reduces a lateral d
 
 $$
 \bar V = \frac{v_c}{2 v_{full}}, \quad \bar W = \frac{\omega_c}{2\omega_{full}}, \qquad
-T(\bar V) = d_v\tanh\frac{\bar V}{0.02} + (400 - d_v)\frac{\bar V}{0.5} \tag{10}
+T(\bar V) = d_v\tanh\frac{\bar V}{0.02} + (400 - d_v)\frac{\bar V}{0.5} \qquad (10)
 $$
 
 $$
-u_L = 1500 + T(\bar V) - T_s(\bar W), \qquad u_R = 1500 - \big(T(\bar V) + T_s(\bar W)\big) \tag{11}
+u_L = 1500 + T(\bar V) - T_s(\bar W), \qquad u_R = 1500 - \big(T(\bar V) + T_s(\bar W)\big) \qquad (11)
 $$
 
 The first term of $T$ is an inverse compensation that jumps like a step of $d_v$ = 47 count near 0 to skip the ESC dead zone (the range of small PWM in which the motor does not turn), and the second term fills the remaining range linearly. The turn component $T_s$ is subtracted on the left and added on the right to create the left/right speed difference. The right motor is mounted in mirror symmetry, so the sign of the right PWM is reversed.
@@ -392,7 +392,7 @@ p^{\star} = \hat p + R(\hat\psi)\,(d + \Delta s)
 \quad\Longrightarrow\quad
 \underbrace{d}_{\text{purple}} + \underbrace{\Delta s}_{\text{orange}} = \underbrace{R^{\top}(\hat\psi)\,(p^{\star} - \hat p)}_{\text{green}}
 \quad\Longrightarrow\quad
-\Delta s = R^{\top}(\hat\psi)\,(p^{\star} - \hat p) - d \tag{12}
+\Delta s = R^{\top}(\hat\psi)\,(p^{\star} - \hat p) - d \qquad (12)
 $$
 
 Since $R$ is orthogonal, multiplying both sides by $R^{\top}$ solves the equation directly. The measured values $\hat p$, $\hat\psi$ are used because the measurements are all the controller knows. The middle equation of Eq. (12) is a triangle formed by three arrows in the body frame, and Figure 8 depicts it.
@@ -427,7 +427,7 @@ The subtraction is performed in the body frame because $d$ is a quantity given i
 As seen in Section 4.2, the point on the line where the pen should be is not prescribed. The position along the line is set by the robot as it advances, and the stage only needs to remove the deviation from the line. The target is therefore the foot of the perpendicular dropped onto the line from $c_0$, the pen position with the stage at its centre.
 
 $$
-c_0 = \hat p + R(\hat\psi)\,d, \qquad \sigma = u^{\top}(c_0 - A), \qquad e_0 = n^{\top}(c_0 - A), \qquad p^{\star} = A + \sigma u = c_0 - e_0\,n \tag{13}
+c_0 = \hat p + R(\hat\psi)\,d, \qquad \sigma = u^{\top}(c_0 - A), \qquad e_0 = n^{\top}(c_0 - A), \qquad p^{\star} = A + \sigma u = c_0 - e_0\,n \qquad (13)
 $$
 
 ![Line and pen target in the wall frame](2_docs/img/fig_pen_wall.png)
@@ -474,7 +474,7 @@ $$
 R^{\top}(\hat\psi)\,(p^{\star} - \hat p) =
 \begin{bmatrix} x_B^{\top}(p^{\star} - \hat p) \\ y_B^{\top}(p^{\star} - \hat p) \end{bmatrix}
 = \begin{bmatrix} 83.0\cos 3^{\circ} - 45.0\sin 3^{\circ} \\ -83.0\sin 3^{\circ} - 45.0\cos 3^{\circ} \end{bmatrix}
-= \begin{bmatrix} 80.6 \\ -49.3 \end{bmatrix}\ \mathrm{mm} \tag{14}
+= \begin{bmatrix} 80.6 \\ -49.3 \end{bmatrix}\ \mathrm{mm} \qquad (14)
 $$
 
 In summary, Eq. (12) reads in three steps.
@@ -488,7 +488,7 @@ In summary, Eq. (12) reads in three steps.
 The same result can also be obtained more briefly. Since $c_0 = \hat p + R(\hat\psi)\,d$, Eq. (12) is equivalent to $\Delta s = R^{\top}(\hat\psi)(p^{\star} - c_0)$, and substituting $p^{\star} - c_0 = -e_0\,n$ from Eq. (13) gives the following simple form.
 
 $$
-\Delta s = -e_0\,R^{\top}(\hat\psi)\,n = -e_0 \begin{bmatrix} \sin(\hat\psi - \theta_l) \\ \cos(\hat\psi - \theta_l) \end{bmatrix} \tag{15}
+\Delta s = -e_0\,R^{\top}(\hat\psi)\,n = -e_0 \begin{bmatrix} \sin(\hat\psi - \theta_l) \\ \cos(\hat\psi - \theta_l) \end{bmatrix} \qquad (15)
 $$
 
 That is, $\Delta s$ is the orange arrow $(0.00,\ 10.73)$ mm of Figure 9(b) re-read on the robot scale, $10.73\,(\sin 3^{\circ},\ \cos 3^{\circ}) = (0.56,\ 10.72)$ mm. When the robot is parallel to the line ($\hat\psi = \theta_l$), $\Delta s = (0,\ -e_0)$; that is, only the Y axis moves, opposite to the cross-track error and by the same amount. When the robot is tilted by 3°, the X axis also moves by $-e_0\sin 3^{\circ}$, so the pen is moved perpendicular to the wall line rather than along the tilted Y axis. In the virtual experiment, the X axis barely moves (51.0–53.8 mm) while the Y axis removes the cross-track error (61.3–72.2 mm), in agreement with this equation. The code computing directly from $\hat p$ without passing through $c_0$ is merely the same equation written in a different order.
@@ -498,7 +498,7 @@ That is, $\Delta s$ is the orange arrow $(0.00,\ 10.73)$ mm of Figure 9(b) re-re
 $\Delta s$ in Eqs. (12)–(15) is a body-frame vector in m. However, the Zaber firmware and the `/stage/target_pos` topic use mm, and their origin is one end of the travel (home). The stage command therefore passes through two more steps.
 
 $$
-s^{\star} = s_c + 1000\,\Delta s \quad [\mathrm{mm}], \qquad s_c = 50.8\ \mathrm{mm} \tag{16}
+s^{\star} = s_c + 1000\,\Delta s \quad [\mathrm{mm}], \qquad s_c = 50.8\ \mathrm{mm} \qquad (16)
 $$
 
 ![Converting Delta s into the Zaber command](2_docs/img/fig_pen_stage.png)
@@ -574,11 +574,11 @@ Whether the stage is fast enough can be judged by comparison with the speed of t
 The compensation of Chapter 6 does not measure the pen; it computes the pen position from the measured robot pose, so the pen departs from the line by as much as the measurement is wrong. Defining the position measurement error as $\delta p = \hat p - p$ and the heading measurement error as $\delta\psi = \hat\psi - \psi$, the pen cross-track error to first order is as follows (Eqs. (39)–(41)).
 
 $$
-e \approx -\,n^{\top}\delta p \;-\; \ell_u\,\delta\psi, \qquad \ell_u = u^{\top}R(\psi)(d + \Delta s) \approx 0.08\ \mathrm{m} \tag{17}
+e \approx -\,n^{\top}\delta p \;-\; \ell_u\,\delta\psi, \qquad \ell_u = u^{\top}R(\psi)(d + \Delta s) \approx 0.08\ \mathrm{m} \qquad (17)
 $$
 
 $$
-\sigma_e^2 \approx \sigma_p^2 + \ell_u^2\left(\sigma_\psi^2 + \frac{(\dot b_\psi T)^2}{3}\right) = 1.0^2 + 0.42^2 + 0.63^2\ \mathrm{mm}^2, \qquad \sigma_e \approx 1.25\ \mathrm{mm} \tag{18}
+\sigma_e^2 \approx \sigma_p^2 + \ell_u^2\left(\sigma_\psi^2 + \frac{(\dot b_\psi T)^2}{3}\right) = 1.0^2 + 0.42^2 + 0.63^2\ \mathrm{mm}^2, \qquad \sigma_e \approx 1.25\ \mathrm{mm} \qquad (18)
 $$
 
 For position error, the component normal to the line becomes pen error directly; for heading error, it is multiplied by the along-line component $\ell_u$ of the lever arm to become pen error. The simulated pen RMS of 1.17–1.20 mm is of the same magnitude as this prediction. In simulations that remove each factor one at a time, setting the ZeroKey noise to 0 gives the largest reduction, to 0.74 mm, and making all sensors ideal leaves 0.41 mm. The remaining 0.41 mm is non-sensor error arising from track bumps, creep and stage dynamics. The result that setting only the IMU noise or drift to 0 instead increases the error to 1.28 mm has not yet been explained (Section 18.5).
@@ -598,7 +598,7 @@ Since ZeroKey is the dominant factor, adding one more tag is considered. There a
 (b) A second tag $T_2$ is mounted on the robot body so that the pen lies exactly midway between the two tags. In the current layout, $T_2 = -r_{tag} = (0.08,\ -0.06)$ m. When three points on a rigid body lie on one straight line, the position of the middle point is the average of the other two, independent of heading.
 
 $$
-c_0 = \tfrac12(p_1 + p_2) \quad\Rightarrow\quad \hat P = \tfrac12(\hat p_1 + \hat p_2) + R(\hat\psi)\,\Delta s, \qquad \sigma_e^2 \approx \tfrac12\sigma_p^2 + \lvert\Delta s\rvert^2\sigma_\psi^2 \tag{19}
+c_0 = \tfrac12(p_1 + p_2) \quad\Rightarrow\quad \hat P = \tfrac12(\hat p_1 + \hat p_2) + R(\hat\psi)\,\Delta s, \qquad \sigma_e^2 \approx \tfrac12\sigma_p^2 + \lvert\Delta s\rvert^2\sigma_\psi^2 \qquad (19)
 $$
 
 If the noise of the two tags is independent, the variance of the average is halved, and the heading error multiplies only the carriage displacement $\lvert\Delta s\rvert \approx$ 15 mm, shrinking to 0.1 mm or less. That is, the effect of heading drift almost disappears. In addition, heading can be obtained directly from the baseline $b = 0.2$ m joining the two tags. Its noise, $\sqrt2\,\sigma_p/b \approx 0.41^{\circ}$, is larger than that of the IMU, but since it has no drift it can be blended with the IMU in a complementary filter to remove drift.
@@ -693,7 +693,7 @@ v^{\mathcal{W}} = a\,x_B^{\mathcal{W}} + b\,y_B^{\mathcal{W}}
 = \underbrace{\begin{bmatrix} x_B^{\mathcal{W}} & y_B^{\mathcal{W}} \end{bmatrix}}_{R(\psi)} \begin{bmatrix} a \\ b \end{bmatrix},
 \qquad
 R(\psi) = \begin{bmatrix} \cos\psi & -\sin\psi \\ \sin\psi & \cos\psi \end{bmatrix}, \qquad
-J = R(90^{\circ}) = \begin{bmatrix} 0 & -1 \\ 1 & 0 \end{bmatrix} \tag{20}
+J = R(90^{\circ}) = \begin{bmatrix} 0 & -1 \\ 1 & 0 \end{bmatrix} \qquad (20)
 $$
 
 *(Same figure: Figure 5)*
@@ -742,12 +742,12 @@ $$
 
 $$
 \dot q = S(q)\,V + w(t), \qquad
-S(q) = \begin{bmatrix} \cos\psi & u_c \sin\psi \\ \sin\psi & -u_c\cos\psi \\ 0 & 1 \end{bmatrix} \tag{21}
+S(q) = \begin{bmatrix} \cos\psi & u_c \sin\psi \\ \sin\psi & -u_c\cos\psi \\ 0 & 1 \end{bmatrix} \qquad (21)
 $$
 
 $$
 w(t) = \begin{bmatrix} -k_s\,\lvert v\rvert \\ 0 \\ \dot\psi_w(t) \end{bmatrix}, \qquad
-\psi_w(t) = a_w \sin(2\pi f_w t) + \tfrac{1}{2} a_w \sin(2\pi\,2.3 f_w t + 1) \tag{22}
+\psi_w(t) = a_w \sin(2\pi f_w t) + \tfrac{1}{2} a_w \sin(2\pi\,2.3 f_w t + 1) \qquad (22)
 $$
 
 | Symbol | Definition | Value |
@@ -765,7 +765,7 @@ Integration point and tag (revised 2026-11-11)
 $$
 \dot c = \text{position components of Eq. (21)}, \qquad
 p = c + R(\psi)\,r_{tag}, \qquad
-\dot p = \dot c + \omega\,J R(\psi)\,r_{tag} \tag{21a}
+\dot p = \dot c + \omega\,J R(\psi)\,r_{tag} \qquad (21a)
 $$
 
 | Item | Previous version | Current version |
@@ -786,25 +786,25 @@ Reduced dynamics of the two papers (Zou Eq. (33b), Sabiha Eq. (29)) with wall ad
 
 $$
 \tilde M\,\dot\nu + \tilde C\,\nu + S^{\top}(f_1 + f_2) = \tilde B\,\tau + S^{\top} f_g, \qquad
-\nu = \begin{bmatrix} v \\ L\omega \end{bmatrix},\quad \tau = \begin{bmatrix} F_r \\ F_l \end{bmatrix} \tag{23}
+\nu = \begin{bmatrix} v \\ L\omega \end{bmatrix},\quad \tau = \begin{bmatrix} F_r \\ F_l \end{bmatrix} \qquad (23)
 $$
 
 $$
 \tilde M = S^{\top} M S = m\begin{bmatrix} 1 & 0 \\ 0 & 1 + u_c^2/L^2 \end{bmatrix}, \quad
 \tilde C = S^{\top} M \dot S, \quad
 \tilde B = \begin{bmatrix} 1 & 1 \\ b/2L & -b/2L \end{bmatrix}, \quad
-L = \sqrt{(l^2 + b^2)/12} \tag{24}
+L = \sqrt{(l^2 + b^2)/12} \qquad (24)
 $$
 
 $$
 f_1 = \mu_l N \begin{bmatrix} \cos\psi \\ \sin\psi \\ 0 \end{bmatrix} \tanh\!\frac{v}{\varepsilon_v}, \qquad
 f_2 = \begin{bmatrix} F_y \sin\psi \\ -F_y\cos\psi \\ M_r / L \end{bmatrix}, \qquad
-f_g = \begin{bmatrix} 0 \\ -m g \\ 0 \end{bmatrix} \tag{25}
+f_g = \begin{bmatrix} 0 \\ -m g \\ 0 \end{bmatrix} \qquad (25)
 $$
 
 $$
 F_y = 2\mu_t \frac{N}{l}\,u_c \tanh\!\frac{\omega}{\varepsilon_\omega}, \qquad
-M_r = \mu_t \frac{N}{l}\left(\frac{l^2}{4} - u_c^2\right) \tanh\!\frac{\omega}{\varepsilon_\omega} \tag{26}
+M_r = \mu_t \frac{N}{l}\left(\frac{l^2}{4} - u_c^2\right) \tanh\!\frac{\omega}{\varepsilon_\omega} \qquad (26)
 $$
 
 | Symbol | Definition | Value |
@@ -844,18 +844,18 @@ $$
 \begin{aligned}
 u_L &= 1500 + T(\bar V) - T_s(\bar W) \\
 u_R &= 1500 - T(\bar V) - T_s(\bar W)
-\end{aligned} \tag{27}
+\end{aligned} \qquad (27)
 $$
 
 $$
 T(\bar V) = d_v \tanh\!\frac{\bar V}{0.02} + (400 - d_v)\,\frac{\bar V}{0.5}, \qquad
-T_s(\bar W) = d_\omega \tanh\!\frac{\bar W}{0.10} + (400 - d_\omega)\,\frac{\bar W}{0.5} \tag{28}
+T_s(\bar W) = d_\omega \tanh\!\frac{\bar W}{0.10} + (400 - d_\omega)\,\frac{\bar W}{0.5} \qquad (28)
 $$
 
 $$
 \tau_X = K_{P,v}\,e_v + K_{I,v}\!\int e_v\,dt, \quad
 \tau_N = K_{P,\omega}\,L e_\omega + K_{I,\omega}\!\int L e_\omega\,dt, \quad
-\tau = \tilde B^{-1}\begin{bmatrix} \tau_X \\ \tau_N \end{bmatrix} \tag{29}
+\tau = \tilde B^{-1}\begin{bmatrix} \tau_X \\ \tau_N \end{bmatrix} \qquad (29)
 $$
 
 | Symbol | Definition | Value |
@@ -877,12 +877,12 @@ Mode 3 (line following). Tracks a time-varying reference point using body-frame 
 $$
 x_r(t) = W_{prev} + v_r\,(t - t_{line})\,u_r, \qquad
 \begin{bmatrix} e_x \\ e_y \end{bmatrix} = R^{\top}(\psi)\,(x_r - p), \qquad
-e_\theta = \mathrm{wrap}(\theta_r - \psi) \tag{30a}
+e_\theta = \mathrm{wrap}(\theta_r - \psi) \qquad (30a)
 $$
 
 $$
 v_c = v_r \cos e_\theta + k_x e_x, \qquad
-\omega_c = k_y e_y + k_\psi \sin e_\theta \tag{30b}
+\omega_c = k_y e_y + k_\psi \sin e_\theta \qquad (30b)
 $$
 
 Mode 1 (to the start point), mode 4 (stop at the end point). Polar-form law.
@@ -891,7 +891,7 @@ $$
 \rho = \lVert W - p\rVert, \quad
 \alpha = \mathrm{wrap}\!\left(\mathrm{atan2}(W - p) - \psi\right), \quad
 v_c = k_\rho\,\rho \max(0, \cos\alpha), \quad
-\omega_c = k_\alpha\,\alpha + \tfrac{1}{2}\sin\alpha\cos\alpha \tag{31}
+\omega_c = k_\alpha\,\alpha + \tfrac{1}{2}\sin\alpha\cos\alpha \qquad (31)
 $$
 
 Mode 2 (heading alignment). $v_c = 0$, $\omega_c = k_\alpha\,\mathrm{wrap}(\theta_r - \psi)$. In all modes $\lvert v_c\rvert \le v_{max}$, $\lvert\omega_c\rvert \le \omega_{max}$.
@@ -913,7 +913,7 @@ Mode 2 (heading alignment). $v_c = 0$, $\omega_c = k_\alpha\,\mathrm{wrap}(\thet
 Pen tip position is the sum of the tag, the lever arm and the carriage displacement.
 
 $$
-P = p + R(\psi)\,(d + \Delta s) = c_0 + R(\psi)\,\Delta s, \qquad c_0 = p + R(\psi)\,d \tag{32}
+P = p + R(\psi)\,(d + \Delta s) = c_0 + R(\psi)\,\Delta s, \qquad c_0 = p + R(\psi)\,d \qquad (32)
 $$
 
 - $c_0$ is the pen position with the stage at centre
@@ -926,14 +926,14 @@ P = p^{\star}
 \ \Leftrightarrow\
 \Delta s = R^{\top}(\psi)\,(p^{\star} - p) - d,
 \qquad
-s^{\star} = s_c + 1000\,\Delta s \tag{33}
+s^{\star} = s_c + 1000\,\Delta s \qquad (33)
 $$
 
 With the uncompensated cross-track error $e_0 = n^{\top}(c_0 - A)$, $p^{\star} - c_0 = -e_0\,n$, hence
 
 $$
 \Delta s = -e_0\,R^{\top}(\psi)\,n = -e_0 \begin{bmatrix} \sin(\psi - \theta_l) \\ \cos(\psi - \theta_l) \end{bmatrix},
-\qquad u = \begin{bmatrix}\cos\theta_l \\ \sin\theta_l\end{bmatrix} \tag{34}
+\qquad u = \begin{bmatrix}\cos\theta_l \\ \sin\theta_l\end{bmatrix} \qquad (34)
 $$
 
 - Stage moves only by $e_0$, in a direction set by the angle difference $\psi - \theta_l$ between the robot and the line
@@ -942,7 +942,7 @@ $$
 
 $$
 \mathrm{pen\_on} = \mathbb{1}\left[\,0 \le \sigma \le \lVert B - A\rVert\,\right], \qquad
-s^{\star} \leftarrow \mathrm{rate}_{83\,\mathrm{mm/s}}\!\left(\mathrm{sat}_{[0,\,101.6]}(s^{\star})\right) \tag{35}
+s^{\star} \leftarrow \mathrm{rate}_{83\,\mathrm{mm/s}}\!\left(\mathrm{sat}_{[0,\,101.6]}(s^{\star})\right) \qquad (35)
 $$
 
 #### 8.6.1 Step-by-step meaning of Eqs. (32)–(33)
@@ -975,7 +975,7 @@ One instant during line following. Measured $\hat p = (-200.0,\ 345.0)$ mm, $\ha
 
 | Quantity | Calculation | Value [mm] |
 |---|---|---|
-| $R(\hat\psi)$ | $\cos 3^{\circ} = 0.9986$, $\sin 3^{\circ} = 0.0523$ | $\begin{bmatrix} 0.9986 & -0.0523 \\ 0.0523 & 0.9986 \end{bmatrix}$ |
+| $R(\hat\psi)$ | $\cos 3^{\circ} = 0.9986$, $\sin 3^{\circ} = 0.0523$ | $[\,0.9986\ \ {-0.0523};\ 0.0523\ \ 0.9986\,]$ |
 | $R\,d$ | $d = (80.0,\ -60.0)$ | $(83.0,\ -55.7)$ |
 | $c_0$ | $\hat p + R d$ | $(-117.0,\ 289.3)$ |
 | $\sigma$ | $u^{\top}(c_0 - A) = -117.0 - (-700)$ | 583.0 (within the pen down interval $0 \le \sigma \le 1200$) |
@@ -1037,12 +1037,12 @@ Since the compensator uses $\hat\psi$, a heading error of $\delta\psi$ moves the
 Modelled as a position servo per axis behind the trapezoidal trajectory generator of the Zaber firmware.
 
 $$
-m_i\,\ddot x_i + c_s\,\dot x_i = \mathrm{sat}_{F_{max}(\dot x_i)}\!\left(K_{P,i} e_i + K_{D,i}\,\dot e_i + K_{I,i}\!\int e_i\,dt\right) - m_i\,g_{B,i}(\psi), \qquad i \in \{X, Y\} \tag{36}
+m_i\,\ddot x_i + c_s\,\dot x_i = \mathrm{sat}_{F_{max}(\dot x_i)}\!\left(K_{P,i} e_i + K_{D,i}\,\dot e_i + K_{I,i}\!\int e_i\,dt\right) - m_i\,g_{B,i}(\psi), \qquad i \in \{X, Y\} \qquad (36)
 $$
 
 $$
 K_{P,i} = m_i\,\omega_{n,s}^2, \quad K_{D,i} = 2\zeta_s m_i\,\omega_{n,s}, \quad K_{I,i} = K_{P,i}\,\omega_{n,s}/5, \quad
-g_B(\psi) = R^{\top}(\psi)\begin{bmatrix} 0 \\ -g \end{bmatrix} \tag{37}
+g_B(\psi) = R^{\top}(\psi)\begin{bmatrix} 0 \\ -g \end{bmatrix} \qquad (37)
 $$
 
 | Symbol | Definition | Value |
@@ -1057,7 +1057,7 @@ $$
 
 $$
 \hat p(t_k) = p(t_k - \tau_{zk}) + \eta_p, \quad \eta_p \sim \mathcal{N}(0, \sigma_p^2 I), \qquad
-\hat\psi(t) = \psi(t) + \eta_\psi + \dot b_\psi\,t, \quad \eta_\psi \sim \mathcal{N}(0, \sigma_\psi^2) \tag{38}
+\hat\psi(t) = \psi(t) + \eta_\psi + \dot b_\psi\,t, \quad \eta_\psi \sim \mathcal{N}(0, \sigma_\psi^2) \qquad (38)
 $$
 
 | Symbol | Definition | Value |
@@ -1071,12 +1071,12 @@ The compensator solves Eq. (33) with the measurements $\hat p,\ \hat\psi$, so $\
 
 $$
 P = \underbrace{\hat p + R(\hat\psi)(d + \Delta s)}_{\text{on the line}} - \delta p + \big(R(\psi) - R(\hat\psi)\big)(d + \Delta s),
-\qquad R(\psi) - R(\hat\psi) \approx -\delta\psi\,J R(\psi) \tag{39}
+\qquad R(\psi) - R(\hat\psi) \approx -\delta\psi\,J R(\psi) \qquad (39)
 $$
 
 $$
 e = n^{\top}(P - A) \approx -\,n^{\top}\delta p \;-\; \delta\psi\;\ell_u, \qquad
-\ell_u = u^{\top} R(\psi)\,(d + \Delta s) \tag{40}
+\ell_u = u^{\top} R(\psi)\,(d + \Delta s) \qquad (40)
 $$
 
 - $\delta p = \hat p - p$, $\delta\psi = \hat\psi - \psi$. Since $n = Ju$ and $J^{\top}J = I$, $n^{\top}J = u^{\top}J^{\top}J = u^{\top}$ used
@@ -1086,7 +1086,7 @@ $$
 $$
 \sigma_e^2 \approx \sigma_p^2 + \ell_u^2\,\sigma_\psi^2 + \ell_u^2\,\frac{(\dot b_\psi T)^2}{3}
 = (1.0)^2 + (0.42)^2 + (0.63)^2\ \mathrm{mm}^2
-\ \Rightarrow\ \sigma_e \approx 1.25\ \mathrm{mm} \tag{41}
+\ \Rightarrow\ \sigma_e \approx 1.25\ \mathrm{mm} \qquad (41)
 $$
 
 - $T$ = 39.3 s (pen down time). Drift term is the RMS of an error increasing linearly from 0 to $\dot b_\psi T$
@@ -1442,7 +1442,7 @@ All computation resides in MATLAB Function blocks inside the model, and the head
 $$
 \hat p = \begin{bmatrix} z \\ x \end{bmatrix}, \qquad
 \mathrm{yaw} = \mathrm{atan2}\big(2(q_w q_z + q_x q_y),\ 1 - 2(q_y^2 + q_z^2)\big), \qquad
-\hat\psi = \mathrm{wrap}(\mathrm{yaw} - \mathrm{yaw}_0 + \psi_0) \tag{42}
+\hat\psi = \mathrm{wrap}(\mathrm{yaw} - \mathrm{yaw}_0 + \psi_0) \qquad (42)
 $$
 
 In ZeroKey world coordinates $z$ is the height and $x$ is the wall horizontal, so the wall frame coordinates are $[s_x x;\ z]$. $s_x$ (`zk_xsign`) is $-1$ (default) if ZeroKey $x$ is positive to the left when facing the wall, and $+1$ if it is positive to the right. The wall normal component $y$ is discarded. The yaw angle is extracted from the quaternion with the standard formula, and the yaw $\mathrm{yaw}_0$ of the first valid sample is stored and subtracted to obtain a relative yaw. Because this block must remember previous values, it is a discrete block (0.01 s). Version 2 additionally outputs the body forward velocity $u_B = \dot x\cos\hat\psi + \dot y\sin\hat\psi$ and the gyro rate $r$ as `V_meas`.
@@ -1458,7 +1458,7 @@ One Enabled Subsystem is enabled for each mode, and Merge passes on only the out
 Modes 1 and 4 use a polar-coordinate law. From the distance to the target $\rho$ and the bearing error $\alpha$, the law outputs
 
 $$
-v = k_\rho\,\rho\,\max(0,\ \cos\alpha), \qquad \omega = k_\alpha\,\alpha + \tfrac12\sin\alpha\cos\alpha \tag{43}
+v = k_\rho\,\rho\,\max(0,\ \cos\alpha), \qquad \omega = k_\alpha\,\alpha + \tfrac12\sin\alpha\cos\alpha \qquad (43)
 $$
 
 Owing to $\max(0,\ \cos\alpha)$, the robot only rotates without advancing when the bearing is off by more than 90°, and it moves faster as the heading becomes aligned. Mode 1 steers the centre to the target, and mode 4 steers the tag. Mode 2 rotates in place with $v = 0$, $\omega = k_\alpha\,\mathrm{wrap}(\theta_l - \hat\psi)$. Mode 3 follows Eqs. (7)–(8). When the optional stage centring ($K_c,\ K_{ci} > 0$) is enabled, the Y deviation of `/stage/pos`, $e_s = (s_Y - s_c)/1000$ [m], is added to the cross-track error so that the robot moves toward the pen side and the stage operates in the middle of its travel.
@@ -1468,7 +1468,7 @@ Owing to $\max(0,\ \cos\alpha)$, the robot only rotates without advancing when t
 $$
 e_v = v_c - u_B, \quad e_\omega = \omega_c - g_\omega r, \qquad
 \bar V = \mathrm{sat}_{[0,\,0.5]}\Big(K_{P,v} e_v + K_{I,v}\sum e_v T_s\Big), \quad
-\bar W = \mathrm{sat}_{[-0.5,\,0.5]}\Big(K_{P,\omega} e_\omega + K_{I,\omega}\sum e_\omega T_s\Big) \tag{44}
+\bar W = \mathrm{sat}_{[-0.5,\,0.5]}\Big(K_{P,\omega} e_\omega + K_{I,\omega}\sum e_\omega T_s\Big) \qquad (44)
 $$
 
 This is the same discrete PI as in the real robot Xsens model (Forward Euler, 0.01 s, integrator clamping). Using the real robot values unchanged causes two problems. The gyro scale factor $g_\omega = 0.1443$ is inconsistent in units with the rad/s command and makes ω oscillate, so it is set to 1; and the integrator value carried over at a mode change causes forward motion during rotation, so the integrators are reset at mode transitions. Confirmation of the source remains outstanding (Section 21.2).
@@ -1875,7 +1875,7 @@ Boxes changed from version 1
 
 $$
 \bar V = \mathrm{sat}_{[0,\,0.5]}\!\Big(K_{P,v}^{in} e_v + K_{I,v}^{in}\!\sum e_v\,T_s\Big),\ e_v = v_c - u_B, \qquad
-\bar W = \mathrm{sat}_{[-0.5,\,0.5]}\!\Big(K_{P,\omega}^{in} e_\omega + K_{I,\omega}^{in}\!\sum e_\omega\,T_s\Big),\ e_\omega = \omega_c - g_\omega\,r \tag{45}
+\bar W = \mathrm{sat}_{[-0.5,\,0.5]}\!\Big(K_{P,\omega}^{in} e_\omega + K_{I,\omega}^{in}\!\sum e_\omega\,T_s\Big),\ e_\omega = \omega_c - g_\omega\,r \qquad (45)
 $$
 
 | Symbol | Definition | Value (`XY_setup.m` section 10) |
